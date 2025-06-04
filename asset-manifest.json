@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/omfood/static/css/main.c7421fc2.css",
-    "main.js": "/omfood/static/js/main.a2b9ce21.js",
+    "main.js": "/omfood/static/js/main.ede075ab.js",
     "static/js/453.7c4ab50f.chunk.js": "/omfood/static/js/453.7c4ab50f.chunk.js",
     "index.html": "/omfood/index.html",
     "main.c7421fc2.css.map": "/omfood/static/css/main.c7421fc2.css.map",
-    "main.a2b9ce21.js.map": "/omfood/static/js/main.a2b9ce21.js.map",
+    "main.ede075ab.js.map": "/omfood/static/js/main.ede075ab.js.map",
     "453.7c4ab50f.chunk.js.map": "/omfood/static/js/453.7c4ab50f.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.c7421fc2.css",
-    "static/js/main.a2b9ce21.js"
+    "static/js/main.ede075ab.js"
   ]
 }
