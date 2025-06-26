@@ -8,6 +8,7 @@ import { doc, setDoc, getDoc, onSnapshot, collection, addDoc, updateDoc, deleteD
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { QuerySnapshot, DocumentData } from 'firebase/firestore';
 import Footer from './components/Footer';
+import BrandPage from './components/BrandPage';
 
 const GlobalStyle = createGlobalStyle`
   html, body, #root {
@@ -782,10 +783,12 @@ const AdminButton = styled.button<{ $primary?: boolean }>`
 `;
 
 const AdminGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  display: flex;
+  flex-direction: row;
   gap: 24px;
   margin-bottom: 24px;
+  flex-wrap: wrap;
+  justify-content: center;
 `;
 
 const AdminSuccessMessage = styled.div`
@@ -1436,6 +1439,7 @@ function App() {
         <Route path="/admin/slogan" element={<AdminRoute><AdminSloganManage /></AdminRoute>} />
         <Route path="/admin/store" element={<AdminRoute><AdminStoreManage /></AdminRoute>} />
         <Route path="/admin/brand" element={<AdminRoute><AdminBrandManage /></AdminRoute>} />
+        <Route path="/brand" element={<BrandPage />} />
         {/* 기존 홈페이지 라우트 */}
         <Route path="/*" element={
           <AppContainer>

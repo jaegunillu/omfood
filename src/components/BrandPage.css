@@ -1,0 +1,355 @@
+.brand-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding-top: 120px; /* Header 높이만큼 상단 패딩 추가 */
+}
+
+.brand-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* 헤더 스타일 */
+.brand-header {
+  text-align: center;
+  padding: 2rem 0 4rem 0; /* 상단 패딩 줄임 */
+}
+
+.brand-title {
+  font-size: 2.7rem;
+  font-weight: 800;
+  margin-bottom: 28px;
+  line-height: 1.25;
+  color: #222;
+  /* text-shadow: none; */
+}
+
+.brand-subtitle {
+  font-size: 1.5rem;
+  opacity: 0.9;
+  font-weight: 300;
+}
+
+/* 비디오 섹션 스타일 */
+.video-section {
+  margin: 4rem 0;
+  padding: 2rem 0;
+}
+
+.video-container {
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.brand-video {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 15px;
+}
+
+/* 콘텐츠 섹션 스타일 */
+.content-section {
+  padding: 4rem 0;
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.content-item {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2rem;
+  border-radius: 15px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.content-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+}
+
+.content-item h2 {
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+  color: #fff;
+  font-weight: 600;
+}
+
+.content-item p {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  opacity: 0.9;
+}
+
+/* 두 번째 비디오 섹션 */
+.video-section.secondary {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  margin: 4rem 0;
+}
+
+/* 푸터 스타일 */
+.brand-footer {
+  text-align: center;
+  padding: 2rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  margin-top: 4rem;
+}
+
+.brand-footer p {
+  opacity: 0.7;
+  font-size: 0.9rem;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .brand-page {
+    padding-top: 100px; /* 모바일에서 Header 높이 조정 */
+  }
+  
+  .brand-container {
+    padding: 1rem;
+  }
+  
+  .brand-title {
+    font-size: 2.5rem;
+  }
+  
+  .brand-subtitle {
+    font-size: 1.2rem;
+  }
+  
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .video-container {
+    border-radius: 10px;
+  }
+  
+  .brand-video {
+    border-radius: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .brand-title {
+    font-size: 2rem;
+  }
+  
+  .brand-subtitle {
+    font-size: 1rem;
+  }
+  
+  .content-item {
+    padding: 1.5rem;
+  }
+  
+  .content-item h2 {
+    font-size: 1.5rem;
+  }
+  
+  .content-item p {
+    font-size: 1rem;
+  }
+}
+
+.brandpage-root {
+  width: 100vw;
+  min-height: 100vh;
+  background: #fff;
+  overflow-x: hidden;
+}
+
+/* 풀스크린 섹션 */
+.brand-fullscreen-section {
+  width: 100vw;
+  height: 100vh;
+  min-height: 600px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 메인 비디오(헤더 포함 풀스크린) */
+.brand-main-video-section {
+  padding: 0;
+}
+.brand-main-video,
+.brand-section-video {
+  width: 100vw !important;
+  max-width: 100vw !important;
+  height: 60vh !important;
+  min-height: 320px !important;
+  display: block !important;
+  position: relative !important;
+  z-index: 10 !important;
+  background: #eee !important;
+}
+.brand-main-overlay {
+  position: relative;
+  z-index: 2;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 브랜드 소개 섹션 */
+.brand-section-inner.horizontal {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  max-width: 1400px;
+  width: 100%;
+  gap: 100px;
+  height: 100%;
+}
+.brand-section-inner.horizontal.reverse {
+  flex-direction: row-reverse;
+}
+
+.brand-desc {
+  flex: 1 1 0;
+  min-width: 320px;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 32px 0;
+}
+.brand-em {
+  color: #222;
+}
+.brand-bold {
+  font-weight: 700;
+  margin-bottom: 18px;
+  font-size: 1.25rem;
+  color: #222;
+}
+.brand-desc-text {
+  font-size: 1.13rem;
+  color: #444;
+  margin-bottom: 36px;
+  line-height: 1.7;
+}
+.brand-btn {
+  margin-top: 12px;
+  padding: 14px 38px;
+  border-radius: 24px;
+  border: 1.5px solid #aaa;
+  background: #fff;
+  color: #222;
+  font-size: 1.13rem;
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  text-decoration: none;
+  display: inline-block;
+  letter-spacing: 0.01em;
+}
+.brand-btn:hover {
+  background: #da4b38;
+  color: #fff;
+  border: 1.5px solid #da4b38;
+}
+
+.brand-video-wrap {
+  flex: 1 1 0;
+  min-width: 350px;
+  max-width: 700px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.brand-section-video {
+  width: 100%;
+  max-width: 700px;
+  aspect-ratio: 1.2/1;
+  height: auto;
+  border-radius: 36px;
+  border: 2px solid #e5e7eb;
+  background: #fafbfc;
+  object-fit: cover;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.10);
+}
+
+/* 헤더가 비디오 위에 오버레이되도록 z-index 조정 */
+header, .HeaderContainer, .header-container {
+  z-index: 10 !important;
+  position: relative;
+}
+
+/* 반응형 */
+@media (max-width: 1400px) {
+  .brand-section-inner.horizontal, .brand-section-inner.horizontal.reverse {
+    max-width: 98vw;
+    gap: 40px;
+  }
+  .brand-video-wrap {
+    max-width: 90vw;
+  }
+  .brand-section-video {
+    max-width: 90vw;
+  }
+}
+@media (max-width: 1024px) {
+  .brand-section-inner.horizontal, .brand-section-inner.horizontal.reverse {
+    flex-direction: column !important;
+    gap: 32px;
+    align-items: center;
+    height: 100%;
+  }
+  .brand-desc, .brand-video-wrap {
+    max-width: 95vw;
+    min-width: 0;
+    width: 100%;
+    align-items: center;
+    text-align: center;
+    padding: 0;
+  }
+  .brand-title {
+    font-size: 2rem;
+  }
+  .brand-section-video {
+    max-width: 95vw;
+    border-radius: 24px;
+  }
+}
+@media (max-width: 600px) {
+  .brand-main-video-section {
+    min-height: 320px;
+    height: 60vw;
+  }
+  .brand-title {
+    font-size: 1.3rem;
+  }
+  .brand-fullscreen-section {
+    min-height: 320px;
+    height: 100vh;
+    padding: 0;
+  }
+  .brand-section-video {
+    border-radius: 14px;
+  }
+} 

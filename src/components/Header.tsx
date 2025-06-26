@@ -4,7 +4,7 @@ import { db } from '../firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 
-const HeaderContainer = styled.header<{ $hover: boolean; $isMobile: boolean }>`
+const HeaderContainer = styled.header<{ $hover: boolean; $isMobile: boolean; $brand?: boolean }>`
   position: fixed;
   top: 0;
   left: 0;
@@ -221,7 +221,7 @@ const SloganWrapper = styled.div`
   pointer-events: auto;
 `;
 
-const Header: React.FC = () => {
+const Header: React.FC<{ isBrandPage?: boolean }> = ({ isBrandPage = false }) => {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [navHover, setNavHover] = useState(false);
   const [logoHover, setLogoHover] = useState(false);
@@ -263,7 +263,7 @@ const Header: React.FC = () => {
   };
 
   return (
-    <HeaderContainer $hover={isHeaderHover} $isMobile={isMobile}>
+    <HeaderContainer $hover={isBrandPage ? true : isHeaderHover} $isMobile={isMobile} $brand={isBrandPage}>
       <MobileMenuButton onClick={handleMobileMenuToggle}>
         {mobileMenuOpen ? '×' : '≡'}
       </MobileMenuButton>
@@ -272,8 +272,14 @@ const Header: React.FC = () => {
         onMouseLeave={() => setLogoHover(false)}
       >
         <a href="/" style={{ width: '100%', height: '100%', display: 'block', position: 'relative' }}>
-          <LogoImg src="/omfood/logo_white.png" alt="logo" $visible={!isHeaderHover} />
-          <LogoImg src="/omfood/logo_black.png" alt="logo" $visible={isHeaderHover} />
+          {isBrandPage ? (
+            <LogoImg src="/logo_black.png" alt="logo" $visible={true} />
+          ) : (
+            <>
+              <LogoImg src="/logo_white.png" alt="logo" $visible={!isHeaderHover} />
+              <LogoImg src="/logo_black.png" alt="logo" $visible={isHeaderHover} />
+            </>
+          )}
         </a>
       </LogoWrapper>
       <NavWrapper>
@@ -287,9 +293,10 @@ const Header: React.FC = () => {
           {menuItems.map((item) => (
             <MenuItem
               key={item}
-              href="#"
+              href={item.toUpperCase() === 'BRAND' ? '/brand' : '#'}
               $isHovered={hoveredItem === item}
-              $hover={isHeaderHover}
+              $hover={isBrandPage ? true : isHeaderHover}
+              style={isBrandPage ? { color: '#222' } : {}}
               onMouseEnter={() => setHoveredItem(item)}
               onMouseLeave={() => setHoveredItem(null)}
             >
