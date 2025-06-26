@@ -9,7 +9,7 @@ const BrandPage: React.FC = () => {
       <Header isBrandPage />
       {/* 메인 비디오 섹션 (헤더 포함 풀스크린) */}
       <section className="brand-fullscreen-section brand-main-video-section">
-        <video className="brand-main-video" src="/brand.mp4" autoPlay muted loop playsInline />
+        <video className="brand-main-video" src="/brand.mp4" autoPlay muted loop playsInline poster="/logo_black.png" onError={e => { alert('비디오 로드 실패!'); }} />
         <div className="brand-main-overlay">
           {/* 오버레이 텍스트 필요시 여기에 추가 */}
         </div>
@@ -28,7 +28,7 @@ const BrandPage: React.FC = () => {
             <a className="brand-btn" href="https://ovenmaru.com/" target="_blank" rel="noopener noreferrer">Ovenmaru &gt;&gt;</a>
           </div>
           <div className="brand-video-wrap right">
-            <video className="brand-section-video" src="/store1.mp4" autoPlay muted loop playsInline controls />
+            <video className="brand-section-video" src="/store1.mp4" autoPlay muted loop playsInline poster="/logo_black.png" onError={e => { alert('비디오 로드 실패!'); }} />
           </div>
         </div>
       </section>
@@ -37,7 +37,7 @@ const BrandPage: React.FC = () => {
       <section className="brand-fullscreen-section brand-section-2">
         <div className="brand-section-inner horizontal reverse">
           <div className="brand-video-wrap left">
-            <video className="brand-section-video" src="/store2.mp4" autoPlay muted loop playsInline controls />
+            <video className="brand-section-video" src="/store2.mp4" autoPlay muted loop playsInline poster="/logo_black.png" onError={e => { alert('비디오 로드 실패!'); }} />
           </div>
           <div className="brand-desc right">
             <h2 className="brand-title"><span className="brand-em">Odduk</span>, a familiar taste<br/>with a surprising twist.</h2>
