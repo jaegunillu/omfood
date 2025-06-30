@@ -1439,42 +1439,47 @@ function AdminBrandManage() {
       <AdminHeader>브랜드 관리</AdminHeader>
       <AdminCard>
         <AdminLabel>브랜드 추가</AdminLabel>
-        <AdminGrid>
-          <div>
-            <AdminInput
-              value={newBrand.name}
-              onChange={e => setNewBrand(prev => ({ ...prev, name: e.target.value }))}
-              placeholder="브랜드명"
-            />
-            <AdminTextarea
-              value={newBrand.desc}
-              onChange={e => setNewBrand(prev => ({ ...prev, desc: e.target.value }))}
-              placeholder="설명"
-              style={{ marginTop: 8 }}
-            />
-            <input
-              type="file"
-              accept="image/*"
-              onChange={e => handleImageUpload(e, null)}
-              style={{ marginTop: 8 }}
-              disabled={uploading === 'new'}
-            />
-            {newBrand.image && (
-              <img src={newBrand.image} alt="미리보기" style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: 8, marginTop: 8 }} />
-            )}
-            <AdminButton onClick={handleAdd} $primary style={{ marginTop: 12 }}>브랜드 추가</AdminButton>
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <div style={{ width: 920, maxWidth: '100%', background: '#fafafa', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', padding: 32, display: 'flex', flexDirection: 'row', gap: 40 }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <AdminInput
+                value={newBrand.name}
+                onChange={e => setNewBrand(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="브랜드명"
+                style={{ fontSize: 18, padding: '14px 16px' }}
+              />
+              <AdminTextarea
+                value={newBrand.desc}
+                onChange={e => setNewBrand(prev => ({ ...prev, desc: e.target.value }))}
+                placeholder="설명"
+                style={{ fontSize: 16, minHeight: 80, padding: '14px 16px' }}
+              />
+              <input
+                type="file"
+                accept="image/*"
+                onChange={e => handleImageUpload(e, null)}
+                style={{ marginTop: 4 }}
+                disabled={uploading === 'new'}
+              />
+              {newBrand.image && (
+                <img src={newBrand.image} alt="미리보기" style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: 8, marginTop: 8 }} />
+              )}
+              <AdminButton onClick={handleAdd} $primary style={{ marginTop: 12, width: '100%', fontSize: 18, padding: '14px 0' }}>브랜드 추가</AdminButton>
+            </div>
           </div>
-        </AdminGrid>
+        </div>
       </AdminCard>
       <AdminCard>
-        <AdminGrid>
+        <AdminGrid style={{ gap: 40 }}>
           {brands.map((brand, idx) => (
-            <div key={brand.id}>
-              <img
-                src={brand.image}
-                alt={brand.name}
-                style={{ width: '100%', height: 200, objectFit: 'cover', borderRadius: 8, marginBottom: 16 }}
-              />
+            <div key={brand.id} style={{ flex: '1 1 440px', maxWidth: 440, background: '#fafafa', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', padding: 32 }}>
+              {brand.image && (
+                <img
+                  src={brand.image}
+                  alt={brand.name}
+                  style={{ width: '100%', height: 160, objectFit: 'cover', borderRadius: 8, marginBottom: 16 }}
+                />
+              )}
               <input
                 type="file"
                 accept="image/*"
