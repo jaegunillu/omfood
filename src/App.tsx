@@ -414,7 +414,7 @@ const BackButton = styled.button`
   }
 `;
 
-function AdminLayoutComponent({ children, showBackButton = true }: { children: React.ReactNode; showBackButton?: boolean }) {
+function AdminLayoutComponent({ children, showBackButton = true, backTo, backLabel }: { children: React.ReactNode; showBackButton?: boolean; backTo?: string; backLabel?: string }) {
   const navigate = useNavigate();
   const logout = () => {
     localStorage.removeItem('admin_login');
@@ -425,8 +425,8 @@ function AdminLayoutComponent({ children, showBackButton = true }: { children: R
       <AdminMain>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
           {showBackButton && (
-            <BackButton onClick={() => navigate('/admin/dashboard')}>
-              <span style={{ fontSize: 20 }}>←</span> 대시보드로
+            <BackButton onClick={() => navigate(backTo || '/admin/dashboard')}>
+              <span style={{ fontSize: 20 }}>←</span> {backLabel || '대시보드로'}
             </BackButton>
           )}
           <AdminLogoutBtn onClick={logout}>로그아웃</AdminLogoutBtn>
@@ -666,12 +666,71 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 
 function AdminDashboard() {
   const navigate = useNavigate();
-  const logout = () => {
-    localStorage.removeItem('admin_login');
-    navigate('/admin/login');
-  };
+  const iconSize = 38; // 기존 32에서 20% 증가
   return (
     <AdminLayoutComponent showBackButton={false}>
+      <AdminHeader style={{ textAlign: 'center' }}>관리자 대시보드</AdminHeader>
+      <div style={{ maxWidth: 500, margin: '100px auto 0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
+        {/* 메인페이지 관리 */}
+        <div style={{ width: '100%', background: '#fff', borderRadius: 20, border: '1px solid #ddd', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', padding: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s' }} onClick={() => navigate('/admin/mainpage')}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <span style={{ fontSize: iconSize, marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🏠</span>
+            <span style={{ fontWeight: 700, fontSize: 22, marginBottom: 8 }}>메인페이지 관리</span>
+            <span style={{ color: '#888', fontSize: 16 }}>메인페이지 전체 관리</span>
+          </div>
+        </div>
+        {/* About OMFOOD 관리 */}
+        <div style={{ width: '100%', background: '#fff', borderRadius: 20, border: '1px solid #ddd', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', padding: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s' }} onClick={() => navigate('/admin/about')}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <span style={{ fontSize: iconSize, marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>ℹ️</span>
+            <span style={{ fontWeight: 700, fontSize: 22, marginBottom: 8 }}>About OMFOOD</span>
+            <span style={{ color: '#888', fontSize: 16 }}>회사소개 페이지 관리</span>
+          </div>
+        </div>
+        {/* Food Service 관리 */}
+        <div style={{ width: '100%', background: '#fff', borderRadius: 20, border: '1px solid #ddd', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', padding: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s' }} onClick={() => navigate('/admin/foodservice')}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <span style={{ fontSize: iconSize, marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🍽️</span>
+            <span style={{ fontWeight: 700, fontSize: 22, marginBottom: 8 }}>Food Service</span>
+            <span style={{ color: '#888', fontSize: 16 }}>푸드서비스 페이지 관리</span>
+          </div>
+        </div>
+        {/* Brand 관리 */}
+        <div style={{ width: '100%', background: '#fff', borderRadius: 20, border: '1px solid #ddd', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', padding: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s' }} onClick={() => navigate('/admin/brand')}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <span style={{ fontSize: iconSize, marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🏷️</span>
+            <span style={{ fontWeight: 700, fontSize: 22, marginBottom: 8 }}>Brand 관리</span>
+            <span style={{ color: '#888', fontSize: 16 }}>브랜드 정보/이미지 관리</span>
+          </div>
+        </div>
+        {/* Product 관리 */}
+        <div style={{ width: '100%', background: '#fff', borderRadius: 20, border: '1px solid #ddd', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', padding: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s' }} onClick={() => navigate('/admin/product')}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <span style={{ fontSize: iconSize, marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>📦</span>
+            <span style={{ fontWeight: 700, fontSize: 22, marginBottom: 8 }}>Product 관리</span>
+            <span style={{ color: '#888', fontSize: 16 }}>제품정보 관리</span>
+          </div>
+        </div>
+        {/* Contact 관리 */}
+        <div style={{ width: '100%', background: '#fff', borderRadius: 20, border: '1px solid #ddd', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', padding: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s' }} onClick={() => navigate('/admin/contact')}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <span style={{ fontSize: iconSize, marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>📞</span>
+            <span style={{ fontWeight: 700, fontSize: 22, marginBottom: 8 }}>Contact 관리</span>
+            <span style={{ color: '#888', fontSize: 16 }}>문의 정보 관리</span>
+          </div>
+        </div>
+      </div>
+    </AdminLayoutComponent>
+  );
+}
+
+// 메인페이지 관리 페이지 (기존 기능들을 통합)
+function AdminMainPageManage() {
+  const navigate = useNavigate();
+  
+  return (
+    <AdminLayoutComponent>
+      <AdminHeader>메인페이지 관리</AdminHeader>
       <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap', marginBottom: 40 }}>
         <div style={{ flex: '1 1 220px', minWidth: 220, background: '#fff', borderRadius: 16, boxShadow: '0 2px 16px rgba(0,0,0,0.08)', padding: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s' }} onClick={() => navigate('/admin/menu')}>
           <span style={{ fontSize: 32, marginBottom: 12 }}>📋</span>
@@ -693,26 +752,64 @@ function AdminDashboard() {
           <span style={{ fontWeight: 700, fontSize: 18, marginBottom: 4 }}>스토어 관리</span>
           <span style={{ color: '#888', fontSize: 15 }}>스토어 정보/이미지 관리</span>
         </div>
-        <div style={{ flex: '1 1 220px', minWidth: 220, background: '#fff', borderRadius: 16, boxShadow: '0 2px 16px rgba(0,0,0,0.08)', padding: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s' }} onClick={() => navigate('/admin/brand')}>
-          <span style={{ fontSize: 32, marginBottom: 12 }}>🏷️</span>
-          <span style={{ fontWeight: 700, fontSize: 18, marginBottom: 4 }}>브랜드 관리</span>
-          <span style={{ color: '#888', fontSize: 15 }}>브랜드 정보/이미지 관리</span>
-        </div>
       </div>
     </AdminLayoutComponent>
   );
 }
 
-const adminBtnStyle = { padding: '16px 0', fontSize: 18, borderRadius: 8, border: '1px solid #ddd', background: '#fff', cursor: 'pointer', fontWeight: 500 };
-
-function AdminPlaceholder({ title }: { title: string }) {
-  const navigate = useNavigate();
+// About OMFOOD 관리 페이지
+function AdminAboutManage() {
   return (
-    <div style={{ minHeight: '100vh', background: '#f7f7f7', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-      <button onClick={() => navigate('/admin/dashboard')} style={{ alignSelf: 'flex-start', margin: '32px 0 0 32px', background: 'none', border: 'none', color: '#222', fontSize: 18, cursor: 'pointer', fontWeight: 500 }}>&larr; 대시보드로</button>
-      <h2 style={{ marginBottom: 24 }}>{title}</h2>
-      <div style={{ color: '#888' }}>여기에 {title} 기능이 추가될 예정입니다.</div>
-    </div>
+    <AdminLayoutComponent>
+      <AdminHeader>About OMFOOD 관리</AdminHeader>
+      <AdminCard>
+        <div style={{ textAlign: 'center', color: '#888', fontSize: 16 }}>
+          About OMFOOD 페이지 관리 기능이 준비 중입니다.
+        </div>
+      </AdminCard>
+    </AdminLayoutComponent>
+  );
+}
+
+// Food Service 관리 페이지
+function AdminFoodServiceManage() {
+  return (
+    <AdminLayoutComponent>
+      <AdminHeader>Food Service 관리</AdminHeader>
+      <AdminCard>
+        <div style={{ textAlign: 'center', color: '#888', fontSize: 16 }}>
+          Food Service 페이지 관리 기능이 준비 중입니다.
+        </div>
+      </AdminCard>
+    </AdminLayoutComponent>
+  );
+}
+
+// Product 관리 페이지
+function AdminProductManage() {
+  return (
+    <AdminLayoutComponent>
+      <AdminHeader>Product 관리</AdminHeader>
+      <AdminCard>
+        <div style={{ textAlign: 'center', color: '#888', fontSize: 16 }}>
+          Product 페이지 관리 기능이 준비 중입니다.
+        </div>
+      </AdminCard>
+    </AdminLayoutComponent>
+  );
+}
+
+// Contact 관리 페이지
+function AdminContactManage() {
+  return (
+    <AdminLayoutComponent>
+      <AdminHeader>Contact 관리</AdminHeader>
+      <AdminCard>
+        <div style={{ textAlign: 'center', color: '#888', fontSize: 16 }}>
+          Contact 페이지 관리 기능이 준비 중입니다.
+        </div>
+      </AdminCard>
+    </AdminLayoutComponent>
   );
 }
 
@@ -831,6 +928,14 @@ function AdminMenuManage() {
     setNames(next);
   };
 
+  const moveMenu = (fromIdx: number, toIdx: number) => {
+    if (toIdx < 0 || toIdx >= names.length) return;
+    const next = [...names];
+    const [moved] = next.splice(fromIdx, 1);
+    next.splice(toIdx, 0, moved);
+    setNames(next);
+  };
+
   const handleSave = async () => {
     await setDoc(doc(db, 'menu', 'names'), { items: names });
     setMsg('저장되었습니다!');
@@ -838,27 +943,32 @@ function AdminMenuManage() {
   };
 
   return (
-    <AdminLayoutComponent>
+    <AdminLayoutComponent backTo="/admin/mainpage" backLabel="메인페이지">
       {loading ? (
         <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>로딩 중...</div>
       ) : (
         <>
           <AdminHeader>메뉴명 관리</AdminHeader>
-          <AdminCard>
-            <AdminGrid>
+          <AdminCard style={{ maxWidth: 780, margin: '0 auto', padding: '48px 40px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
               {names.map((name, idx) => (
-                <div key={idx}>
-                  <AdminLabel>메뉴 {idx + 1}</AdminLabel>
-                  <AdminInput
+                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
+                  <span style={{ minWidth: 78, fontWeight: 700, fontSize: 23 }}>{`메뉴${idx + 1}`}</span>
+                  <input
                     value={name}
                     onChange={e => handleChange(idx, e.target.value)}
                     placeholder={`메뉴 ${idx + 1} 이름을 입력하세요`}
+                    style={{ flex: 1, padding: '12px 18px', fontSize: 21, border: '1px solid #ccc', borderRadius: 8 }}
                   />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <button onClick={() => moveMenu(idx, idx - 1)} disabled={idx === 0} style={{ padding: '4px 12px', fontSize: 18, borderRadius: 6, border: '1px solid #bbb', background: '#fff', cursor: idx === 0 ? 'not-allowed' : 'pointer' }}>▲</button>
+                    <button onClick={() => moveMenu(idx, idx + 1)} disabled={idx === names.length - 1} style={{ padding: '4px 12px', fontSize: 18, borderRadius: 6, border: '1px solid #bbb', background: '#fff', cursor: idx === names.length - 1 ? 'not-allowed' : 'pointer' }}>▼</button>
+                  </div>
                 </div>
               ))}
-            </AdminGrid>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 16 }}>
-              <AdminButton onClick={handleSave} $primary>저장하기</AdminButton>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 42 }}>
+              <AdminButton onClick={handleSave} $primary style={{ fontSize: 20, padding: '16px 0', minWidth: 180 }}>저장하기</AdminButton>
             </div>
             {msg && <AdminSuccessMessage>{msg}</AdminSuccessMessage>}
           </AdminCard>
@@ -933,7 +1043,7 @@ function AdminMainManage() {
   };
 
   return (
-    <AdminLayoutComponent>
+    <AdminLayoutComponent backTo="/admin/mainpage" backLabel="메인페이지">
       <AdminHeader>메인 섹션 관리</AdminHeader>
       <AdminCard>
         <AdminLabel>메인 이미지/영상 업로드</AdminLabel>
@@ -1007,7 +1117,7 @@ function AdminSloganManage() {
   };
 
   return (
-    <AdminLayoutComponent>
+    <AdminLayoutComponent backTo="/admin/mainpage" backLabel="메인페이지">
       {loading ? (
         <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>로딩 중...</div>
       ) : (
@@ -1134,7 +1244,7 @@ function AdminStoreManage() {
   };
 
   return (
-    <AdminLayoutComponent>
+    <AdminLayoutComponent backTo="/admin/mainpage" backLabel="메인페이지">
       <AdminHeader>스토어 관리</AdminHeader>
       <AdminCard>
         <AdminLabel>스토어 추가</AdminLabel>
@@ -1325,7 +1435,7 @@ function AdminBrandManage() {
   };
 
   return (
-    <AdminLayoutComponent>
+    <AdminLayoutComponent backTo="/admin/mainpage" backLabel="메인페이지">
       <AdminHeader>브랜드 관리</AdminHeader>
       <AdminCard>
         <AdminLabel>브랜드 추가</AdminLabel>
@@ -1434,11 +1544,21 @@ function App() {
       <Routes>
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+        
+        {/* 메인페이지 하위 관리 기능들 */}
+        <Route path="/admin/mainpage" element={<AdminRoute><AdminMainPageManage /></AdminRoute>} />
         <Route path="/admin/menu" element={<AdminRoute><AdminMenuManage /></AdminRoute>} />
         <Route path="/admin/main" element={<AdminRoute><AdminMainManage /></AdminRoute>} />
         <Route path="/admin/slogan" element={<AdminRoute><AdminSloganManage /></AdminRoute>} />
         <Route path="/admin/store" element={<AdminRoute><AdminStoreManage /></AdminRoute>} />
+        
+        {/* 각 페이지별 관리 기능들 */}
+        <Route path="/admin/about" element={<AdminRoute><AdminAboutManage /></AdminRoute>} />
+        <Route path="/admin/foodservice" element={<AdminRoute><AdminFoodServiceManage /></AdminRoute>} />
         <Route path="/admin/brand" element={<AdminRoute><AdminBrandManage /></AdminRoute>} />
+        <Route path="/admin/product" element={<AdminRoute><AdminProductManage /></AdminRoute>} />
+        <Route path="/admin/contact" element={<AdminRoute><AdminContactManage /></AdminRoute>} />
+        
         <Route path="/brand" element={<BrandPage />} />
         {/* 기존 홈페이지 라우트 */}
         <Route path="/*" element={
