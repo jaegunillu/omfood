@@ -77,7 +77,7 @@ const LogoImg = styled.img<{ $visible?: boolean }>`
 const NavWrapper = styled.div`
   position: absolute;
   left: 50%;
-  top: -10px;
+  top: 0px;
   transform: translateX(-50%);
   height: 100%;
   display: flex;
@@ -221,6 +221,50 @@ const SloganWrapper = styled.div`
   pointer-events: auto;
 `;
 
+const LanguageSelector = styled.div`
+  position: absolute;
+  right: 80px;
+  top: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  z-index: 3;
+`;
+
+const FlagWrapper = styled.div`
+  position: relative;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+`;
+
+const FlagIcon = styled.img`
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 1.5px solid #eee;
+  background: #fff;
+`;
+
+const RedDot = styled.div`
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 7px;
+  height: 7px;
+  background: #ff2d2d;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  z-index: 2;
+  margin-bottom: 5px;
+`;
+
 const Header: React.FC<{ isBrandPage?: boolean }> = ({ isBrandPage = false }) => {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [navHover, setNavHover] = useState(false);
@@ -230,6 +274,9 @@ const Header: React.FC<{ isBrandPage?: boolean }> = ({ isBrandPage = false }) =>
   const [menuItems, setMenuItems] = useState<string[]>([
     "ABOUT OMFOOD", "FOOD SERVICE", "BRAND", "PRODUCT", "CONTACT"
   ]);
+  const [language, setLanguage] = useState<'en' | 'ko'>('en');
+  const [logoWhite, setLogoWhite] = useState<string>('/logo_white.png');
+  const [logoBlack, setLogoBlack] = useState<string>('/logo_black.png');
 
   useEffect(() => {
     const handleResize = () => {
@@ -250,6 +297,21 @@ const Header: React.FC<{ isBrandPage?: boolean }> = ({ isBrandPage = false }) =>
     return () => unsubscribe();
   }, []);
 
+  useEffect(() => {
+    // Firestore에서 로고 경로 실시간 구독
+    const docRef = doc(db, 'header', 'logo');
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        setLogoWhite(docSnap.data().white || '/logo_white.png');
+        setLogoBlack(docSnap.data().black || '/logo_black.png');
+      } else {
+        setLogoWhite('/logo_white.png');
+        setLogoBlack('/logo_black.png');
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
   const isHeaderHover = navHover || logoHover;
 
   const handleMobileMenuToggle = (e: React.MouseEvent) => {
@@ -260,6 +322,11 @@ const Header: React.FC<{ isBrandPage?: boolean }> = ({ isBrandPage = false }) =>
   const handleMobileMenuClose = (e: React.MouseEvent) => {
     e.stopPropagation();
     setMobileMenuOpen(false);
+  };
+
+  const handleLanguageChange = (lang: 'en' | 'ko') => {
+    setLanguage(lang);
+    // TODO: 국문 페이지 전환 로직 (추후 구현)
   };
 
   return (
@@ -273,11 +340,11 @@ const Header: React.FC<{ isBrandPage?: boolean }> = ({ isBrandPage = false }) =>
       >
         <a href="/" style={{ width: '100%', height: '100%', display: 'block', position: 'relative' }}>
           {isBrandPage ? (
-            <LogoImg src="/logo_black.png" alt="logo" $visible={true} />
+            <LogoImg src={logoBlack} alt="logo" $visible={true} />
           ) : (
             <>
-              <LogoImg src="/logo_white.png" alt="logo" $visible={!isHeaderHover} />
-              <LogoImg src="/logo_black.png" alt="logo" $visible={isHeaderHover} />
+              <LogoImg src={logoWhite} alt="logo" $visible={!isHeaderHover} />
+              <LogoImg src={logoBlack} alt="logo" $visible={isHeaderHover} />
             </>
           )}
         </a>
@@ -313,6 +380,16 @@ const Header: React.FC<{ isBrandPage?: boolean }> = ({ isBrandPage = false }) =>
           ))}
         </Nav>
       </NavWrapper>
+      <LanguageSelector>
+        <FlagWrapper onClick={() => handleLanguageChange('en')} title="English">
+          {language === 'en' && <RedDot />}
+          <FlagIcon src="/america.png" alt="English" />
+        </FlagWrapper>
+        <FlagWrapper onClick={() => handleLanguageChange('ko')} title="한국어">
+          {language === 'ko' && <RedDot />}
+          <FlagIcon src="/korea.png" alt="한국어" />
+        </FlagWrapper>
+      </LanguageSelector>
       <MobileNav $open={mobileMenuOpen}>
         {mobileMenuOpen && (
           <MobileCloseButton onClick={handleMobileMenuClose} title="닫기">×</MobileCloseButton>

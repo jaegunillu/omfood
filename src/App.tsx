@@ -5,7 +5,7 @@ import VideoSection from './components/VideoSection';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { db, storage } from './firebase';
 import { doc, setDoc, getDoc, onSnapshot, collection, addDoc, updateDoc, deleteDoc, getDocs } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { QuerySnapshot, DocumentData } from 'firebase/firestore';
 import Footer from './components/Footer';
 import BrandPage from './components/BrandPage';
@@ -670,13 +670,13 @@ function AdminDashboard() {
   return (
     <AdminLayoutComponent showBackButton={false}>
       <AdminHeader style={{ textAlign: 'center' }}>관리자 대시보드</AdminHeader>
-      <div style={{ maxWidth: 500, margin: '100px auto 0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <div style={{ maxWidth: 900, margin: '100px auto 0 auto', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 32 }}>
         {/* 메인페이지 관리 */}
         <div style={{ width: '100%', background: '#fff', borderRadius: 20, border: '1px solid #ddd', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', padding: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s' }} onClick={() => navigate('/admin/mainpage')}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <span style={{ fontSize: iconSize, marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🏠</span>
             <span style={{ fontWeight: 700, fontSize: 22, marginBottom: 8 }}>메인페이지 관리</span>
-            <span style={{ color: '#b22222', fontSize: 16 }}>메인페이지 전체 관리</span>
+            <span style={{ color: '#888', fontSize: 16 }}>메인페이지 전체 관리</span>
           </div>
         </div>
         {/* About OMFOOD 관리 */}
@@ -692,7 +692,7 @@ function AdminDashboard() {
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <span style={{ fontSize: iconSize, marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🍽️</span>
             <span style={{ fontWeight: 700, fontSize: 22, marginBottom: 8 }}>Food Service</span>
-            <span style={{ color: '#b22222', fontSize: 16 }}>푸드서비스 페이지 관리</span>
+            <span style={{ color: '#888', fontSize: 16 }}>푸드서비스 페이지 관리</span>
           </div>
         </div>
         {/* Brand 관리 (네비게이션 Brand 페이지 관리용) */}
@@ -734,8 +734,8 @@ function AdminMainPageManage() {
       <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap', marginBottom: 40 }}>
         <div style={{ flex: '1 1 220px', minWidth: 220, background: '#fff', borderRadius: 16, boxShadow: '0 2px 16px rgba(0,0,0,0.08)', padding: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s' }} onClick={() => navigate('/admin/menu')}>
           <span style={{ fontSize: 32, marginBottom: 12 }}>📋</span>
-          <span style={{ fontWeight: 700, fontSize: 18, marginBottom: 4 }}>메뉴명 관리</span>
-          <span style={{ color: '#888', fontSize: 15 }}>네비게이션 메뉴명 수정</span>
+          <span style={{ fontWeight: 700, fontSize: 18, marginBottom: 4 }}>헤더영역 관리</span>
+          <span style={{ color: '#888', fontSize: 15 }}>로고/메뉴명 수정</span>
         </div>
         <div style={{ flex: '1 1 220px', minWidth: 220, background: '#fff', borderRadius: 16, boxShadow: '0 2px 16px rgba(0,0,0,0.08)', padding: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s' }} onClick={() => navigate('/admin/main')}>
           <span style={{ fontSize: 32, marginBottom: 12 }}>🎬</span>
@@ -914,6 +914,11 @@ function AdminMenuManage() {
   const [msg, setMsg] = useState('');
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const [logoWhite, setLogoWhite] = useState('');
+  const [logoBlack, setLogoBlack] = useState('');
+  const [logoWhiteFile, setLogoWhiteFile] = useState<File | null>(null);
+  const [logoBlackFile, setLogoBlackFile] = useState<File | null>(null);
+  const [logoMsg, setLogoMsg] = useState('');
 
   useEffect(() => {
     async function fetchMenuNames() {
@@ -926,6 +931,20 @@ function AdminMenuManage() {
       setLoading(false);
     }
     fetchMenuNames();
+  }, []);
+
+  useEffect(() => {
+    // Firestore에서 로고 경로 불러오기
+    const docRef = doc(db, 'header', 'logo');
+    getDoc(docRef).then(docSnap => {
+      if (docSnap.exists()) {
+        setLogoWhite(docSnap.data().white || '/logo_white.png');
+        setLogoBlack(docSnap.data().black || '/logo_black.png');
+      } else {
+        setLogoWhite('/logo_white.png');
+        setLogoBlack('/logo_black.png');
+      }
+    });
   }, []);
 
   const handleChange = (idx: number, value: string) => {
@@ -948,14 +967,51 @@ function AdminMenuManage() {
     setTimeout(() => setMsg(''), 1500);
   };
 
+  const handleLogoUpload = async (type: 'white' | 'black') => {
+    try {
+      const file = type === 'white' ? logoWhiteFile : logoBlackFile;
+      if (!file) return;
+      const ext = file.name.split('.').pop();
+      const storagePath = `header/logo_${type}_${Date.now()}.${ext}`;
+      const sRef = storageRef(storage, storagePath);
+      await uploadBytes(sRef, file);
+      const url = await getDownloadURL(sRef);
+      const docRef = doc(db, 'header', 'logo');
+      await setDoc(docRef, { [type]: url }, { merge: true });
+      if (type === 'white') setLogoWhite(url);
+      if (type === 'black') setLogoBlack(url);
+      setLogoMsg('로고가 저장되었습니다!');
+      setTimeout(() => setLogoMsg(''), 1500);
+    } catch (e) {
+      setLogoMsg('업로드 실패');
+      setTimeout(() => setLogoMsg(''), 1500);
+    }
+  };
+
   return (
     <AdminLayoutComponent backTo="/admin/mainpage" backLabel="메인페이지">
       {loading ? (
         <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>로딩 중...</div>
       ) : (
         <>
-          <AdminHeader>메뉴명 관리</AdminHeader>
+          <AdminHeader>헤더영역 관리</AdminHeader>
           <AdminCard style={{ maxWidth: 780, margin: '0 auto', padding: '48px 40px' }}>
+            {/* 로고 업로드 UI 추가 */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 18, marginBottom: 32 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+                <span style={{ minWidth: 90, fontWeight: 700, fontSize: 18 }}>로고(흰색)</span>
+                <input type="file" accept="image/*" onChange={e => setLogoWhiteFile(e.target.files?.[0] || null)} />
+                {logoWhite && <img src={logoWhite} alt="logo_white" style={{ width: 60, height: 40, objectFit: 'contain', background: '#eee', borderRadius: 6 }} />}
+                <button onClick={() => handleLogoUpload('white')} disabled={!logoWhiteFile} style={{ marginLeft: 8, padding: '6px 16px', borderRadius: 6, border: '1px solid #bbb', background: '#fff', cursor: logoWhiteFile ? 'pointer' : 'not-allowed' }}>저장</button>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+                <span style={{ minWidth: 90, fontWeight: 700, fontSize: 18 }}>로고(검정)</span>
+                <input type="file" accept="image/*" onChange={e => setLogoBlackFile(e.target.files?.[0] || null)} />
+                {logoBlack && <img src={logoBlack} alt="logo_black" style={{ width: 60, height: 40, objectFit: 'contain', background: '#eee', borderRadius: 6 }} />}
+                <button onClick={() => handleLogoUpload('black')} disabled={!logoBlackFile} style={{ marginLeft: 8, padding: '6px 16px', borderRadius: 6, border: '1px solid #bbb', background: '#fff', cursor: logoBlackFile ? 'pointer' : 'not-allowed' }}>저장</button>
+              </div>
+              {logoMsg && <div style={{ color: '#1976d2', marginTop: 8 }}>{logoMsg}</div>}
+            </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
               {names.map((name, idx) => (
                 <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
@@ -1026,9 +1082,9 @@ function AdminMainManage() {
       if (data.file) {
         const ext = data.file.name.split('.').pop();
         const uniqueName = `mainSection/${Date.now()}.${ext}`;
-        const storageRef = ref(storage, uniqueName);
-        await uploadBytes(storageRef, data.file);
-        mediaUrl = await getDownloadURL(storageRef);
+        const fileStorageRef = storageRef(storage, uniqueName);
+        await uploadBytes(fileStorageRef, data.file);
+        mediaUrl = await getDownloadURL(fileStorageRef);
       }
 
       const mainData = {
@@ -1220,9 +1276,9 @@ function AdminStoreManage() {
     try {
       const ext = file.name.split('.').pop();
       const uniqueName = `stores/${Date.now()}.${ext}`;
-      const storageRef = ref(storage, uniqueName);
-      await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(storageRef);
+      const fileStorageRef = storageRef(storage, uniqueName);
+      await uploadBytes(fileStorageRef, file);
+      const url = await getDownloadURL(fileStorageRef);
       if (idx === null) {
         setNewStore(prev => ({ ...prev, image: url }));
       } else {
@@ -1411,9 +1467,9 @@ function AdminBrandManage() {
     try {
       const ext = file.name.split('.').pop();
       const uniqueName = `brands/${Date.now()}.${ext}`;
-      const storageRef = ref(storage, uniqueName);
-      await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(storageRef);
+      const fileStorageRef = storageRef(storage, uniqueName);
+      await uploadBytes(fileStorageRef, file);
+      const url = await getDownloadURL(fileStorageRef);
       if (idx === null) {
         setNewBrand(prev => ({ ...prev, image: url }));
       } else {
@@ -1536,7 +1592,9 @@ function AdminBrandPageManage() {
     subText: '',
     mediaType: 'video',
     file: null as File | null,
-    preview: ''
+    preview: '',
+    link: '',
+    linkText: ''
   });
   const [msg, setMsg] = useState('');
   const [loading, setLoading] = useState(true);
@@ -1585,9 +1643,9 @@ function AdminBrandPageManage() {
       if (mainMedia.file) {
         const ext = mainMedia.file.name.split('.').pop();
         const uniqueName = `brandPage/mainMedia_${Date.now()}.${ext}`;
-        const storageRef = ref(storage, uniqueName);
-        await uploadBytes(storageRef, mainMedia.file);
-        url = await getDownloadURL(storageRef);
+        const fileStorageRef = storageRef(storage, uniqueName);
+        await uploadBytes(fileStorageRef, mainMedia.file);
+        url = await getDownloadURL(fileStorageRef);
         type = mainMedia.file.type.startsWith('video') ? 'video' : 'image';
       }
       await setDoc(doc(db, 'brandPage', 'mainMedia'), { url, type });
@@ -1610,9 +1668,9 @@ function AdminBrandPageManage() {
       if (brand.file) {
         const ext = brand.file.name.split('.').pop();
         const uniqueName = `brandPage/brand${idx + 1}_${Date.now()}.${ext}`;
-        const storageRef = ref(storage, uniqueName);
-        await uploadBytes(storageRef, brand.file);
-        mediaUrl = await getDownloadURL(storageRef);
+        const fileStorageRef = storageRef(storage, uniqueName);
+        await uploadBytes(fileStorageRef, brand.file);
+        mediaUrl = await getDownloadURL(fileStorageRef);
         mediaType = brand.file.type.startsWith('video') ? 'video' : 'image';
       }
       const data = {
@@ -1620,7 +1678,9 @@ function AdminBrandPageManage() {
         subText: brand.subText,
         mediaUrl,
         mediaType,
-        order: idx
+        order: idx,
+        link: brand.link || '',
+        linkText: brand.linkText || ''
       };
       if (brand.id) {
         await setDoc(doc(db, 'brandPage', 'brands', 'items', brand.id), data);
@@ -1669,9 +1729,9 @@ function AdminBrandPageManage() {
       if (addBrand.file) {
         const ext = addBrand.file.name.split('.').pop();
         const uniqueName = `brandPage/brand_${Date.now()}.${ext}`;
-        const storageRef = ref(storage, uniqueName);
-        await uploadBytes(storageRef, addBrand.file);
-        mediaUrl = await getDownloadURL(storageRef);
+        const fileStorageRef = storageRef(storage, uniqueName);
+        await uploadBytes(fileStorageRef, addBrand.file);
+        mediaUrl = await getDownloadURL(fileStorageRef);
         mediaType = addBrand.file.type.startsWith('video') ? 'video' : 'image';
       }
       const data = {
@@ -1679,10 +1739,12 @@ function AdminBrandPageManage() {
         subText: addBrand.subText,
         mediaUrl,
         mediaType,
-        order: brands.length
+        order: brands.length,
+        link: addBrand.link || '',
+        linkText: addBrand.linkText || ''
       };
       await addDoc(collection(db, 'brandPage', 'brands', 'items'), data);
-      setAddBrand({ mainText: '', subText: '', mediaType: 'video', file: null, preview: '' });
+      setAddBrand({ mainText: '', subText: '', mediaType: 'video', file: null, preview: '', link: '', linkText: '' });
       setMsg('브랜드가 추가되었습니다!');
       setTimeout(() => setMsg(''), 1500);
     } catch (e) {
@@ -1702,12 +1764,16 @@ function AdminBrandPageManage() {
       {msg && <div style={{ textAlign: 'center', color: '#007bff', fontWeight: 600, marginBottom: 16 }}>{msg}</div>}
       {/* 브랜드 추가 + 메인 미디어 교체를 한 줄에 2개로 배치 */}
       <div style={{ display: 'flex', flexDirection: 'row', gap: 32, justifyContent: 'center', alignItems: 'flex-start', maxWidth: 960, margin: '0 auto 40px auto' }}>
-        <div style={{ flex: 1, minWidth: 400, maxWidth: 440, background: '#fff', borderRadius: 18, boxShadow: '0 4px 24px rgba(0,0,0,0.07)', boxSizing: 'border-box', padding: 32, display: 'flex', flexDirection: 'column', gap: 18 }}>
+        <div style={{ flex: 1, width: 440, minWidth: 440, maxWidth: 440, minHeight: 620, background: '#fff', borderRadius: 18, boxShadow: '0 4px 24px rgba(0,0,0,0.07)', boxSizing: 'border-box', padding: 32, display: 'flex', flexDirection: 'column', gap: 18 }}>
           <div style={{ fontWeight: 700, fontSize: 20, marginBottom: 16 }}>브랜드 추가</div>
           <AdminLabel>메인 텍스트</AdminLabel>
           <AdminInput value={addBrand.mainText} onChange={e => setAddBrand(b => ({ ...b, mainText: e.target.value }))} style={{ fontSize: 16, padding: '10px 12px', borderRadius: 8, border: '1.5px solid #e5e5e5', marginBottom: 8 }} />
           <AdminLabel style={{ marginTop: 4 }}>서브 텍스트</AdminLabel>
           <AdminTextarea value={addBrand.subText} onChange={e => setAddBrand(b => ({ ...b, subText: e.target.value }))} style={{ fontSize: 15, minHeight: 70, padding: '10px 12px', borderRadius: 8, border: '1.5px solid #e5e5e5', marginBottom: 8 }} />
+          <AdminLabel style={{ marginTop: 4 }}>링크 URL (선택사항)</AdminLabel>
+          <AdminInput value={addBrand.link} onChange={e => setAddBrand(b => ({ ...b, link: e.target.value }))} style={{ fontSize: 16, padding: '10px 12px', borderRadius: 8, border: '1.5px solid #e5e5e5', marginBottom: 8 }} placeholder="https://example.com" />
+          <AdminLabel style={{ marginTop: 4 }}>링크 텍스트 (선택사항)</AdminLabel>
+          <AdminInput value={addBrand.linkText} onChange={e => setAddBrand(b => ({ ...b, linkText: e.target.value }))} style={{ fontSize: 16, padding: '10px 12px', borderRadius: 8, border: '1.5px solid #e5e5e5', marginBottom: 8 }} placeholder="자세히 보기" />
           <AdminLabel style={{ marginTop: 4 }}>비디오/이미지 파일</AdminLabel>
           <input type="file" accept="image/png,image/jpeg,video/mp4" onChange={e => handleFile(e, null)} style={{ marginBottom: 8 }} />
           {addBrand.preview && (
@@ -1721,7 +1787,7 @@ function AdminBrandPageManage() {
           )}
           <AdminButton $primary style={{ marginTop: 12, fontSize: 16, borderRadius: 8, height: 44 }} onClick={handleAddBrand}>브랜드 추가</AdminButton>
         </div>
-        <div style={{ flex: 1, minWidth: 400, maxWidth: 440, background: '#fff', borderRadius: 18, boxShadow: '0 4px 24px rgba(0,0,0,0.07)', boxSizing: 'border-box', padding: 32, display: 'flex', flexDirection: 'column', gap: 18 }}>
+        <div style={{ flex: 1, width: 440, minWidth: 440, maxWidth: 440, minHeight: 620, background: '#fff', borderRadius: 18, boxShadow: '0 4px 24px rgba(0,0,0,0.07)', boxSizing: 'border-box', padding: 32, display: 'flex', flexDirection: 'column', gap: 18 }}>
           <div style={{ fontWeight: 700, fontSize: 20, marginBottom: 16 }}>메인 영역 미디어 교체</div>
           <input type="file" accept="image/png,image/jpeg,video/mp4" onChange={e => setMainMedia(prev => ({ ...prev, file: e.target.files?.[0] || null }))} style={{ marginBottom: 8 }} />
           {mainMedia.url && (
@@ -1760,7 +1826,7 @@ function AdminBrandPageManage() {
                 minWidth: 420,
                 maxWidth: 440,
                 width: 440,
-                minHeight: 520,
+                minHeight: 620,
                 display: 'flex',
                 flexDirection: 'column',
                 gap: 18,
@@ -1786,6 +1852,10 @@ function AdminBrandPageManage() {
                 <AdminInput value={brand.mainText} onChange={e => setBrands(prev => { const next = [...prev]; next[idx] = { ...next[idx], mainText: e.target.value }; return next; })} style={{ fontSize: 16, padding: '10px 12px', borderRadius: 8, border: '1.5px solid #e5e5e5', marginBottom: 4 }} />
                 <AdminLabel style={{ marginTop: 4 }}>서브 텍스트</AdminLabel>
                 <AdminTextarea value={brand.subText} onChange={e => setBrands(prev => { const next = [...prev]; next[idx] = { ...next[idx], subText: e.target.value }; return next; })} style={{ fontSize: 15, minHeight: 70, padding: '10px 12px', borderRadius: 8, border: '1.5px solid #e5e5e5', marginBottom: 4 }} />
+                <AdminLabel style={{ marginTop: 4 }}>링크 URL (선택사항)</AdminLabel>
+                <AdminInput value={brand.link || ''} onChange={e => setBrands(prev => { const next = [...prev]; next[idx] = { ...next[idx], link: e.target.value }; return next; })} style={{ fontSize: 16, padding: '10px 12px', borderRadius: 8, border: '1.5px solid #e5e5e5', marginBottom: 4 }} placeholder="https://example.com" />
+                <AdminLabel style={{ marginTop: 4 }}>링크 텍스트 (선택사항)</AdminLabel>
+                <AdminInput value={brand.linkText || ''} onChange={e => setBrands(prev => { const next = [...prev]; next[idx] = { ...next[idx], linkText: e.target.value }; return next; })} style={{ fontSize: 16, padding: '10px 12px', borderRadius: 8, border: '1.5px solid #e5e5e5', marginBottom: 4 }} placeholder="자세히 보기" />
                 <div style={{ display: 'flex', gap: 8, marginTop: 16, justifyContent: 'center' }}>
                   <AdminButton $primary onClick={() => handleSaveBrand(idx)} style={{ minWidth: 70, fontSize: 15, borderRadius: 8, height: 40 }}>저장</AdminButton>
                   <AdminButton onClick={() => handleDeleteBrand(idx)} style={{ background: '#f66', color: '#fff', minWidth: 70, fontSize: 15, borderRadius: 8, height: 40 }}>삭제</AdminButton>
