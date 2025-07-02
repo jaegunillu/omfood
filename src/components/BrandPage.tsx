@@ -73,8 +73,8 @@ const BrandPage: React.FC = () => {
               // 기본: 텍스트 왼쪽, 미디어 오른쪽
               <>
                 <div className="brand-desc left" style={{flex:'0 0 650px',maxWidth:650,minWidth:0,width:'100%',display:'flex',flexDirection:'column',justifyContent:'center'}}>
-                  <h2 className={`brand-title${visibleArr[idx] ? ' brand-ani-in' : ' invisible'}`} style={{fontSize:'2.2rem',fontWeight:800,marginBottom:24,lineHeight:1.3}}>{brand.mainText}</h2>
-                  <div className={`brand-desc-text${visibleArr[idx] ? ' brand-ani-in-sub' : ' invisible'}`} style={{fontSize:'1.18rem',marginBottom:28,lineHeight:1.7,color:'#222'}}>{brand.subText}</div>
+                  <h2 className={`brand-title${visibleArr[idx] ? ' brand-ani-in' : ' invisible'}`} style={{fontSize:'2.2rem',fontWeight:800,marginBottom:24,lineHeight:1.3}} dangerouslySetInnerHTML={{ __html: brand.mainText }} />
+                  <div className={`brand-desc-text${visibleArr[idx] ? ' brand-ani-in-sub' : ' invisible'}`} style={{fontSize:'1.18rem',marginBottom:28,lineHeight:1.7,color:'#222'}} dangerouslySetInnerHTML={{ __html: brand.subText }} />
                   {brand.link && (
                     <a className={`brand-btn${visibleArr[idx] ? ' brand-ani-in-btn' : ' invisible'}`} href={brand.link} target="_blank" rel="noopener noreferrer" style={{marginTop:24,display:'inline-block',padding:'13px 36px',borderRadius:24,border:'1.5px solid #bbb',fontWeight:600,fontSize:'1.08rem',color:'#222',background:'#fff'}}>{brand.linkText || '자세히 보기'} &gt;&gt;</a>
                   )}
@@ -98,8 +98,8 @@ const BrandPage: React.FC = () => {
                   )}
                 </div>
                 <div className="brand-desc right" style={{flex:'0 0 650px',maxWidth:650,minWidth:0,width:'100%',display:'flex',flexDirection:'column',justifyContent:'center'}}>
-                  <h2 className={`brand-title${visibleArr[idx] ? ' brand-ani-in' : ' invisible'}`} style={{fontSize:'2.2rem',fontWeight:800,marginBottom:24,lineHeight:1.3}}>{brand.mainText}</h2>
-                  <div className={`brand-desc-text${visibleArr[idx] ? ' brand-ani-in-sub' : ' invisible'}`} style={{fontSize:'1.18rem',marginBottom:28,lineHeight:1.7,color:'#222'}}>{brand.subText}</div>
+                  <h2 className={`brand-title${visibleArr[idx] ? ' brand-ani-in' : ' invisible'}`} style={{fontSize:'2.2rem',fontWeight:800,marginBottom:24,lineHeight:1.3}} dangerouslySetInnerHTML={{ __html: brand.mainText }} />
+                  <div className={`brand-desc-text${visibleArr[idx] ? ' brand-ani-in-sub' : ' invisible'}`} style={{fontSize:'1.18rem',marginBottom:28,lineHeight:1.7,color:'#222'}} dangerouslySetInnerHTML={{ __html: brand.subText }} />
                   {brand.link && (
                     <a className={`brand-btn${visibleArr[idx] ? ' brand-ani-in-btn' : ' invisible'}`} href={brand.link} target="_blank" rel="noopener noreferrer" style={{marginTop:24,display:'inline-block',padding:'13px 36px',borderRadius:24,border:'1.5px solid #bbb',fontWeight:600,fontSize:'1.08rem',color:'#222',background:'#fff'}}>{brand.linkText || '자세히 보기'} &gt;&gt;</a>
                   )}

@@ -10,6 +10,19 @@ import { QuerySnapshot, DocumentData } from 'firebase/firestore';
 import Footer from './components/Footer';
 import BrandPage from './components/BrandPage';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
+
+// Quill 툴바 옵션 (공통)
+const quillModules = {
+  toolbar: [
+    [{ 'header': [1, 2, false] }],
+    ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+    ['link', 'color', 'background'],
+    ['clean']
+  ]
+};
 
 const GlobalStyle = createGlobalStyle`
   html, body, #root {
@@ -606,15 +619,9 @@ function Brands() {
       {brands.map((brand, idx) => (
         <BrandSection ref={el => { refs.current[idx] = el as HTMLDivElement; }} key={brand.name + idx}>
           <BrandTextBlock>
-            <BrandTopText $visible={visibleArr[idx]}>{brand.name}</BrandTopText>
-            <BrandMainText $visible={visibleArr[idx]}>
-              {brand.name.toLowerCase().includes('odduk')
-                ? (<>
-                    The Signature of <br />Korean Spice ODDUK!
-                  </>)
-                : brand.desc.split('\n').map((line, i) => <React.Fragment key={i}>{line}<br /></React.Fragment>)}
-            </BrandMainText>
-            <BrandSubText $visible={visibleArr[idx]}>{brand.subText}</BrandSubText>
+            <BrandTopText $visible={visibleArr[idx]} dangerouslySetInnerHTML={{ __html: brand.name || '' }} />
+            <BrandMainText $visible={visibleArr[idx]} dangerouslySetInnerHTML={{ __html: brand.desc || '' }} />
+            <BrandSubText $visible={visibleArr[idx]} dangerouslySetInnerHTML={{ __html: brand.subText || '' }} />
           </BrandTextBlock>
           {brand.image && <BrandImage src={brand.image} alt={brand.name} />}
         </BrandSection>
@@ -695,12 +702,8 @@ function SloganSection() {
   return (
     <SectionBg>
       <Section ref={ref}>
-        <SloganMainText $show={show}>{mainText}</SloganMainText>
-        <SubText style={{ minHeight: 48 }}>
-          {subLines.map((line, i) => (
-            <SloganSubTextLine key={i} $show={show && subShow > i} $delay={i * 350}>{line}</SloganSubTextLine>
-          ))}
-        </SubText>
+        <SloganMainText $show={show} dangerouslySetInnerHTML={{ __html: mainText || '' }} />
+        <SubText style={{ minHeight: 48 }} dangerouslySetInnerHTML={{ __html: subText || '' }} />
       </Section>
     </SectionBg>
   );
@@ -1193,18 +1196,28 @@ function AdminMainManage() {
         </div>
 
         <AdminLabel>메인 텍스트</AdminLabel>
-        <AdminInput
-          value={data.mainText}
-          onChange={e => handleChange('mainText', e.target.value)}
-          placeholder="메인 텍스트를 입력하세요"
-        />
+        <div style={{ marginBottom: 24 }}>
+          <ReactQuill
+            value={data.mainText}
+            onChange={v => handleChange('mainText', v)}
+            modules={quillModules}
+            theme="snow"
+            placeholder="메인 텍스트를 입력하세요"
+            style={{ height: 120, marginBottom: 12, background: '#fff' }}
+          />
+        </div>
 
         <AdminLabel style={{ marginTop: 24 }}>서브 텍스트</AdminLabel>
-        <AdminTextarea
-          value={data.subText}
-          onChange={e => handleChange('subText', e.target.value)}
-          placeholder="서브 텍스트를 입력하세요"
-        />
+        <div style={{ marginBottom: 24 }}>
+          <ReactQuill
+            value={data.subText}
+            onChange={v => handleChange('subText', v)}
+            modules={quillModules}
+            theme="snow"
+            placeholder="서브 텍스트를 입력하세요"
+            style={{ height: 120, marginBottom: 12, background: '#fff' }}
+          />
+        </div>
 
         <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 32 }}>
           <AdminButton onClick={handleSave} $primary>저장하기</AdminButton>
@@ -1252,19 +1265,27 @@ function AdminSloganManage() {
           <AdminHeader>슬로건 관리</AdminHeader>
           <AdminCard>
             <AdminLabel>메인 슬로건</AdminLabel>
-            <AdminInput
-              value={mainText}
-              onChange={e => setMainText(e.target.value)}
-              placeholder="메인 슬로건을 입력하세요"
-            />
-
+            <div style={{ marginBottom: 24 }}>
+              <ReactQuill
+                value={mainText}
+                onChange={setMainText}
+                modules={quillModules}
+                theme="snow"
+                placeholder="메인 슬로건을 입력하세요"
+                style={{ height: 120, marginBottom: 12, background: '#fff' }}
+              />
+            </div>
             <AdminLabel style={{ marginTop: 24 }}>서브 슬로건</AdminLabel>
-            <AdminTextarea
-              value={subText}
-              onChange={e => setSubText(e.target.value)}
-              placeholder="서브 슬로건을 입력하세요"
-            />
-
+            <div style={{ marginBottom: 24 }}>
+              <ReactQuill
+                value={subText}
+                onChange={setSubText}
+                modules={quillModules}
+                theme="snow"
+                placeholder="서브 슬로건을 입력하세요"
+                style={{ height: 120, marginBottom: 12, background: '#fff' }}
+              />
+            </div>
             <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 32 }}>
               <AdminButton onClick={handleSave} $primary>저장하기</AdminButton>
             </div>
@@ -1571,92 +1592,104 @@ function AdminBrandManage() {
       <AdminHeader>브랜드 관리</AdminHeader>
       <AdminCard>
         <AdminLabel>브랜드 추가</AdminLabel>
-        <AdminGrid>
-          <div>
-            <AdminInput
-              value={newBrand.name}
-              onChange={e => setNewBrand(prev => ({ ...prev, name: e.target.value }))}
-              placeholder="브랜드명"
-            />
-            <AdminTextarea
-              value={newBrand.desc}
-              onChange={e => setNewBrand(prev => ({ ...prev, desc: e.target.value }))}
-              placeholder="브랜드 설명"
-              style={{ marginTop: 8 }}
-            />
-            <AdminInput
-              value={newBrand.subText}
-              onChange={e => setNewBrand(prev => ({ ...prev, subText: e.target.value }))}
-              placeholder="브랜드 서브텍스트 (작은 글씨)"
-              style={{ marginTop: 8, fontSize: 14, color: '#888' }}
-            />
-            <input
-              type="file"
-              accept="image/*"
-              onChange={e => handleImageUpload(e, null)}
-              style={{ marginTop: 8 }}
-              disabled={uploading}
-            />
-            {newBrand.image && (
-              <img src={newBrand.image} alt="미리보기" style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: 8, marginTop: 8 }} />
-            )}
-            <AdminButton onClick={handleAdd} $primary style={{ marginTop: 12 }}>브랜드 추가</AdminButton>
+        <div style={{ maxWidth: 1100, width: '100%', margin: '0 auto', background: '#fff', borderRadius: 18, boxShadow: '0 4px 24px rgba(0,0,0,0.08)', padding: 40, marginBottom: 40 }}>
+          <div style={{ display: 'flex', flexDirection: 'row', gap: 40, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+            {/* 왼쪽: 입력/포맷팅 */}
+            <div style={{ flex: 2, minWidth: 320 }}>
+              <div style={{ marginBottom: 24 }}>
+                <label style={{ fontWeight: 700, fontSize: 18, marginBottom: 8, display: 'block' }}>브랜드명</label>
+                <ReactQuill value={newBrand.name} onChange={v => setNewBrand(prev => ({ ...prev, name: v }))} modules={quillModules} theme="snow" placeholder="브랜드명" style={{ height: 60, marginBottom: 8 }} />
+              </div>
+              <div style={{ marginBottom: 24 }}>
+                <label style={{ fontWeight: 700, fontSize: 18, marginBottom: 8, display: 'block' }}>브랜드 설명</label>
+                <ReactQuill value={newBrand.desc} onChange={v => setNewBrand(prev => ({ ...prev, desc: v }))} modules={quillModules} theme="snow" placeholder="브랜드 설명" style={{ height: 100, marginBottom: 8 }} />
+              </div>
+              <div style={{ marginBottom: 24 }}>
+                <label style={{ fontWeight: 700, fontSize: 18, marginBottom: 8, display: 'block' }}>브랜드 서브텍스트 (작은 글씨)</label>
+                <ReactQuill value={newBrand.subText || ''} onChange={v => setNewBrand(prev => ({ ...prev, subText: v }))} modules={quillModules} theme="snow" placeholder="브랜드 서브텍스트" style={{ height: 80, marginBottom: 8 }} />
+              </div>
+            </div>
+            {/* 오른쪽: 버튼/파일/이미지 */}
+            <div style={{ flex: 1, minWidth: 220, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 24 }}>
+              <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
+                <AdminButton onClick={handleAdd} $primary style={{ fontSize: 16, padding: '12px 32px' }}>브랜드 추가</AdminButton>
+              </div>
+              <div style={{ marginBottom: 12 }}>
+                <input type="file" accept="image/*" onChange={e => handleImageUpload(e, null)} style={{ marginTop: 8 }} disabled={uploading} />
+                <div style={{ fontSize: 14, color: '#888', marginTop: 4 }}>선택된 파일 없음</div>
+              </div>
+              {newBrand.image && (
+                <img src={newBrand.image} alt="미리보기" style={{ width: 220, height: 160, objectFit: 'cover', borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.08)', border: '1px solid #eee' }} />
+              )}
+            </div>
           </div>
-        </AdminGrid>
+        </div>
       </AdminCard>
       <AdminCard>
-        <AdminGrid>
+        <AdminLabel>브랜드 목록</AdminLabel>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
           {brands.map((brand, idx) => (
-            <div key={brand.id} style={{ position: 'relative' }}>
-              <img
-                src={brand.image}
-                alt={brand.name}
-                style={{ width: '100%', height: 200, objectFit: 'cover', borderRadius: 8, marginBottom: 16 }}
-              />
-              <input
-                type="file"
-                accept="image/*"
-                onChange={e => handleImageUpload(e, idx)}
-                style={{ marginBottom: 8 }}
-                disabled={uploading}
-              />
-              <AdminLabel>브랜드명</AdminLabel>
-              <AdminInput
-                value={brand.name}
-                onChange={e => setBrands(prev => {
-                  const next = [...prev];
-                  next[idx] = { ...next[idx], name: e.target.value };
-                  return next;
-                })}
-              />
-              <AdminLabel style={{ marginTop: 16 }}>브랜드 설명</AdminLabel>
-              <AdminTextarea
-                value={brand.desc}
-                onChange={e => setBrands(prev => {
-                  const next = [...prev];
-                  next[idx] = { ...next[idx], desc: e.target.value };
-                  return next;
-                })}
-              />
-              <AdminLabel style={{ marginTop: 8 }}>브랜드 서브텍스트 (작은 글씨)</AdminLabel>
-              <AdminInput
-                value={brand.subText || ''}
-                onChange={e => setBrands(prev => {
-                  const next = [...prev];
-                  next[idx] = { ...next[idx], subText: e.target.value };
-                  return next;
-                })}
-                style={{ fontSize: 14, color: '#888' }}
-              />
-              <div style={{ display: 'flex', gap: 8, marginTop: 16, justifyContent: 'center' }}>
-                <AdminButton $primary onClick={() => handleSave(brand)} style={{ minWidth: 70, fontSize: 15, borderRadius: 8, height: 40 }}>저장</AdminButton>
-                <AdminButton onClick={() => handleDelete(brand.id)} style={{ background: '#f66', color: '#fff', minWidth: 70, fontSize: 15, borderRadius: 8, height: 40 }}>삭제</AdminButton>
-                <AdminButton onClick={() => moveBrand(idx, idx - 1)} disabled={idx === 0} style={{ minWidth: 36, padding: '0 8px', fontSize: 15, borderRadius: 8, height: 40 }}>▲</AdminButton>
-                <AdminButton onClick={() => moveBrand(idx, idx + 1)} disabled={idx === brands.length - 1} style={{ minWidth: 36, padding: '0 8px', fontSize: 15, borderRadius: 8, height: 40 }}>▼</AdminButton>
+            <div key={brand.id} style={{ background: '#fff', borderRadius: 16, boxShadow: '0 2px 12px rgba(0,0,0,0.06)', padding: 32, marginBottom: 24, maxWidth: 700, width: '100%', margin: '0 auto' }}>
+              <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', gap: 24, width: '100%' }}>
+                {/* 왼쪽: 입력/포맷팅 */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ marginBottom: 12 }}>
+                    <AdminLabel style={{ marginBottom: 4 }}>브랜드명</AdminLabel>
+                    <ReactQuill
+                      value={brand.name}
+                      onChange={v => setBrands(prev => { const next = [...prev]; next[idx] = { ...next[idx], name: v }; return next; })}
+                      modules={quillModules}
+                      theme="snow"
+                      placeholder="브랜드명"
+                      style={{ height: 60, marginBottom: 8, background: '#fff' }}
+                    />
+                  </div>
+                  <div style={{ marginBottom: 12 }}>
+                    <AdminLabel style={{ marginBottom: 4 }}>브랜드 설명</AdminLabel>
+                    <ReactQuill
+                      value={brand.desc}
+                      onChange={v => setBrands(prev => { const next = [...prev]; next[idx] = { ...next[idx], desc: v }; return next; })}
+                      modules={quillModules}
+                      theme="snow"
+                      placeholder="브랜드 설명"
+                      style={{ height: 100, marginBottom: 8, background: '#fff' }}
+                    />
+                  </div>
+                  <div style={{ marginBottom: 12 }}>
+                    <AdminLabel style={{ marginBottom: 4 }}>브랜드 서브텍스트 (작은 글씨)</AdminLabel>
+                    <ReactQuill
+                      value={brand.subText || ''}
+                      onChange={v => setBrands(prev => { const next = [...prev]; next[idx] = { ...next[idx], subText: v }; return next; })}
+                      modules={quillModules}
+                      theme="snow"
+                      placeholder="브랜드 서브텍스트"
+                      style={{ height: 80, marginBottom: 8, background: '#fff' }}
+                    />
+                  </div>
+                </div>
+                {/* 오른쪽: 버튼/파일/이미지 */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', minWidth: 180, gap: 12 }}>
+                  {/* 버튼 그룹 */}
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
+                    <AdminButton $primary onClick={() => handleSave(brand)} style={{ fontSize: 15, padding: '10px 24px' }}>저장</AdminButton>
+                    <AdminButton onClick={() => handleDelete(brand.id)} style={{ background: '#f66', color: '#fff', fontSize: 15, padding: '10px 24px' }}>삭제</AdminButton>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                    <AdminButton onClick={() => moveBrand(idx, idx - 1)} disabled={idx === 0} style={{ fontSize: 15, padding: '10px 24px' }}>▲ 위로</AdminButton>
+                    <AdminButton onClick={() => moveBrand(idx, idx + 1)} disabled={idx === brands.length - 1} style={{ fontSize: 15, padding: '10px 24px' }}>▼ 아래로</AdminButton>
+                  </div>
+                  {/* 파일선택/이미지 미리보기 */}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+                    <input type="file" accept="image/*" onChange={e => handleImageUpload(e, idx)} style={{ marginBottom: 4 }} disabled={uploading} />
+                    {/* 파일명 표시 */}
+                    {/* brand.image가 파일명 대신 미리보기로 사용됨 */}
+                    {brand.image && <img src={brand.image} alt={brand.name} style={{ width: 120, height: 90, objectFit: 'cover', borderRadius: 8, marginBottom: 4, border: '1px solid #eee' }} />}
+                  </div>
+                </div>
               </div>
             </div>
           ))}
-        </AdminGrid>
+        </div>
         {msg && <AdminSuccessMessage>{msg}</AdminSuccessMessage>}
       </AdminCard>
     </AdminLayoutComponent>

@@ -91,7 +91,7 @@ const VideoSection: React.FC = () => {
         <VideoBg as="img" src={main.mediaUrl} alt="main" />
       )}
       <MainTextOverlay>
-        <MainText>{main.mainText}</MainText>
+        <MainText dangerouslySetInnerHTML={{ __html: main.mainText }} />
         <SubText dangerouslySetInnerHTML={{ __html: main.subText }} />
       </MainTextOverlay>
     </VideoContainer>
