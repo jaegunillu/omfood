@@ -36,3 +36,5 @@
     transform: rotate(360deg);
   }
 }
+
+/* 아래 store-ani-in, store-invisible, @keyframes storeFadeUp 등은 모두 삭제 */

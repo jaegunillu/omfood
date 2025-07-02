@@ -379,4 +379,53 @@ header, .HeaderContainer, .header-container {
   .brand-section-video {
     border-radius: 14px;
   }
+}
+
+/* --- 브랜드 개체별 애니메이션 --- */
+@keyframes brandFadeDown {
+  0% { opacity: 0; transform: translateY(-40px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes brandFadeUp {
+  0% { opacity: 0; transform: translateY(40px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes brandScaleIn {
+  0% { opacity: 0; transform: scale(0.8); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes brandSlideLeftIn {
+  0% { opacity: 0; transform: translateX(-60px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+@keyframes brandSlideRightIn {
+  0% { opacity: 0; transform: translateX(60px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+.brand-ani-in {
+  opacity: 0;
+  animation: brandFadeDown 0.8s cubic-bezier(0.4,0,0.2,1) 0.05s forwards;
+}
+.brand-ani-in-sub {
+  opacity: 0;
+  animation: brandFadeUp 0.8s cubic-bezier(0.4,0,0.2,1) 0.35s forwards;
+}
+.brand-ani-in-btn {
+  opacity: 0;
+  animation: brandScaleIn 0.7s cubic-bezier(0.4,0,0.2,1) 0.7s forwards;
+}
+.brand-ani-in-media.left {
+  opacity: 0;
+  animation: brandSlideLeftIn 1s cubic-bezier(0.4,0,0.2,1) 0.15s forwards;
+}
+.brand-ani-in-media.right {
+  opacity: 0;
+  animation: brandSlideRightIn 1s cubic-bezier(0.4,0,0.2,1) 0.15s forwards;
+}
+
+.invisible {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 0.2s;
 } 

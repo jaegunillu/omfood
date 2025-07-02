@@ -230,6 +230,9 @@ const LanguageSelector = styled.div`
   align-items: center;
   gap: 16px;
   z-index: 3;
+  @media (max-width: 1162px) {
+    display: none;
+  }
 `;
 
 const FlagWrapper = styled.div`
@@ -263,6 +266,21 @@ const RedDot = styled.div`
   box-shadow: 0 1px 4px rgba(0,0,0,0.08);
   z-index: 2;
   margin-bottom: 5px;
+`;
+
+// 모바일 메뉴 내 언어 선택자
+const MobileLanguageSelector = styled.div`
+  display: none;
+  @media (max-width: 1162px) {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    width: 100%;
+    margin-top: auto;
+    margin-bottom: 40px;
+  }
 `;
 
 const Header: React.FC<{ isBrandPage?: boolean }> = ({ isBrandPage = false }) => {
@@ -406,6 +424,16 @@ const Header: React.FC<{ isBrandPage?: boolean }> = ({ isBrandPage = false }) =>
             {item}
           </MenuItem>
         ))}
+        <MobileLanguageSelector>
+          <FlagWrapper onClick={() => handleLanguageChange('en')} title="English">
+            {language === 'en' && <RedDot />}
+            <FlagIcon src="/america.png" alt="English" />
+          </FlagWrapper>
+          <FlagWrapper onClick={() => handleLanguageChange('ko')} title="한국어">
+            {language === 'ko' && <RedDot />}
+            <FlagIcon src="/korea.png" alt="한국어" />
+          </FlagWrapper>
+        </MobileLanguageSelector>
       </MobileNav>
     </HeaderContainer>
   );

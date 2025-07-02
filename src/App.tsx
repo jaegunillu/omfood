@@ -3,12 +3,13 @@ import styled, { keyframes, css, createGlobalStyle } from 'styled-components';
 import Header from './components/Header';
 import VideoSection from './components/VideoSection';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { db, storage } from './firebase';
+import { db, storage, auth } from './firebase';
 import { doc, setDoc, getDoc, onSnapshot, collection, addDoc, updateDoc, deleteDoc, getDocs } from 'firebase/firestore';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { QuerySnapshot, DocumentData } from 'firebase/firestore';
 import Footer from './components/Footer';
 import BrandPage from './components/BrandPage';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 const GlobalStyle = createGlobalStyle`
   html, body, #root {
@@ -147,7 +148,7 @@ const StoreList = styled.div`
   }
 `;
 
-const StoreCard = styled.div`
+const StoreCard = styled.div<{ $visible?: boolean; $delay?: number }>`
   background: #fff;
   border-radius: 18px;
   box-shadow: 0 2px 16px rgba(0,0,0,0.06);
@@ -157,6 +158,10 @@ const StoreCard = styled.div`
   flex-direction: column;
   align-items: center;
   position: relative;
+  opacity: ${({ $visible }) => ($visible ? 1 : 0)};
+  transform: ${({ $visible }) => ($visible ? 'translateY(0)' : 'translateY(40px)')};
+  transition: opacity 0.7s cubic-bezier(0.4,0,0.2,1) ${({ $delay }) => $delay || 0}ms,
+              transform 0.7s cubic-bezier(0.4,0,0.2,1) ${({ $delay }) => $delay || 0}ms;
   @media (max-width: 400px) {
     width: 95vw;
     min-width: 0;
@@ -441,12 +446,58 @@ function StoreCards({ stores }: { stores: Array<{ name: string; image: string; a
   const [openMapIdx, setOpenMapIdx] = useState<number | null>(null);
   // order 기준 정렬
   const sortedStores = [...stores].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+  // 애니메이션 관련
+  const cardRefs = useRef<(HTMLDivElement|null)[]>([]);
+  const [visibleArr, setVisibleArr] = useState<boolean[]>([]);
+
+  // 카드 개수 변화에 따라 ref/visibleArr 동기화
+  useEffect(() => {
+    setVisibleArr(Array(sortedStores.length).fill(false));
+    cardRefs.current = Array(sortedStores.length).fill(null);
+  }, [sortedStores.length]);
+
+  // ref가 모두 연결된 후에만 observer 연결
+  useEffect(() => {
+    if (!sortedStores.length) return;
+    if (cardRefs.current.some(ref => !ref)) return;
+
+    const observers: IntersectionObserver[] = [];
+    cardRefs.current.forEach((ref, idx) => {
+      if (!ref) return;
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            setVisibleArr(prev => {
+              if (prev[idx] === entry.isIntersecting) return prev;
+              const next = [...prev];
+              next[idx] = entry.isIntersecting;
+              return next;
+            });
+          });
+        },
+        { threshold: 0.3, rootMargin: '0px 0px -20% 0px' }
+      );
+      observer.observe(ref);
+      observers.push(observer);
+    });
+    return () => { observers.forEach(o => o.disconnect()); };
+  }, [sortedStores.length, cardRefs.current, stores]);
+
+  console.log('[StoreCards] stores prop:', stores);
+
   return (
     <StoreSection>
       <StoreTitle>STORE</StoreTitle>
       <StoreList>
+        {(() => { console.log('[StoreCards] map 실행, stores:', stores); return null; })()}
         {sortedStores.map((store, idx) => (
-          <StoreCard key={store.name}>
+          <StoreCard
+            key={store.name}
+            ref={el => { cardRefs.current[idx] = el; }}
+            $visible={visibleArr[idx]}
+            $delay={idx * 120}
+          >
             <StoreImageWrapper>
               {openMapIdx === idx ? (
                 <>
@@ -479,8 +530,23 @@ const BrandsWrapper = styled.div`
   gap: 80px;
 `;
 
+// styled-components로 작은 폰트 스타일 추가
+const BrandSubText = styled.div<{ $visible: boolean }>`
+  font-size: 0.98rem;
+  color: #888;
+  margin-bottom: 12px;
+  min-height: 18px;
+  opacity: 0;
+  transition: opacity 0.7s cubic-bezier(0.4,0,0.2,1), transform 0.7s cubic-bezier(0.4,0,0.2,1);
+  transform: translateY(40px);
+  ${({ $visible }) => $visible && css`
+    opacity: 1;
+    transform: translateY(0);
+  `}
+`;
+
 function Brands() {
-  const [brands, setBrands] = useState<Array<{ name: string; desc: string; image: string; order?: number }>>([]);
+  const [brands, setBrands] = useState<Array<{ name: string; desc: string; subText?: string; image: string; order?: number }>>([]);
   const refs = useRef<Array<HTMLDivElement | null>>([]);
   const [visibleArr, setVisibleArr] = useState<boolean[]>([]);
 
@@ -491,6 +557,7 @@ function Brands() {
         return {
           name: data.name || '',
           desc: data.desc || '',
+          subText: data.subText || '',
           image: data.image || '',
           order: data.order ?? 0,
         };
@@ -505,28 +572,34 @@ function Brands() {
 
   useEffect(() => {
     if (!brands.length) return;
-    const observers: IntersectionObserver[] = [];
-    brands.forEach((_, idx) => {
-      if (!refs.current[idx]) return;
-      const observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            setVisibleArr(prev => {
-              const next = [...prev];
-              next[idx] = entry.isIntersecting;
-              return next;
+    if (refs.current.filter(Boolean).length !== brands.length) return;
+
+    const timeout = setTimeout(() => {
+      const observers: IntersectionObserver[] = [];
+      refs.current.forEach((ref, idx) => {
+        if (!ref) return;
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              setVisibleArr(prev => {
+                if (prev[idx] === entry.isIntersecting) return prev;
+                const next = [...prev];
+                next[idx] = entry.isIntersecting;
+                return next;
+              });
             });
-          });
-        },
-        { threshold: 0.3 }
-      );
-      observer.observe(refs.current[idx]!);
-      observers.push(observer);
-    });
-    return () => {
-      observers.forEach(o => o.disconnect());
-    };
-  }, [brands.length]);
+          },
+          { threshold: 0.2, rootMargin: '0px 0px -10% 0px' }
+        );
+        observer.observe(ref);
+        observers.push(observer);
+      });
+      // cleanup
+      return () => { observers.forEach(o => o.disconnect()); };
+    }, 0);
+
+    return () => clearTimeout(timeout);
+  }, [brands, visibleArr, refs.current.filter(Boolean).length]);
 
   return (
     <BrandsWrapper>
@@ -541,6 +614,7 @@ function Brands() {
                   </>)
                 : brand.desc.split('\n').map((line, i) => <React.Fragment key={i}>{line}<br /></React.Fragment>)}
             </BrandMainText>
+            <BrandSubText $visible={visibleArr[idx]}>{brand.subText}</BrandSubText>
           </BrandTextBlock>
           {brand.image && <BrandImage src={brand.image} alt={brand.name} />}
         </BrandSection>
@@ -637,12 +711,13 @@ function AdminLogin() {
   const [id, setId] = useState('');
   const [pw, setPw] = useState('');
   const [err, setErr] = useState('');
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (id === 'admin' && pw === '1234') {
+    try {
+      await signInWithEmailAndPassword(auth, id, pw);
       localStorage.setItem('admin_login', '1');
       navigate('/admin/dashboard');
-    } else {
+    } catch (error) {
       setErr('아이디 또는 비밀번호가 올바르지 않습니다.');
     }
   };
@@ -650,8 +725,8 @@ function AdminLogin() {
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f7f7f7' }}>
       <form onSubmit={handleLogin} style={{ background: '#fff', padding: 32, borderRadius: 12, boxShadow: '0 2px 16px rgba(0,0,0,0.08)', minWidth: 320 }}>
         <h2 style={{ marginBottom: 24 }}>관리자 로그인</h2>
-        <input value={id} onChange={e => setId(e.target.value)} placeholder="ID" style={{ width: '100%', marginBottom: 12, padding: 8, fontSize: 16 }} />
-        <input value={pw} onChange={e => setPw(e.target.value)} placeholder="Password" type="password" style={{ width: '100%', marginBottom: 12, padding: 8, fontSize: 16 }} />
+        <input value={id} onChange={e => setId(e.target.value)} placeholder="이메일" style={{ width: '100%', marginBottom: 12, padding: 8, fontSize: 16 }} />
+        <input value={pw} onChange={e => setPw(e.target.value)} placeholder="비밀번호" type="password" style={{ width: '100%', marginBottom: 12, padding: 8, fontSize: 16 }} />
         <button type="submit" style={{ width: '100%', padding: 10, fontSize: 16, background: '#222', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' }}>로그인</button>
         {err && <div style={{ color: 'red', marginTop: 12 }}>{err}</div>}
       </form>
@@ -667,6 +742,30 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 function AdminDashboard() {
   const navigate = useNavigate();
   const iconSize = 38;
+  const [menuNames, setMenuNames] = useState([
+    "ABOUT OMFOOD", "FOOD SERVICE", "BRAND", "PRODUCT", "CONTACT"
+  ]);
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(doc(db, 'menu', 'names'), (docSnap) => {
+      if (docSnap.exists()) {
+        setMenuNames(docSnap.data().items);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // 메뉴명에 맞는 경로 매핑 (동적)
+  const getMenuRoute = (name: string) => {
+    const upper = name.toUpperCase();
+    if (upper.includes('ABOUT')) return '/admin/about';
+    if (upper.includes('FOOD')) return '/admin/foodservice';
+    if (upper.includes('BRAND')) return '/admin/brandpage';
+    if (upper.includes('PRODUCT')) return '/admin/product';
+    if (upper.includes('CONTACT')) return '/admin/contact';
+    return '/admin';
+  };
+
   return (
     <AdminLayoutComponent showBackButton={false}>
       <AdminHeader style={{ textAlign: 'center' }}>관리자 대시보드</AdminHeader>
@@ -674,51 +773,17 @@ function AdminDashboard() {
         {/* 메인페이지 관리 */}
         <div style={{ width: '100%', background: '#fff', borderRadius: 20, border: '1px solid #ddd', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', padding: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s' }} onClick={() => navigate('/admin/mainpage')}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <span style={{ fontSize: iconSize, marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🏠</span>
             <span style={{ fontWeight: 700, fontSize: 22, marginBottom: 8 }}>메인페이지 관리</span>
-            <span style={{ color: '#888', fontSize: 16 }}>메인페이지 전체 관리</span>
           </div>
         </div>
-        {/* About OMFOOD 관리 */}
-        <div style={{ width: '100%', background: '#fff', borderRadius: 20, border: '1px solid #ddd', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', padding: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s' }} onClick={() => navigate('/admin/about')}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <span style={{ fontSize: iconSize, marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>ℹ️</span>
-            <span style={{ fontWeight: 700, fontSize: 22, marginBottom: 8 }}>About OMFOOD</span>
-            <span style={{ color: '#888', fontSize: 16 }}>회사소개 페이지 관리</span>
+        {/* 동적 메뉴 관리 버튼 */}
+        {menuNames.map((name) => (
+          <div key={name} style={{ width: '100%', background: '#fff', borderRadius: 20, border: '1px solid #ddd', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', padding: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s' }} onClick={() => navigate(getMenuRoute(name)) }>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <span style={{ fontWeight: 700, fontSize: 22, marginBottom: 8 }}>{name}</span>
+            </div>
           </div>
-        </div>
-        {/* Food Service 관리 */}
-        <div style={{ width: '100%', background: '#fff', borderRadius: 20, border: '1px solid #ddd', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', padding: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s' }} onClick={() => navigate('/admin/foodservice')}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <span style={{ fontSize: iconSize, marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🍽️</span>
-            <span style={{ fontWeight: 700, fontSize: 22, marginBottom: 8 }}>Food Service</span>
-            <span style={{ color: '#888', fontSize: 16 }}>푸드서비스 페이지 관리</span>
-          </div>
-        </div>
-        {/* Brand 관리 (네비게이션 Brand 페이지 관리용) */}
-        <div style={{ width: '100%', background: '#fff', borderRadius: 20, border: '1px solid #ddd', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', padding: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s' }} onClick={() => navigate('/admin/brandpage')}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <span style={{ fontSize: iconSize, marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🏷️</span>
-            <span style={{ fontWeight: 700, fontSize: 22, marginBottom: 8 }}>Brand 관리</span>
-            <span style={{ color: '#888', fontSize: 16 }}>Brand 페이지 관리</span>
-          </div>
-        </div>
-        {/* Product 관리 */}
-        <div style={{ width: '100%', background: '#fff', borderRadius: 20, border: '1px solid #ddd', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', padding: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s' }} onClick={() => navigate('/admin/product')}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <span style={{ fontSize: iconSize, marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>📦</span>
-            <span style={{ fontWeight: 700, fontSize: 22, marginBottom: 8 }}>Product 관리</span>
-            <span style={{ color: '#888', fontSize: 16 }}>제품정보 관리</span>
-          </div>
-        </div>
-        {/* Contact 관리 */}
-        <div style={{ width: '100%', background: '#fff', borderRadius: 20, border: '1px solid #ddd', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', padding: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s' }} onClick={() => navigate('/admin/contact')}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <span style={{ fontSize: iconSize, marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>📞</span>
-            <span style={{ fontWeight: 700, fontSize: 22, marginBottom: 8 }}>Contact 관리</span>
-            <span style={{ color: '#888', fontSize: 16 }}>문의 정보 관리</span>
-          </div>
-        </div>
+        ))}
       </div>
     </AdminLayoutComponent>
   );
@@ -1220,18 +1285,22 @@ function AdminStoreManage() {
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, STORES_COLLECTION), (snapshot) => {
-      const arr = snapshot.docs.map(docSnap => ({
-        id: docSnap.id,
-        name: docSnap.data().name || '',
-        image: docSnap.data().image || '',
-        address: docSnap.data().address || '',
-        mapUrl: docSnap.data().mapUrl || '',
-        order: docSnap.data().order ?? 0
-      }));
-      arr.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-      setStores(arr);
-      setLoading(false);
+    const unsubscribe = onSnapshot(collection(db, STORES_COLLECTION), (snapshot: QuerySnapshot<DocumentData>) => {
+      const stores = snapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id, // id 필드 추가
+          name: data.name || '',
+          image: data.image || '',
+          address: data.address || '',
+          mapUrl: data.mapUrl || '',
+          order: data.order ?? 0
+        };
+      });
+      // order 기준 정렬
+      stores.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+      console.log('[onSnapshot] stores:', stores);
+      setStores(stores);
     });
     return () => unsubscribe();
   }, []);
@@ -1405,18 +1474,19 @@ function AdminStoreManage() {
 
 // 브랜드 관리 페이지
 function AdminBrandManage() {
-  const [brands, setBrands] = useState<Array<{ id: string; name: string; desc: string; image: string; order?: number }>>([]);
+  const [brands, setBrands] = useState<Array<{ id: string; name: string; desc: string; subText?: string; image: string; order?: number }>>([]);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState('');
   const [uploading, setUploading] = useState(false);
-  const [newBrand, setNewBrand] = useState<{ name: string; desc: string; image: string }>({ name: '', desc: '', image: '' });
+  const [newBrand, setNewBrand] = useState<{ name: string; desc: string; subText?: string; image: string }>({ name: '', desc: '', subText: '', image: '' });
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, 'brands'), (snapshot) => {
+    const unsubscribe = onSnapshot(collection(db, 'brands'), (snapshot: QuerySnapshot<DocumentData>) => {
       const arr = snapshot.docs.map(docSnap => ({
         id: docSnap.id,
         name: docSnap.data().name || '',
         desc: docSnap.data().desc || '',
+        subText: docSnap.data().subText || '',
         image: docSnap.data().image || '',
         order: docSnap.data().order ?? 0
       }));
@@ -1452,7 +1522,7 @@ function AdminBrandManage() {
     try {
       const order = brands.length;
       await addDoc(collection(db, 'brands'), { ...newBrand, order });
-      setNewBrand({ name: '', desc: '', image: '' });
+      setNewBrand({ name: '', desc: '', subText: '', image: '' });
       setMsg('브랜드가 추가되었습니다!');
       setTimeout(() => setMsg(''), 1500);
     } catch (error) {
@@ -1514,6 +1584,12 @@ function AdminBrandManage() {
               placeholder="브랜드 설명"
               style={{ marginTop: 8 }}
             />
+            <AdminInput
+              value={newBrand.subText}
+              onChange={e => setNewBrand(prev => ({ ...prev, subText: e.target.value }))}
+              placeholder="브랜드 서브텍스트 (작은 글씨)"
+              style={{ marginTop: 8, fontSize: 14, color: '#888' }}
+            />
             <input
               type="file"
               accept="image/*"
@@ -1562,13 +1638,21 @@ function AdminBrandManage() {
                   return next;
                 })}
               />
-              <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-                <AdminButton onClick={() => handleSave(brand)} $primary>저장</AdminButton>
-                <AdminButton onClick={() => handleDelete(brand.id)}>삭제</AdminButton>
-              </div>
-              <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                <AdminButton onClick={() => moveBrand(idx, idx - 1)} disabled={idx === 0}>▲</AdminButton>
-                <AdminButton onClick={() => moveBrand(idx, idx + 1)} disabled={idx === brands.length - 1}>▼</AdminButton>
+              <AdminLabel style={{ marginTop: 8 }}>브랜드 서브텍스트 (작은 글씨)</AdminLabel>
+              <AdminInput
+                value={brand.subText || ''}
+                onChange={e => setBrands(prev => {
+                  const next = [...prev];
+                  next[idx] = { ...next[idx], subText: e.target.value };
+                  return next;
+                })}
+                style={{ fontSize: 14, color: '#888' }}
+              />
+              <div style={{ display: 'flex', gap: 8, marginTop: 16, justifyContent: 'center' }}>
+                <AdminButton $primary onClick={() => handleSave(brand)} style={{ minWidth: 70, fontSize: 15, borderRadius: 8, height: 40 }}>저장</AdminButton>
+                <AdminButton onClick={() => handleDelete(brand.id)} style={{ background: '#f66', color: '#fff', minWidth: 70, fontSize: 15, borderRadius: 8, height: 40 }}>삭제</AdminButton>
+                <AdminButton onClick={() => moveBrand(idx, idx - 1)} disabled={idx === 0} style={{ minWidth: 36, padding: '0 8px', fontSize: 15, borderRadius: 8, height: 40 }}>▲</AdminButton>
+                <AdminButton onClick={() => moveBrand(idx, idx + 1)} disabled={idx === brands.length - 1} style={{ minWidth: 36, padding: '0 8px', fontSize: 15, borderRadius: 8, height: 40 }}>▼</AdminButton>
               </div>
             </div>
           ))}
@@ -1889,6 +1973,7 @@ function App() {
       const stores = snapshot.docs.map((doc) => {
         const data = doc.data();
         return {
+          id: doc.id, // id 필드 추가
           name: data.name || '',
           image: data.image || '',
           address: data.address || '',
@@ -1898,6 +1983,7 @@ function App() {
       });
       // order 기준 정렬
       stores.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+      console.log('[onSnapshot] stores:', stores);
       setStoreList(stores);
     });
     return () => unsubscribe();
@@ -1931,7 +2017,7 @@ function App() {
             <Header />
             <VideoSection />
             <SloganSection />
-            <StoreCards stores={storeList} />
+            <StoreCards stores={(() => { console.log('[App] storeList:', storeList); return storeList; })()} />
             <BrandSection>
               <Brands />
             </BrandSection>
