@@ -4,6 +4,39 @@ import Footer from './Footer';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import './BrandPage.css';
+import styled from 'styled-components';
+
+const BrandAddRow = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 40px;
+  align-items: flex-start;
+  flex-wrap: nowrap;
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+  padding: 40px;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+`;
+
+const BrandCardRow = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 40px;
+  align-items: flex-start;
+  flex-wrap: nowrap;
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+  padding: 40px;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+`;
 
 const BrandPage: React.FC = () => {
   const [brands, setBrands] = useState<any[]>([]);
