@@ -101,18 +101,17 @@ const BrandPage: React.FC = () => {
           ref={el => { sectionRefs.current[idx] = el as HTMLDivElement | null; }}
           style={{background:'#fff',display:'flex',alignItems:'center',justifyContent:'center',minHeight:600}}
         >
-          <div className="brand-section-inner horizontal" style={{display:'flex',alignItems:'center',justifyContent:'center',width:'100%',maxWidth:1200,gap:60}}>
+          <div className="brand-section-inner horizontal">
             {idx % 2 === 0 ? (
-              // 기본: 텍스트 왼쪽, 미디어 오른쪽
               <>
-                <div className="brand-desc left" style={{flex:'0 0 650px',maxWidth:650,minWidth:0,width:'100%',display:'flex',flexDirection:'column',justifyContent:'center'}}>
+                <div className="brand-desc left">
                   <h2 className={`brand-title${visibleArr[idx] ? ' brand-ani-in' : ' invisible'}`} style={{fontSize:'2.2rem',fontWeight:800,marginBottom:24,lineHeight:1.3}} dangerouslySetInnerHTML={{ __html: brand.mainText }} />
                   <div className={`brand-desc-text${visibleArr[idx] ? ' brand-ani-in-sub' : ' invisible'}`} style={{fontSize:'1.18rem',marginBottom:28,lineHeight:1.7,color:'#222'}} dangerouslySetInnerHTML={{ __html: brand.subText }} />
                   {brand.link && (
                     <a className={`brand-btn${visibleArr[idx] ? ' brand-ani-in-btn' : ' invisible'}`} href={brand.link} target="_blank" rel="noopener noreferrer" style={{marginTop:24,display:'inline-block',padding:'13px 36px',borderRadius:24,border:'1.5px solid #bbb',fontWeight:600,fontSize:'1.08rem',color:'#222',background:'#fff'}}>{brand.linkText || '자세히 보기'} &gt;&gt;</a>
                   )}
                 </div>
-                <div className={`brand-video-wrap right${visibleArr[idx] ? ' brand-ani-in-media right' : ' invisible'}`} style={{width:'600px',height:'600px',borderRadius:24,background:'#eee',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                <div className={`brand-video-wrap right${visibleArr[idx] ? ' brand-ani-in-media right' : ' invisible'}`}>
                   {brand.mediaType === 'video' ? (
                     <video src={brand.mediaUrl} autoPlay muted playsInline style={{width:600,height:600,objectFit:'cover',borderRadius:24,background:'#eee'}} onEnded={e => e.currentTarget.pause()} />
                   ) : (
@@ -121,16 +120,15 @@ const BrandPage: React.FC = () => {
                 </div>
               </>
             ) : (
-              // reverse: 미디어 왼쪽, 텍스트 오른쪽
               <>
-                <div className={`brand-video-wrap left${visibleArr[idx] ? ' brand-ani-in-media left' : ' invisible'}`} style={{width:'600px',height:'600px',borderRadius:24,background:'#eee',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                <div className={`brand-video-wrap left${visibleArr[idx] ? ' brand-ani-in-media left' : ' invisible'}`}>
                   {brand.mediaType === 'video' ? (
                     <video src={brand.mediaUrl} autoPlay muted playsInline style={{width:600,height:600,objectFit:'cover',borderRadius:24,background:'#eee'}} onEnded={e => e.currentTarget.pause()} />
                   ) : (
                     <img src={brand.mediaUrl} alt={brand.mainText} style={{width:600,height:600,objectFit:'cover',borderRadius:24,background:'#eee'}} />
                   )}
                 </div>
-                <div className="brand-desc right" style={{flex:'0 0 650px',maxWidth:650,minWidth:0,width:'100%',display:'flex',flexDirection:'column',justifyContent:'center'}}>
+                <div className="brand-desc right">
                   <h2 className={`brand-title${visibleArr[idx] ? ' brand-ani-in' : ' invisible'}`} style={{fontSize:'2.2rem',fontWeight:800,marginBottom:24,lineHeight:1.3}} dangerouslySetInnerHTML={{ __html: brand.mainText }} />
                   <div className={`brand-desc-text${visibleArr[idx] ? ' brand-ani-in-sub' : ' invisible'}`} style={{fontSize:'1.18rem',marginBottom:28,lineHeight:1.7,color:'#222'}} dangerouslySetInnerHTML={{ __html: brand.subText }} />
                   {brand.link && (

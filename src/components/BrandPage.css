@@ -222,23 +222,30 @@
 }
 
 /* 브랜드 소개 섹션 */
-.brand-section-inner.horizontal, .brand-section-inner.horizontal.reverse {
+.brand-section-inner.horizontal {
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-start;
+  flex-wrap: wrap;
+  align-items: stretch;
+  justify-content: center;
   gap: 40px;
-  max-width: 1500px;
+  max-width: 1200px;
   width: 100%;
-  height: 100%;
-  padding-left: 0;
+  margin: 0 auto;
+}
+.brand-desc,
+.brand-video-wrap {
+  flex: 1 1 0;
+  max-width: 50%;
+  min-width: 320px;
+  width: 50%;
 }
 .brand-desc {
   position: relative;
   z-index: 2;
   background: transparent;
-  min-width: 320px;
-  max-width: 650px;
+  /* min-width: 320px; */
+  /* max-width: 650px; */
+  /* width: auto; */
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -341,19 +348,16 @@ header, .HeaderContainer, .header-container {
   }
 }
 @media (max-width: 1024px) {
-  .brand-section-inner.horizontal, .brand-section-inner.horizontal.reverse {
+  .brand-desc,
+  .brand-video-wrap {
+    max-width: 100%;
+    width: 100%;
+    flex: 1 1 100%;
+  }
+  .brand-section-inner.horizontal {
     flex-direction: column !important;
     gap: 32px;
     align-items: center;
-    height: 100%;
-  }
-  .brand-desc, .brand-video-wrap {
-    max-width: 95vw;
-    min-width: 0;
-    width: 100%;
-    align-items: center;
-    text-align: center;
-    padding: 0;
   }
   .brand-title {
     font-size: 2rem;
@@ -429,3 +433,51 @@ header, .HeaderContainer, .header-container {
   pointer-events: none !important;
   transition: opacity 0.2s;
 } 
+/* BrandPage.css 내 추가 또는 수정 */
+
+.brand-section-inner.horizontal {
+  flex-wrap: wrap; /* 이미 있음, 유지 */
+}
+
+.brand-desc,
+.brand-video-wrap {
+  flex: 1 1 500px; /* 최소 500px, 부족하면 줄바꿈 */
+  max-width: 600px; /* 최대 600px로 제한 */
+  min-width: 300px; /* 모바일 최소 너비 */
+  width: 100%; /* 가로폭을 부모에 맞춤 */
+}
+
+@media (max-width: 1024px) {
+  .brand-desc,
+  .brand-video-wrap {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+}
+
+.admin-brand-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 40px;
+  justify-content: center;
+  align-items: stretch;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.admin-brand-grid > div {
+  min-width: 320px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  padding: 20px;
+  min-height: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 1.5px solid #e5e5e5;
+  position: relative;
+  box-sizing: border-box;
+  align-items: stretch;
+  justify-content: flex-start;
+}

@@ -892,74 +892,104 @@ const AdminCard = styled.div`
   background: #fff;
   border-radius: 18px;
   box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-  padding: 0;
-  margin-bottom: 24px;
+  padding: 40px;
+  max-width: 1300px;
+  width: 100%;
+  margin: 0 auto 40px auto;
+  box-sizing: border-box;
 `;
-
+const AdminLabel = styled.label`
+  font-weight: 700;
+  font-size: 1.08rem;
+  margin-bottom: 8px;
+  display: block;
+  color: #222;
+`;
 const AdminInput = styled.input`
   width: 100%;
   padding: 12px 16px;
-  font-size: 16px;
-  border: 1px solid #ddd;
+  font-size: 1.08rem;
+  border: 1.5px solid #e0e0e0;
   border-radius: 8px;
-  margin-top: 8px;
-  transition: border-color 0.2s;
-  &:focus {
-    outline: none;
-    border-color: #007bff;
-  }
+  margin-bottom: 24px;
+  background: #fafbfc;
+  box-sizing: border-box;
 `;
-
 const AdminTextarea = styled.textarea`
   width: 100%;
   padding: 12px 16px;
-  font-size: 16px;
-  border: 1px solid #ddd;
+  font-size: 1.08rem;
+  border: 1.5px solid #e0e0e0;
   border-radius: 8px;
-  margin-top: 8px;
-  min-height: 120px;
-  resize: vertical;
-  transition: border-color 0.2s;
-  &:focus {
-    outline: none;
-    border-color: #007bff;
-  }
+  margin-bottom: 24px;
+  background: #fafbfc;
+  box-sizing: border-box;
 `;
-
-const AdminLabel = styled.label`
-  display: block;
-  font-weight: 500;
-  font-size: 15px;
-  color: #333;
-  margin-bottom: 8px;
-`;
-
 const AdminButton = styled.button<{ $primary?: boolean }>`
-  padding: 12px 24px;
-  font-size: 16px;
-  font-weight: 600;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
+  width: 100%;
+  padding: 14px 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border-radius: 10px;
   border: none;
-  background: ${props => props.$primary ? '#007bff' : '#f8f9fa'};
-  color: ${props => props.$primary ? '#fff' : '#333'};
-  &:hover {
-    background: ${props => props.$primary ? '#0056b3' : '#e9ecef'};
+  background: ${({ $primary }) => $primary ? '#1976d2' : '#f5f5f5'};
+  color: ${({ $primary }) => $primary ? '#fff' : '#222'};
+  margin-top: 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+  &:hover { background: ${({ $primary }) => $primary ? '#1251a3' : '#e0e0e0'}; }
+`;
+const AdminFileInput = styled.input`
+  margin-bottom: 16px;
+`;
+const AdminFileLabel = styled.label`
+  display: inline-block;
+  padding: 8px 18px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #222;
+  cursor: pointer;
+  margin-bottom: 12px;
+  margin-right: 12px;
+`;
+const AdminPreview = styled.div`
+  width: 250px;
+  height: 140px;
+  background: #eee;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  overflow: hidden;
+`;
+const AdminQuill = styled(ReactQuill)`
+  .ql-toolbar {
+    border-radius: 8px 8px 0 0;
+    background: #fafbfc;
+    border: 1.5px solid #e0e0e0;
+    border-bottom: none;
   }
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
+  .ql-container {
+    border-radius: 0 0 8px 8px;
+    border: 1.5px solid #e0e0e0;
+    min-height: 120px;
+    font-size: 1.08rem;
+    background: #fff;
   }
+  margin-bottom: 24px;
 `;
 
 const AdminGrid = styled.div`
-  display: flex;
-  flex-direction: row;
-  gap: 24px;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  max-width: 1300px;
+  width: 100%;
+  margin: 0 auto;
 `;
 
 const AdminSuccessMessage = styled.div`
@@ -1177,51 +1207,36 @@ function AdminMainManage() {
       <AdminHeader>메인 섹션 관리</AdminHeader>
       <AdminCard>
         <AdminLabel>메인 이미지/영상 업로드</AdminLabel>
-        <div style={{ marginBottom: 24 }}>
-          <input
-            type="file"
-            accept="image/png,image/jpeg,video/mp4"
-            onChange={handleFile}
-            style={{ marginBottom: 16 }}
-          />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 32, marginBottom: 32 }}>
+          <AdminFileLabel htmlFor="main-media-upload">파일 선택</AdminFileLabel>
+          <AdminFileInput id="main-media-upload" type="file" accept="image/*,video/*" onChange={handleFile} />
           {preview && (
-            <div style={{ marginTop: 16, textAlign: 'center' }}>
-              {data.mediaType === 'video' ? (
-                <video src={preview} style={{ maxWidth: '100%', maxHeight: 300, borderRadius: 8 }} controls />
+            <AdminPreview>
+              {isVideo(preview) ? (
+                <video src={preview} style={{ width: '100%', height: '100%', objectFit: 'cover' }} controls />
               ) : (
-                <img src={preview} alt="미리보기" style={{ maxWidth: '100%', maxHeight: 300, borderRadius: 8 }} />
+                <img src={preview} alt="미리보기" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               )}
-            </div>
+            </AdminPreview>
           )}
         </div>
-
         <AdminLabel>메인 텍스트</AdminLabel>
-        <div style={{ marginBottom: 24 }}>
-          <ReactQuill
-            value={data.mainText}
-            onChange={v => handleChange('mainText', v)}
-            modules={quillModules}
-            theme="snow"
-            placeholder="메인 텍스트를 입력하세요"
-            style={{ height: 120, marginBottom: 12, background: '#fff' }}
-          />
-        </div>
-
-        <AdminLabel style={{ marginTop: 24 }}>서브 텍스트</AdminLabel>
-        <div style={{ marginBottom: 24 }}>
-          <ReactQuill
-            value={data.subText}
-            onChange={v => handleChange('subText', v)}
-            modules={quillModules}
-            theme="snow"
-            placeholder="서브 텍스트를 입력하세요"
-            style={{ height: 120, marginBottom: 12, background: '#fff' }}
-          />
-        </div>
-
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 32 }}>
-          <AdminButton onClick={handleSave} $primary>저장하기</AdminButton>
-        </div>
+        <AdminQuill
+          value={data.mainText}
+          onChange={v => handleChange('mainText', v)}
+          modules={quillModules}
+          theme="snow"
+          placeholder="메인 텍스트를 입력하세요"
+        />
+        <AdminLabel>서브 텍스트</AdminLabel>
+        <AdminQuill
+          value={data.subText}
+          onChange={v => handleChange('subText', v)}
+          modules={quillModules}
+          theme="snow"
+          placeholder="서브 텍스트를 입력하세요"
+        />
+        <AdminButton $primary onClick={handleSave}>저장하기</AdminButton>
         {msg && <AdminSuccessMessage>{msg}</AdminSuccessMessage>}
       </AdminCard>
     </AdminLayoutComponent>
@@ -1501,7 +1516,7 @@ const BrandAddRow = styled.div`
   gap: 40px;
   align-items: flex-start;
   flex-wrap: nowrap;
-  max-width: 900px;
+  max-width: 1150px;
   width: 100%;
   margin: 0 auto;
   box-sizing: border-box;
@@ -1509,14 +1524,13 @@ const BrandAddRow = styled.div`
   background: #fff;
   border-radius: 18px;
   box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  justify-content: center;
 `;
 const BrandCardRow = styled.div`
-  display: flex;
-  flex-direction: row;
+  display: grid;
+  grid-template-columns: repeat(2, 555px);
   gap: 40px;
-  align-items: flex-start;
-  flex-wrap: nowrap;
-  max-width: 900px;
+  max-width: 1150px;
   width: 100%;
   margin: 0 auto;
   box-sizing: border-box;
@@ -1524,40 +1538,35 @@ const BrandCardRow = styled.div`
   background: #fff;
   border-radius: 18px;
   box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  justify-content: center;
 `;
 const BrandAddLeft = styled.div`
-  flex: 2 1 0%;
-  min-width: 320px;
-  width: 100%;
-  max-width: 600px;
-  min-width: 0;
+  width: 555px;
+  min-width: 555px;
+  max-width: 555px;
 `;
 const BrandAddRight = styled.div`
-  flex: 1 1 0%;
-  min-width: 220px;
+  width: 555px;
+  min-width: 555px;
+  max-width: 555px;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 18px;
-  width: 0;
-  min-width: 0;
 `;
 const BrandCardLeft = styled.div`
-  flex: 2 1 0%;
-  min-width: 320px;
-  width: 100%;
-  max-width: 600px;
-  min-width: 0;
+  width: 555px;
+  min-width: 555px;
+  max-width: 555px;
 `;
 const BrandCardRight = styled.div`
-  flex: 1 1 0%;
-  min-width: 180px;
+  width: 555px;
+  min-width: 555px;
+  max-width: 555px;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 14px;
-  width: 0;
-  min-width: 0;
 `;
 const BrandCardBtnRow = styled.div`
   display: flex;
@@ -1701,27 +1710,26 @@ function AdminBrandManage() {
         <BrandAddRow>
           <BrandAddLeft>
             <BrandInputGroup>
-              <BrandLabel>브랜드명</BrandLabel>
-              <BrandQuill value={newBrand.name} onChange={v => setNewBrand(prev => ({ ...prev, name: v }))} modules={quillModules} theme="snow" placeholder="브랜드명" />
+              <BrandLabel style={{ marginLeft: '70px' }}>브랜드명</BrandLabel>
+              <BrandQuill value={newBrand.name} onChange={v => setNewBrand(prev => ({ ...prev, name: v }))} modules={quillModules} theme="snow" placeholder="브랜드명" style={{ marginLeft: '70px' }} />
             </BrandInputGroup>
             <BrandInputGroup>
-              <BrandLabel>브랜드 설명</BrandLabel>
-              <BrandQuill value={newBrand.desc} onChange={v => setNewBrand(prev => ({ ...prev, desc: v }))} modules={quillModules} theme="snow" placeholder="브랜드 설명" />
+              <BrandLabel style={{ marginLeft: '70px' }}>브랜드 설명</BrandLabel>
+              <BrandQuill value={newBrand.desc} onChange={v => setNewBrand(prev => ({ ...prev, desc: v }))} modules={quillModules} theme="snow" placeholder="브랜드 설명" style={{ marginLeft: '70px' }} />
             </BrandInputGroup>
             <BrandInputGroup>
-              <BrandLabel>브랜드 서브텍스트 (작은 글씨)</BrandLabel>
-              <BrandQuill value={newBrand.subText || ''} onChange={v => setNewBrand(prev => ({ ...prev, subText: v }))} modules={quillModules} theme="snow" placeholder="브랜드 서브텍스트" />
+              <BrandLabel style={{ marginLeft: '70px' }}>브랜드 서브텍스트 (작은 글씨)</BrandLabel>
+              <BrandQuill value={newBrand.subText || ''} onChange={v => setNewBrand(prev => ({ ...prev, subText: v }))} modules={quillModules} theme="snow" placeholder="브랜드 서브텍스트" style={{ marginLeft: '70px' }} />
             </BrandInputGroup>
           </BrandAddLeft>
           <BrandAddRight>
             <BrandCardBtnRow>
-              <AdminButton onClick={handleAdd} $primary style={{ fontSize: 16, padding: '12px 32px', minWidth: 120 }}>브랜드 추가</AdminButton>
+              <AdminButton onClick={handleAdd} $primary style={{ fontSize: 16, padding: '12px 32px', minWidth: 120, marginLeft: '-200px' }}>브랜드 추가</AdminButton>
             </BrandCardBtnRow>
             <BrandCardFileBox>
               <input type="file" accept="image/*" onChange={e => handleImageUpload(e, null)} style={{ marginTop: 2 }} disabled={uploading} />
-              <div style={{ fontSize: 14, color: '#888', marginTop: 2 }}>선택된 파일 없음</div>
               {newBrand.image && (
-                <img src={newBrand.image} alt="미리보기" style={{ width: 250, height: 140, objectFit: 'cover', borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.08)', border: '1px solid #eee', marginTop: 6 }} />
+                <img src={newBrand.image} alt="미리보기" style={{ width: 250, height: 140, objectFit: 'cover', borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.08)', border: '1px solid #eee', marginTop: 6, marginLeft: '70px' }} />
               )}
             </BrandCardFileBox>
           </BrandAddRight>
@@ -1734,38 +1742,41 @@ function AdminBrandManage() {
             <BrandCardRow key={brand.id}>
               <BrandCardLeft>
                 <BrandInputGroup>
-                  <BrandLabel>브랜드명</BrandLabel>
+                  <BrandLabel style={{ marginLeft: '70px' }}>브랜드명</BrandLabel>
                   <BrandQuill
                     value={brand.name}
                     onChange={v => setBrands(prev => { const next = [...prev]; next[idx] = { ...next[idx], name: v }; return next; })}
                     modules={quillModules}
                     theme="snow"
                     placeholder="브랜드명"
+                    style={{ marginLeft: '70px' }}
                   />
                 </BrandInputGroup>
                 <BrandInputGroup>
-                  <BrandLabel>브랜드 설명</BrandLabel>
+                  <BrandLabel style={{ marginLeft: '70px' }}>브랜드 설명</BrandLabel>
                   <BrandQuill
                     value={brand.desc}
                     onChange={v => setBrands(prev => { const next = [...prev]; next[idx] = { ...next[idx], desc: v }; return next; })}
                     modules={quillModules}
                     theme="snow"
                     placeholder="브랜드 설명"
+                    style={{ marginLeft: '70px' }}
                   />
                 </BrandInputGroup>
                 <BrandInputGroup>
-                  <BrandLabel>브랜드 서브텍스트 (작은 글씨)</BrandLabel>
+                  <BrandLabel style={{ marginLeft: '70px' }}>브랜드 서브텍스트 (작은 글씨)</BrandLabel>
                   <BrandQuill
                     value={brand.subText || ''}
                     onChange={v => setBrands(prev => { const next = [...prev]; next[idx] = { ...next[idx], subText: v }; return next; })}
                     modules={quillModules}
                     theme="snow"
                     placeholder="브랜드 서브텍스트"
+                    style={{ marginLeft: '70px' }}
                   />
                 </BrandInputGroup>
               </BrandCardLeft>
               <BrandCardRight>
-                <BrandCardBtnRow>
+                <BrandCardBtnRow style={{ transform: 'translateX(70px)' }}>
                   <AdminButton $primary onClick={() => handleSave(brand)} style={{ minWidth: 70, fontSize: 15, borderRadius: 8, height: 40 }}>저장</AdminButton>
                   <AdminButton onClick={() => handleDelete(brand.id)} style={{ background: '#f66', color: '#fff', minWidth: 70, fontSize: 15, borderRadius: 8, height: 40 }}>삭제</AdminButton>
                   <AdminButton onClick={() => moveBrand(idx, idx - 1)} disabled={idx === 0} style={{ minWidth: 36, padding: '0 8px', fontSize: 15, borderRadius: 8, height: 40 }}>▲</AdminButton>
@@ -1773,7 +1784,7 @@ function AdminBrandManage() {
                 </BrandCardBtnRow>
                 <BrandCardFileBox>
                   <input type="file" accept="image/*" onChange={e => handleImageUpload(e, idx)} style={{ marginBottom: 4 }} disabled={uploading} />
-                  {brand.image && <img src={brand.image} alt={brand.name} style={{ width: 250, height: 140, objectFit: 'cover', borderRadius: 8, marginBottom: 4, border: '1px solid #eee' }} />}
+                  {brand.image && <img src={brand.image} alt={brand.name} style={{ width: 250, height: 140, objectFit: 'cover', borderRadius: 8, marginBottom: 4, border: '1px solid #eee', transform: 'translateX(70px)' }} />}
                 </BrandCardFileBox>
               </BrandCardRight>
             </BrandCardRow>
@@ -1970,16 +1981,14 @@ function AdminBrandPageManage() {
       {msg && <div style={{ textAlign: 'center', color: '#007bff', fontWeight: 600, marginBottom: 16 }}>{msg}</div>}
       {/* 브랜드 추가 + 메인 미디어 교체를 한 줄에 2개로 배치 */}
       <div style={{ display: 'flex', flexDirection: 'row', gap: 32, justifyContent: 'center', alignItems: 'flex-start', maxWidth: 960, margin: '0 auto 40px auto' }}>
-        <div style={{ flex: 1, width: 440, minWidth: 440, maxWidth: 440, minHeight: 620, background: '#fff', borderRadius: 18, boxShadow: '0 4px 24px rgba(0,0,0,0.07)', boxSizing: 'border-box', padding: 32, display: 'flex', flexDirection: 'column', gap: 18 }}>
+        <div style={{ flex: 1, width: 555, minWidth: 555, maxWidth: 555, minHeight: 620, background: '#fff', borderRadius: 18, boxShadow: '0 4px 24px rgba(0,0,0,0.07)', boxSizing: 'border-box', padding: 32, display: 'flex', flexDirection: 'column', gap: 18 }}>
           <div style={{ fontWeight: 700, fontSize: 20, marginBottom: 16 }}>브랜드 추가</div>
           <AdminLabel>메인 텍스트</AdminLabel>
-          <AdminInput value={addBrand.mainText} onChange={e => setAddBrand(b => ({ ...b, mainText: e.target.value }))} style={{ fontSize: 16, padding: '10px 12px', borderRadius: 8, border: '1.5px solid #e5e5e5', marginBottom: 8 }} />
+          <AdminQuill value={addBrand.mainText} onChange={v => setAddBrand(b => ({ ...b, mainText: v }))} modules={quillModules} theme="snow" placeholder="브랜드 메인 텍스트" />
           <AdminLabel style={{ marginTop: 4 }}>서브 텍스트</AdminLabel>
-          <AdminTextarea value={addBrand.subText} onChange={e => setAddBrand(b => ({ ...b, subText: e.target.value }))} style={{ fontSize: 15, minHeight: 70, padding: '10px 12px', borderRadius: 8, border: '1.5px solid #e5e5e5', marginBottom: 8 }} />
-          <AdminLabel style={{ marginTop: 4 }}>링크 URL (선택사항)</AdminLabel>
-          <AdminInput value={addBrand.link} onChange={e => setAddBrand(b => ({ ...b, link: e.target.value }))} style={{ fontSize: 16, padding: '10px 12px', borderRadius: 8, border: '1.5px solid #e5e5e5', marginBottom: 8 }} placeholder="https://example.com" />
+          <AdminQuill value={addBrand.subText} onChange={v => setAddBrand(b => ({ ...b, subText: v }))} modules={quillModules} theme="snow" placeholder="브랜드 서브 텍스트" />
           <AdminLabel style={{ marginTop: 4 }}>링크 텍스트 (선택사항)</AdminLabel>
-          <AdminInput value={addBrand.linkText} onChange={e => setAddBrand(b => ({ ...b, linkText: e.target.value }))} style={{ fontSize: 16, padding: '10px 12px', borderRadius: 8, border: '1.5px solid #e5e5e5', marginBottom: 8 }} placeholder="자세히 보기" />
+          <AdminQuill value={addBrand.linkText} onChange={v => setAddBrand(b => ({ ...b, linkText: v }))} modules={quillModules} theme="snow" placeholder="자세히 보기" />
           <AdminLabel style={{ marginTop: 4 }}>비디오/이미지 파일</AdminLabel>
           <input type="file" accept="image/png,image/jpeg,video/mp4" onChange={e => handleFile(e, null)} style={{ marginBottom: 8 }} />
           {addBrand.preview && (
@@ -1993,7 +2002,7 @@ function AdminBrandPageManage() {
           )}
           <AdminButton $primary style={{ marginTop: 12, fontSize: 16, borderRadius: 8, height: 44 }} onClick={handleAddBrand}>브랜드 추가</AdminButton>
         </div>
-        <div style={{ flex: 1, width: 440, minWidth: 440, maxWidth: 440, minHeight: 620, background: '#fff', borderRadius: 18, boxShadow: '0 4px 24px rgba(0,0,0,0.07)', boxSizing: 'border-box', padding: 32, display: 'flex', flexDirection: 'column', gap: 18 }}>
+        <div style={{ flex: 1, width: 555, minWidth: 555, maxWidth: 555, minHeight: 620, background: '#fff', borderRadius: 18, boxShadow: '0 4px 24px rgba(0,0,0,0.07)', boxSizing: 'border-box', padding: 32, display: 'flex', flexDirection: 'column', gap: 18 }}>
           <div style={{ fontWeight: 700, fontSize: 20, marginBottom: 16 }}>메인 영역 미디어 교체</div>
           <input type="file" accept="image/png,image/jpeg,video/mp4" onChange={e => setMainMedia(prev => ({ ...prev, file: e.target.files?.[0] || null }))} style={{ marginBottom: 8 }} />
           {mainMedia.url && (
@@ -2017,7 +2026,7 @@ function AdminBrandPageManage() {
         ) : (
           <div className="admin-brand-grid" style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(3, 440px)',
+            gridTemplateColumns: 'repeat(2, 555px)',
             gap: 12,
             justifyContent: 'center',
             alignItems: 'stretch',
@@ -2028,14 +2037,14 @@ function AdminBrandPageManage() {
                 background: '#fff',
                 borderRadius: 16,
                 boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-                padding: 28,
-                minWidth: 420,
-                maxWidth: 440,
-                width: 440,
-                minHeight: 620,
+                padding: 20,
+                minWidth: 555,
+                maxWidth: 555,
+                width: 555,
+                minHeight: 420,
                 display: 'flex',
                 flexDirection: 'column',
-                gap: 18,
+                gap: 12,
                 border: '1.5px solid #e5e5e5',
                 position: 'relative',
                 boxSizing: 'border-box',
@@ -2054,14 +2063,14 @@ function AdminBrandPageManage() {
                   )}
                 </div>
                 <input type="file" accept="image/png,image/jpeg,video/mp4" onChange={e => handleFile(e, idx)} style={{ marginBottom: 8 }} />
-                <AdminLabel>메인 텍스트</AdminLabel>
-                <AdminInput value={brand.mainText} onChange={e => setBrands(prev => { const next = [...prev]; next[idx] = { ...next[idx], mainText: e.target.value }; return next; })} style={{ fontSize: 16, padding: '10px 12px', borderRadius: 8, border: '1.5px solid #e5e5e5', marginBottom: 4 }} />
-                <AdminLabel style={{ marginTop: 4 }}>서브 텍스트</AdminLabel>
-                <AdminTextarea value={brand.subText} onChange={e => setBrands(prev => { const next = [...prev]; next[idx] = { ...next[idx], subText: e.target.value }; return next; })} style={{ fontSize: 15, minHeight: 70, padding: '10px 12px', borderRadius: 8, border: '1.5px solid #e5e5e5', marginBottom: 4 }} />
-                <AdminLabel style={{ marginTop: 4 }}>링크 URL (선택사항)</AdminLabel>
+                <AdminLabel style={{ marginBottom: 8, fontSize: '1.12rem', fontWeight: 700, color: '#222' }}>메인 텍스트</AdminLabel>
+                <AdminQuill value={brand.mainText} onChange={v => setBrands(prev => { const next = [...prev]; next[idx] = { ...next[idx], mainText: v }; return next; })} modules={quillModules} theme="snow" placeholder="브랜드 메인 텍스트" />
+                <AdminLabel style={{ marginTop: 4, fontSize: '1.12rem', fontWeight: 700, color: '#222' }}>서브 텍스트</AdminLabel>
+                <AdminQuill value={brand.subText} onChange={v => setBrands(prev => { const next = [...prev]; next[idx] = { ...next[idx], subText: v }; return next; })} modules={quillModules} theme="snow" placeholder="브랜드 서브 텍스트" />
+                <AdminLabel style={{ marginTop: 4, fontSize: '1.12rem', fontWeight: 700, color: '#222' }}>링크 URL (선택사항)</AdminLabel>
                 <AdminInput value={brand.link || ''} onChange={e => setBrands(prev => { const next = [...prev]; next[idx] = { ...next[idx], link: e.target.value }; return next; })} style={{ fontSize: 16, padding: '10px 12px', borderRadius: 8, border: '1.5px solid #e5e5e5', marginBottom: 4 }} placeholder="https://example.com" />
-                <AdminLabel style={{ marginTop: 4 }}>링크 텍스트 (선택사항)</AdminLabel>
-                <AdminInput value={brand.linkText || ''} onChange={e => setBrands(prev => { const next = [...prev]; next[idx] = { ...next[idx], linkText: e.target.value }; return next; })} style={{ fontSize: 16, padding: '10px 12px', borderRadius: 8, border: '1.5px solid #e5e5e5', marginBottom: 4 }} placeholder="자세히 보기" />
+                <AdminLabel style={{ marginTop: 4, fontSize: '1.12rem', fontWeight: 700, color: '#222' }}>링크 텍스트 (선택사항)</AdminLabel>
+                <AdminQuill value={brand.linkText || ''} onChange={v => setBrands(prev => { const next = [...prev]; next[idx] = { ...next[idx], linkText: v }; return next; })} modules={quillModules} theme="snow" placeholder="자세히 보기" />
                 <div style={{ display: 'flex', gap: 8, marginTop: 16, justifyContent: 'center' }}>
                   <AdminButton $primary onClick={() => handleSaveBrand(idx)} style={{ minWidth: 70, fontSize: 15, borderRadius: 8, height: 40 }}>저장</AdminButton>
                   <AdminButton onClick={() => handleDeleteBrand(idx)} style={{ background: '#f66', color: '#fff', minWidth: 70, fontSize: 15, borderRadius: 8, height: 40 }}>삭제</AdminButton>
@@ -2074,7 +2083,7 @@ function AdminBrandPageManage() {
         )}
         {/* 반응형 스타일 */}
         <style>{`
-          .admin-brand-grid { grid-template-columns: repeat(3, 440px); gap: 12px; justify-content: center; }
+          .admin-brand-grid { grid-template-columns: repeat(2, 555px); gap: 12px; justify-content: center; }
           @media (max-width: 1200px) {
             .admin-brand-grid { grid-template-columns: repeat(2, 440px) !important; }
           }
@@ -2152,3 +2161,8 @@ function App() {
 }
 
 export default App;
+
+// 파일 확장자 기반 비디오 여부 판별 함수
+function isVideo(url: string) {
+  return /\.(mp4|webm|ogg)$/i.test(url);
+}
