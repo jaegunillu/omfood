@@ -1723,15 +1723,15 @@ function AdminBrandManage() {
             </BrandInputGroup>
           </BrandAddLeft>
           <BrandAddRight>
-            <BrandCardBtnRow>
-              <AdminButton onClick={handleAdd} $primary style={{ fontSize: 16, padding: '12px 32px', minWidth: 120, marginLeft: '-200px' }}>브랜드 추가</AdminButton>
-            </BrandCardBtnRow>
-            <BrandCardFileBox>
-              <input type="file" accept="image/*" onChange={e => handleImageUpload(e, null)} style={{ marginTop: 2 }} disabled={uploading} />
-              {newBrand.image && (
-                <img src={newBrand.image} alt="미리보기" style={{ width: 250, height: 140, objectFit: 'cover', borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.08)', border: '1px solid #eee', marginTop: 6, marginLeft: '70px' }} />
-              )}
-            </BrandCardFileBox>
+                            <BrandCardBtnRow>
+                  <AdminButton onClick={handleAdd} $primary style={{ fontSize: 16, padding: '12px 32px', minWidth: 120, marginLeft: '-270px' }}>브랜드 추가</AdminButton>
+                </BrandCardBtnRow>
+                <BrandCardFileBox>
+                  <input type="file" accept="image/*" onChange={e => handleImageUpload(e, null)} style={{ marginTop: 2, marginLeft: '-100px' }} disabled={uploading} />
+                  {newBrand.image && (
+                    <img src={newBrand.image} alt="미리보기" style={{ width: 250, height: 140, objectFit: 'cover', borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.08)', border: '1px solid #eee', marginTop: 6, marginLeft: '-30px' }} />
+                  )}
+                </BrandCardFileBox>
           </BrandAddRight>
         </BrandAddRow>
       </AdminCard>
@@ -1776,15 +1776,15 @@ function AdminBrandManage() {
                 </BrandInputGroup>
               </BrandCardLeft>
               <BrandCardRight>
-                <BrandCardBtnRow style={{ transform: 'translateX(70px)' }}>
+                <BrandCardBtnRow style={{ transform: 'translateX(-30px)' }}>
                   <AdminButton $primary onClick={() => handleSave(brand)} style={{ minWidth: 70, fontSize: 15, borderRadius: 8, height: 40 }}>저장</AdminButton>
                   <AdminButton onClick={() => handleDelete(brand.id)} style={{ background: '#f66', color: '#fff', minWidth: 70, fontSize: 15, borderRadius: 8, height: 40 }}>삭제</AdminButton>
                   <AdminButton onClick={() => moveBrand(idx, idx - 1)} disabled={idx === 0} style={{ minWidth: 36, padding: '0 8px', fontSize: 15, borderRadius: 8, height: 40 }}>▲</AdminButton>
                   <AdminButton onClick={() => moveBrand(idx, idx + 1)} disabled={idx === brands.length - 1} style={{ minWidth: 36, padding: '0 8px', fontSize: 15, borderRadius: 8, height: 40 }}>▼</AdminButton>
                 </BrandCardBtnRow>
                 <BrandCardFileBox>
-                  <input type="file" accept="image/*" onChange={e => handleImageUpload(e, idx)} style={{ marginBottom: 4 }} disabled={uploading} />
-                  {brand.image && <img src={brand.image} alt={brand.name} style={{ width: 250, height: 140, objectFit: 'cover', borderRadius: 8, marginBottom: 4, border: '1px solid #eee', transform: 'translateX(70px)' }} />}
+                  <input type="file" accept="image/*" onChange={e => handleImageUpload(e, idx)} style={{ marginBottom: 4, marginLeft: '-100px' }} disabled={uploading} />
+                  {brand.image && <img src={brand.image} alt={brand.name} style={{ width: 250, height: 140, objectFit: 'cover', borderRadius: 8, marginBottom: 4, border: '1px solid #eee', transform: 'translateX(-30px)' }} />}
                 </BrandCardFileBox>
               </BrandCardRight>
             </BrandCardRow>
