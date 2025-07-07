@@ -1,5 +1,7 @@
+/* OM FOOD App - 새로운 디자인 시스템 적용 */
 .App {
   text-align: center;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .App-logo {
@@ -14,7 +16,7 @@
 }
 
 .App-header {
-  background-color: #282c34;
+  background-color: #111111;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -22,10 +24,16 @@
   justify-content: center;
   font-size: calc(10px + 2vmin);
   color: white;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .App-link {
-  color: #61dafb;
+  color: #E5002B;
+  transition: color 0.2s ease;
+}
+
+.App-link:hover {
+  color: #F88D2A;
 }
 
 @keyframes App-logo-spin {
@@ -37,4 +45,47 @@
   }
 }
 
-/* 아래 store-ani-in, store-invisible, @keyframes storeFadeUp 등은 모두 삭제 */
+/* 공통 애니메이션 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 공통 유틸리티 클래스 */
+.fade-in {
+  animation: fadeIn 0.6s ease-out;
+}
+
+.slide-in {
+  animation: slideIn 0.6s ease-out;
+}
+
+/* 반응형 breakpoints */
+@media (max-width: 1024px) {
+  /* Desktop ≥1024px */
+}
+
+@media (max-width: 768px) {
+  /* Tablet 768~1023px */
+}
+
+@media (max-width: 480px) {
+  /* Mobile <768px */
+}

@@ -1,0 +1,397 @@
+import React, { useState, useEffect } from 'react';
+import { collection, doc, getDocs, updateDoc, deleteDoc, addDoc, orderBy, query } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { db, storage } from '../../firebase';
+import Accordion from '../common/Accordion';
+import DragDropList from '../common/DragDropList';
+import ImageUploader from '../common/ImageUploader';
+import Button from '../common/Button';
+import { useToast } from './ToastContext';
+
+interface BrandPageData {
+  id: string;
+  name: string;
+  description: string;
+  image: string;
+  video?: string;
+  order: number;
+  mainImage?: string;
+  mainVideo?: string;
+}
+
+const BrandPageManage: React.FC = () => {
+  const [loading, setLoading] = useState(false);
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+  const [brandPages, setBrandPages] = useState<BrandPageData[]>([]);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newBrand, setNewBrand] = useState({
+    name: '',
+    description: '',
+    image: '',
+    video: '',
+    mainImage: '',
+    mainVideo: ''
+  });
+  
+  const { showToast } = useToast();
+
+  useEffect(() => {
+    loadBrandPages();
+  }, []);
+
+  const loadBrandPages = async () => {
+    setLoading(true);
+    try {
+      const brandQuery = query(collection(db, 'brandPages'), orderBy('order'));
+      const brandSnapshot = await getDocs(brandQuery);
+      const brandData = brandSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as BrandPageData));
+      setBrandPages(brandData);
+    } catch (error) {
+      console.error('브랜드 페이지 로드 실패:', error);
+      showToast('브랜드 페이지 로드에 실패했습니다.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleImageUpload = async (file: File, itemId: string, fieldName: string) => {
+    try {
+      const storageRef = ref(storage, `brandPages/${itemId}/${fieldName}`);
+      await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(storageRef);
+      
+      const docRef = doc(db, 'brandPages', itemId);
+      await updateDoc(docRef, { [fieldName]: downloadURL });
+      
+      showToast('이미지가 업로드되었습니다.', 'success');
+      loadBrandPages();
+    } catch (error) {
+      console.error('이미지 업로드 실패:', error);
+      showToast('이미지 업로드에 실패했습니다.', 'error');
+    }
+  };
+
+  const handleVideoUpload = async (file: File, itemId: string, fieldName: string) => {
+    try {
+      const storageRef = ref(storage, `brandPages/${itemId}/${fieldName}`);
+      await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(storageRef);
+      
+      const docRef = doc(db, 'brandPages', itemId);
+      await updateDoc(docRef, { [fieldName]: downloadURL });
+      
+      showToast('영상이 업로드되었습니다.', 'success');
+      loadBrandPages();
+    } catch (error) {
+      console.error('영상 업로드 실패:', error);
+      showToast('영상 업로드에 실패했습니다.', 'error');
+    }
+  };
+
+  const handleReorder = async (items: any[]) => {
+    try {
+      const updatedItems = items.map((item, index) => ({ ...item, order: index }));
+      setBrandPages(updatedItems);
+      
+      // Firestore 업데이트
+      for (const item of updatedItems) {
+        const docRef = doc(db, 'brandPages', item.id);
+        await updateDoc(docRef, { order: item.order });
+      }
+      
+      showToast('순서가 변경되었습니다.', 'success');
+    } catch (error) {
+      console.error('순서 변경 실패:', error);
+      showToast('순서 변경에 실패했습니다.', 'error');
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('정말 삭제하시겠습니까?')) return;
+    
+    try {
+      await deleteDoc(doc(db, 'brandPages', id));
+      const updatedBrands = brandPages.filter(brand => brand.id !== id);
+      setBrandPages(updatedBrands);
+      showToast('삭제되었습니다.', 'success');
+    } catch (error) {
+      console.error('삭제 실패:', error);
+      showToast('삭제에 실패했습니다.', 'error');
+    }
+  };
+
+  const handleAddBrand = async () => {
+    if (!newBrand.name.trim()) {
+      showToast('브랜드명을 입력해주세요.', 'error');
+      return;
+    }
+
+    try {
+      const brandData = {
+        ...newBrand,
+        order: brandPages.length,
+        createdAt: new Date()
+      };
+      
+      await addDoc(collection(db, 'brandPages'), brandData);
+      
+      setNewBrand({
+        name: '',
+        description: '',
+        image: '',
+        video: '',
+        mainImage: '',
+        mainVideo: ''
+      });
+      setShowAddForm(false);
+      showToast('브랜드가 추가되었습니다.', 'success');
+      loadBrandPages();
+    } catch (error) {
+      console.error('브랜드 추가 실패:', error);
+      showToast('브랜드 추가에 실패했습니다.', 'error');
+    }
+  };
+
+  const toggleExpanded = (itemId: string) => {
+    const newExpanded = new Set(expandedItems);
+    if (newExpanded.has(itemId)) {
+      newExpanded.delete(itemId);
+    } else {
+      newExpanded.add(itemId);
+    }
+    setExpandedItems(newExpanded);
+  };
+
+  const renderBrandItem = (item: any, index: number) => {
+    const brand = item as BrandPageData;
+    return (
+    <Accordion
+      title={`${brand.name} (순서: ${index + 1})`}
+      defaultExpanded={expandedItems.has(brand.id)}
+      onToggle={(expanded) => {
+        if (expanded) {
+          setExpandedItems(prev => new Set([...Array.from(prev), brand.id]));
+        } else {
+          setExpandedItems(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(brand.id);
+            return newSet;
+          });
+        }
+      }}
+    >
+      <div className="space-y-6">
+        {/* 기본 정보 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2 font-pretendard">브랜드명</label>
+            <input
+              type="text"
+              value={brand.name}
+              onChange={(e) => {
+                const updated = brandPages.map(b => 
+                  b.id === brand.id ? { ...b, name: e.target.value } : b
+                );
+                setBrandPages(updated);
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2 font-pretendard">설명</label>
+            <textarea
+              value={brand.description}
+              onChange={(e) => {
+                const updated = brandPages.map(b => 
+                  b.id === brand.id ? { ...b, description: e.target.value } : b
+                );
+                setBrandPages(updated);
+              }}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+
+        {/* 브랜드 이미지/영상 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <ImageUploader
+            currentImage={brand.image}
+            onImageUpload={(file) => handleImageUpload(file, brand.id, 'image')}
+            label="브랜드 이미지"
+          />
+          <div className="space-y-3">
+            <label className="block text-sm font-medium text-gray-700 font-pretendard">브랜드 영상</label>
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+              <input
+                type="file"
+                accept="video/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    handleVideoUpload(file, brand.id, 'video');
+                  }
+                }}
+                className="w-full"
+              />
+              {brand.video && (
+                <div className="mt-3">
+                  <video
+                    src={brand.video}
+                    controls
+                    className="w-full h-32 object-cover rounded"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* 메인 영역 미디어 */}
+        <Accordion
+          title="메인 영역 미디어 관리"
+          defaultExpanded={false}
+          className="mt-6"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <ImageUploader
+              currentImage={brand.mainImage}
+              onImageUpload={(file) => handleImageUpload(file, brand.id, 'mainImage')}
+              label="메인 영역 이미지"
+            />
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-gray-700 font-pretendard">메인 영역 영상</label>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                <input
+                  type="file"
+                  accept="video/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      handleVideoUpload(file, brand.id, 'mainVideo');
+                    }
+                  }}
+                  className="w-full"
+                />
+                {brand.mainVideo && (
+                  <div className="mt-3">
+                    <video
+                      src={brand.mainVideo}
+                      controls
+                      className="w-full h-32 object-cover rounded"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </Accordion>
+
+        {/* 액션 버튼 */}
+        <div className="flex justify-end space-x-2 pt-4 border-t border-gray-200">
+          <Button
+            variant="danger"
+            size="sm"
+            onClick={() => handleDelete(brand.id)}
+          >
+            삭제
+          </Button>
+        </div>
+      </div>
+    </Accordion>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600 font-pretendard">데이터를 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* 헤더 */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 font-pretendard mb-2">
+            브랜드 페이지 관리
+          </h1>
+          <p className="text-gray-600 font-pretendard">
+            브랜드 페이지의 콘텐츠와 메인 영역 미디어를 관리하세요
+          </p>
+        </div>
+
+        {/* 브랜드 추가 */}
+        <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
+          <Accordion
+            title="새 브랜드 추가"
+            defaultExpanded={showAddForm}
+            onToggle={(expanded) => setShowAddForm(expanded)}
+          >
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 font-pretendard">브랜드명</label>
+                  <input
+                    type="text"
+                    value={newBrand.name}
+                    onChange={(e) => setNewBrand({ ...newBrand, name: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    placeholder="브랜드명을 입력하세요"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 font-pretendard">설명</label>
+                  <textarea
+                    value={newBrand.description}
+                    onChange={(e) => setNewBrand({ ...newBrand, description: e.target.value })}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    placeholder="브랜드 설명을 입력하세요"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-2">
+                <Button
+                  variant="outline"
+                  size="md"
+                  onClick={() => setShowAddForm(false)}
+                >
+                  취소
+                </Button>
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={handleAddBrand}
+                >
+                  브랜드 추가
+                </Button>
+              </div>
+            </div>
+          </Accordion>
+        </div>
+
+        {/* 브랜드 목록 */}
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <h2 className="text-xl font-semibold text-gray-900 font-pretendard mb-6">
+            브랜드 목록 ({brandPages.length}개)
+          </h2>
+          
+          <DragDropList
+            items={brandPages}
+            onReorder={handleReorder}
+            renderItem={renderBrandItem}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default BrandPageManage; 

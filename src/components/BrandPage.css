@@ -1,12 +1,14 @@
+/* OM FOOD Brand Page - 새로운 디자인 시스템 적용 */
 .brand-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #E5002B 0%, #F88D2A 100%);
   color: white;
-  padding-top: 120px; /* Header 높이만큼 상단 패딩 추가 */
+  padding-top: 120px;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .brand-container {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 2rem;
 }
@@ -14,22 +16,24 @@
 /* 헤더 스타일 */
 .brand-header {
   text-align: center;
-  padding: 2rem 0 4rem 0; /* 상단 패딩 줄임 */
+  padding: 2rem 0 4rem 0;
 }
 
 .brand-title {
-  font-size: 2.7rem;
-  font-weight: 800;
+  font-size: 2.5rem;
+  font-weight: 700;
   margin-bottom: 28px;
-  line-height: 1.25;
-  color: #222;
-  /* text-shadow: none; */
+  line-height: 1.4;
+  color: #FFFFFF;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .brand-subtitle {
   font-size: 1.5rem;
   opacity: 0.9;
-  font-weight: 300;
+  font-weight: 500;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  line-height: 1.6;
 }
 
 /* 비디오 섹션 스타일 */
@@ -70,28 +74,31 @@
 .content-item {
   background: rgba(255, 255, 255, 0.1);
   padding: 2rem;
-  border-radius: 15px;
+  border-radius: 8px;
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: all 0.2s ease;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .content-item:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
 }
 
 .content-item h2 {
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   margin-bottom: 1rem;
   color: #fff;
   font-weight: 600;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .content-item p {
-  font-size: 1.1rem;
+  font-size: 1rem;
   line-height: 1.6;
   opacity: 0.9;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 /* 두 번째 비디오 섹션 */
@@ -115,9 +122,19 @@
 }
 
 /* 반응형 디자인 */
+@media (max-width: 1024px) {
+  .brand-container {
+    max-width: 900px;
+  }
+  
+  .content-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
   .brand-page {
-    padding-top: 100px; /* 모바일에서 Header 높이 조정 */
+    padding-top: 100px;
   }
   
   .brand-container {
@@ -125,7 +142,7 @@
   }
   
   .brand-title {
-    font-size: 2.5rem;
+    font-size: 2rem;
   }
   
   .brand-subtitle {
@@ -134,20 +151,25 @@
   
   .content-grid {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
   }
   
   .video-container {
-    border-radius: 10px;
+    border-radius: 8px;
   }
   
   .brand-video {
-    border-radius: 10px;
+    border-radius: 8px;
+  }
+  
+  .content-item {
+    padding: 1.5rem;
   }
 }
 
 @media (max-width: 480px) {
   .brand-title {
-    font-size: 2rem;
+    font-size: 1.75rem;
   }
   
   .brand-subtitle {
@@ -155,15 +177,15 @@
   }
   
   .content-item {
-    padding: 1.5rem;
+    padding: 1.25rem;
   }
   
   .content-item h2 {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
   }
   
   .content-item p {
-    font-size: 1rem;
+    font-size: 0.9rem;
   }
 }
 

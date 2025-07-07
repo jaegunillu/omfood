@@ -14,14 +14,29 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import AdminProductManageComponent from './components/AdminProductManage';
+import { ToastProvider } from './components/admin/ToastContext';
 
-// Quill 툴바 옵션 (공통)
+// 디자인 시스템 - 컬러 팔레트
+const colors = {
+  primary: '#E5002B',
+  secondary: '#F88D2A',
+  black: '#111111',
+  grayDark: '#444444',
+  grayLight: '#F5F5F5',
+  white: '#FFFFFF',
+  grayMedium: '#888888',
+  grayBorder: '#E0E0E0',
+  success: '#28a745',
+  error: '#dc3545',
+  info: '#17a2b8'
+};
+
+// Quill 툴바 옵션 (통일된 포맷팅)
 const quillModules = {
   toolbar: [
-    [{ 'header': [1, 2, false] }],
-    ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+    ['bold', 'italic', 'underline'],
     [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-    ['link', 'color', 'background'],
+    ['link'],
     ['clean']
   ]
 };
@@ -31,8 +46,84 @@ const GlobalStyle = createGlobalStyle`
     max-width: 100vw;
     overflow-x: hidden;
     box-sizing: border-box;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
   }
 `;
+
+
+
+// 토스트 알림 컴포넌트
+const ToastContainer = styled.div`
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 3000;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`;
+
+const Toast = styled.div<{ $type: 'success' | 'error' | 'info' }>`
+  background: ${({ $type }) => 
+    $type === 'success' ? colors.success : 
+    $type === 'error' ? colors.error : colors.info};
+  color: ${colors.white};
+  padding: 16px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+  min-width: 300px;
+  animation: slideIn 0.3s ease-out;
+  
+  @keyframes slideIn {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+`;
+
+// 로딩 스피너
+const Spinner = styled.div`
+  width: 20px;
+  height: 20px;
+  border: 2px solid ${colors.grayLight};
+  border-top: 2px solid ${colors.primary};
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`;
+
+// 진행률 바
+const ProgressBar = styled.div<{ $progress: number }>`
+  width: 100%;
+  height: 4px;
+  background: ${colors.grayBorder};
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 8px 0;
+  
+  &::after {
+    content: '';
+    display: block;
+    height: 100%;
+    width: ${({ $progress }) => $progress}%;
+    background: ${colors.primary};
+    transition: width 0.3s ease;
+  }
+`;
+
+
 
 const AppContainer = styled.div`
   width: 100%;
@@ -373,11 +464,11 @@ function setMainSection(data: any) {
 // Store 관리용 Firestore 컬렉션 키
 const STORES_COLLECTION = 'stores';
 
-// 관리자 공통 레이아웃 스타일
+// 관리자 공통 레이아웃 스타일 (새로운 디자인 시스템 적용)
 const AdminLayout = styled.div`
   display: flex;
   min-height: 100vh;
-  background: #f7f7f7;
+  background: ${colors.grayLight};
   position: relative;
 `;
 
@@ -386,17 +477,24 @@ const AdminLogoutBtn = styled.button`
   top: 32px;
   right: 40px;
   z-index: 200;
-  background: #fff;
-  border: 1px solid #ddd;
+  background: ${colors.white};
+  border: 1px solid ${colors.grayBorder};
   border-radius: 8px;
-  padding: 10px 32px;
+  padding: 12px 24px;
   cursor: pointer;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
   font-weight: 600;
-  font-size: 16px;
-  color: #222;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-  transition: background 0.2s, color 0.2s;
-  &:hover { background: #ffd600; color: #222; }
+  font-size: 1rem;
+  color: ${colors.black};
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: all 0.2s ease;
+  
+  &:hover { 
+    background: ${colors.primary}; 
+    color: ${colors.white};
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  }
 `;
 
 const AdminMain = styled.main`
@@ -405,32 +503,37 @@ const AdminMain = styled.main`
   min-height: 100vh;
   max-width: 1400px;
   margin: 0 auto;
+  
   @media (max-width: 900px) {
     padding: 24px 16px;
   }
 `;
 
 const AdminHeader = styled.header`
-  font-size: 2rem;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 2.5rem;
   font-weight: 700;
   margin-bottom: 32px;
-  color: #222;
+  color: ${colors.black};
 `;
 
 const BackButton = styled.button`
   background: none;
   border: none;
-  color: #222;
-  font-size: 16px;
+  color: ${colors.black};
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
-  font-weight: 500;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0;
+  padding: 8px 0;
   margin-bottom: 24px;
+  transition: color 0.2s ease;
+  
   &:hover {
-    color: #666;
+    color: ${colors.primary};
   }
 `;
 
@@ -774,18 +877,93 @@ function AdminDashboard() {
   return (
     <AdminLayoutComponent showBackButton={false}>
       <AdminHeader style={{ textAlign: 'center' }}>관리자 대시보드</AdminHeader>
-      <div style={{ maxWidth: 900, margin: '100px auto 0 auto', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 32 }}>
+      <div style={{ 
+        maxWidth: '1400px', 
+        margin: '100px auto 0 auto', 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+        gap: '32px',
+        padding: '0 20px'
+      }}>
         {/* 메인페이지 관리 */}
-        <div style={{ width: '100%', background: '#fff', borderRadius: 20, border: '1px solid #ddd', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', padding: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s' }} onClick={() => navigate('/admin/mainpage')}>
+        <div style={{ 
+          width: '100%', 
+          background: colors.white, 
+          borderRadius: '8px', 
+          border: `1px solid ${colors.grayBorder}`, 
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)', 
+          padding: '32px', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center', 
+          cursor: 'pointer', 
+          transition: 'all 0.2s ease'
+        }} 
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-4px)';
+          e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.15)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+        }}
+        onClick={() => navigate('/admin/mainpage')}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <span style={{ fontWeight: 700, fontSize: 22, marginBottom: 8 }}>메인페이지 관리</span>
+            <span style={{ 
+              fontWeight: '600', 
+              fontSize: '1.5rem', 
+              marginBottom: '8px',
+              fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif',
+              color: colors.black
+            }}>메인페이지 관리</span>
+            <span style={{ 
+              color: colors.grayDark, 
+              fontSize: '1rem',
+              fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif',
+              textAlign: 'center',
+              lineHeight: '1.6'
+            }}>헤더, 메인 섹션, 슬로건, 스토어, 브랜드 관리</span>
           </div>
         </div>
         {/* 동적 메뉴 관리 버튼 */}
         {menuNames.map((name) => (
-          <div key={name} style={{ width: '100%', background: '#fff', borderRadius: 20, border: '1px solid #ddd', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', padding: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s' }} onClick={() => navigate(getMenuRoute(name)) }>
+          <div key={name} style={{ 
+            width: '100%', 
+            background: colors.white, 
+            borderRadius: '8px', 
+            border: `1px solid ${colors.grayBorder}`, 
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)', 
+            padding: '32px', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center', 
+            cursor: 'pointer', 
+            transition: 'all 0.2s ease'
+          }} 
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-4px)';
+            e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.15)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+          }}
+          onClick={() => navigate(getMenuRoute(name)) }>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <span style={{ fontWeight: 700, fontSize: 22, marginBottom: 8 }}>{name}</span>
+              <span style={{ 
+                fontWeight: '600', 
+                fontSize: '1.5rem', 
+                marginBottom: '8px',
+                fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif',
+                color: colors.black
+              }}>{name}</span>
+              <span style={{ 
+                color: colors.grayDark, 
+                fontSize: '1rem',
+                fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif',
+                textAlign: 'center',
+                lineHeight: '1.6'
+              }}>{name} 페이지 관리</span>
             </div>
           </div>
         ))}
@@ -801,34 +979,237 @@ function AdminMainPageManage() {
   return (
     <AdminLayoutComponent>
       <AdminHeader>메인페이지 관리</AdminHeader>
-      <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap', marginBottom: 40 }}>
-        <div style={{ flex: '1 1 220px', minWidth: 220, background: '#fff', borderRadius: 16, boxShadow: '0 2px 16px rgba(0,0,0,0.08)', padding: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s' }} onClick={() => navigate('/admin/menu')}>
-          <span style={{ fontSize: 32, marginBottom: 12 }}>📋</span>
-          <span style={{ fontWeight: 700, fontSize: 18, marginBottom: 4 }}>헤더영역 관리</span>
-          <span style={{ color: '#888', fontSize: 15 }}>로고/메뉴명 수정</span>
+      <div className="admin-mainpage-grid" style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(5, 1fr)', 
+        gap: '24px', 
+        marginBottom: '40px',
+        maxWidth: '1400px',
+        margin: '0 auto 40px auto',
+        padding: '0 20px'
+      }}>
+        <div style={{ 
+          background: colors.white, 
+          borderRadius: '12px', 
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)', 
+          padding: '24px 16px', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          cursor: 'pointer', 
+          transition: 'all 0.3s ease',
+          border: `1px solid ${colors.grayBorder}`,
+          minHeight: '160px'
+        }} 
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-6px) scale(1.02)';
+          e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0) scale(1)';
+          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
+        }}
+        onClick={() => navigate('/admin/menu')}>
+          <span style={{ fontSize: '28px', marginBottom: '12px' }}>📋</span>
+          <span style={{ 
+            fontWeight: '600', 
+            fontSize: '1rem', 
+            marginBottom: '4px',
+            fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif',
+            color: colors.black,
+            textAlign: 'center'
+          }}>헤더영역 관리</span>
+          <span style={{ 
+            color: colors.grayDark, 
+            fontSize: '0.8rem',
+            fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif',
+            textAlign: 'center',
+            lineHeight: '1.3'
+          }}>로고/메뉴명 수정</span>
         </div>
-        <div style={{ flex: '1 1 220px', minWidth: 220, background: '#fff', borderRadius: 16, boxShadow: '0 2px 16px rgba(0,0,0,0.08)', padding: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s' }} onClick={() => navigate('/admin/main')}>
-          <span style={{ fontSize: 32, marginBottom: 12 }}>🎬</span>
-          <span style={{ fontWeight: 700, fontSize: 18, marginBottom: 4 }}>메인 섹션 관리</span>
-          <span style={{ color: '#888', fontSize: 15 }}>메인 비주얼/텍스트 관리</span>
+        <div style={{ 
+          background: colors.white, 
+          borderRadius: '12px', 
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)', 
+          padding: '24px 16px', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          cursor: 'pointer', 
+          transition: 'all 0.3s ease',
+          border: `1px solid ${colors.grayBorder}`,
+          minHeight: '160px'
+        }} 
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-6px) scale(1.02)';
+          e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0) scale(1)';
+          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
+        }}
+        onClick={() => navigate('/admin/main')}>
+          <span style={{ fontSize: '28px', marginBottom: '12px' }}>🎬</span>
+          <span style={{ 
+            fontWeight: '600', 
+            fontSize: '1rem', 
+            marginBottom: '4px',
+            fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif',
+            color: colors.black,
+            textAlign: 'center'
+          }}>메인 섹션 관리</span>
+          <span style={{ 
+            color: colors.grayDark, 
+            fontSize: '0.8rem',
+            fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif',
+            textAlign: 'center',
+            lineHeight: '1.3'
+          }}>메인 비주얼/텍스트 관리</span>
         </div>
-        <div style={{ flex: '1 1 220px', minWidth: 220, background: '#fff', borderRadius: 16, boxShadow: '0 2px 16px rgba(0,0,0,0.08)', padding: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s' }} onClick={() => navigate('/admin/slogan')}>
-          <span style={{ fontSize: 32, marginBottom: 12 }}>💬</span>
-          <span style={{ fontWeight: 700, fontSize: 18, marginBottom: 4 }}>슬로건 관리</span>
-          <span style={{ color: '#888', fontSize: 15 }}>슬로건 텍스트 관리</span>
+        <div style={{ 
+          background: colors.white, 
+          borderRadius: '12px', 
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)', 
+          padding: '24px 16px', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          cursor: 'pointer', 
+          transition: 'all 0.3s ease',
+          border: `1px solid ${colors.grayBorder}`,
+          minHeight: '160px'
+        }} 
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-6px) scale(1.02)';
+          e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0) scale(1)';
+          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
+        }}
+        onClick={() => navigate('/admin/slogan')}>
+          <span style={{ fontSize: '28px', marginBottom: '12px' }}>💬</span>
+          <span style={{ 
+            fontWeight: '600', 
+            fontSize: '1rem', 
+            marginBottom: '4px',
+            fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif',
+            color: colors.black,
+            textAlign: 'center'
+          }}>슬로건 관리</span>
+          <span style={{ 
+            color: colors.grayDark, 
+            fontSize: '0.8rem',
+            fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif',
+            textAlign: 'center',
+            lineHeight: '1.3'
+          }}>슬로건 텍스트 관리</span>
         </div>
-        <div style={{ flex: '1 1 220px', minWidth: 220, background: '#fff', borderRadius: 16, boxShadow: '0 2px 16px rgba(0,0,0,0.08)', padding: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s' }} onClick={() => navigate('/admin/store')}>
-          <span style={{ fontSize: 32, marginBottom: 12 }}>🏪</span>
-          <span style={{ fontWeight: 700, fontSize: 18, marginBottom: 4 }}>스토어 관리</span>
-          <span style={{ color: '#888', fontSize: 15 }}>스토어 정보/이미지 관리</span>
+        <div style={{ 
+          background: colors.white, 
+          borderRadius: '12px', 
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)', 
+          padding: '24px 16px', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          cursor: 'pointer', 
+          transition: 'all 0.3s ease',
+          border: `1px solid ${colors.grayBorder}`,
+          minHeight: '160px'
+        }} 
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-6px) scale(1.02)';
+          e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0) scale(1)';
+          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
+        }}
+        onClick={() => navigate('/admin/store')}>
+          <span style={{ fontSize: '28px', marginBottom: '12px' }}>🏪</span>
+          <span style={{ 
+            fontWeight: '600', 
+            fontSize: '1rem', 
+            marginBottom: '4px',
+            fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif',
+            color: colors.black,
+            textAlign: 'center'
+          }}>스토어 관리</span>
+          <span style={{ 
+            color: colors.grayDark, 
+            fontSize: '0.8rem',
+            fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif',
+            textAlign: 'center',
+            lineHeight: '1.3'
+          }}>스토어 정보/이미지 관리</span>
         </div>
-        {/* Brand 관리 버튼 추가 */}
-        <div style={{ flex: '1 1 220px', minWidth: 220, background: '#fff', borderRadius: 16, boxShadow: '0 2px 16px rgba(0,0,0,0.08)', padding: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s' }} onClick={() => navigate('/admin/brand')}>
-          <span style={{ fontSize: 32, marginBottom: 12 }}>🏷️</span>
-          <span style={{ fontWeight: 700, fontSize: 18, marginBottom: 4 }}>브랜드 관리</span>
-          <span style={{ color: '#888', fontSize: 15 }}>브랜드 정보/이미지 관리</span>
+        <div style={{ 
+          background: colors.white, 
+          borderRadius: '12px', 
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)', 
+          padding: '24px 16px', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          cursor: 'pointer', 
+          transition: 'all 0.3s ease',
+          border: `1px solid ${colors.grayBorder}`,
+          minHeight: '160px'
+        }} 
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-6px) scale(1.02)';
+          e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0) scale(1)';
+          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
+        }}
+        onClick={() => navigate('/admin/brand')}>
+          <span style={{ fontSize: '28px', marginBottom: '12px' }}>🏷️</span>
+          <span style={{ 
+            fontWeight: '600', 
+            fontSize: '1rem', 
+            marginBottom: '4px',
+            fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif',
+            color: colors.black,
+            textAlign: 'center'
+          }}>브랜드 관리</span>
+          <span style={{ 
+            color: colors.grayDark, 
+            fontSize: '0.8rem',
+            fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif',
+            textAlign: 'center',
+            lineHeight: '1.3'
+          }}>브랜드 정보/이미지 관리</span>
         </div>
       </div>
+      
+      {/* 반응형 스타일 추가 */}
+      <style>{`
+        @media (max-width: 1200px) {
+          .admin-mainpage-grid {
+            grid-template-columns: repeat(3, 1fr) !important;
+          }
+        }
+        @media (max-width: 768px) {
+          .admin-mainpage-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 16px !important;
+          }
+        }
+        @media (max-width: 480px) {
+          .admin-mainpage-grid {
+            grid-template-columns: 1fr !important;
+            gap: 12px !important;
+          }
+        }
+      `}</style>
     </AdminLayoutComponent>
   );
 }
@@ -880,123 +1261,193 @@ function AdminContactManage() {
   );
 }
 
-// 관리자 페이지 공통 스타일
+// 관리자 페이지 공통 스타일 (새로운 디자인 시스템 적용)
 const AdminCard = styled.div`
-  background: #fff;
-  border-radius: 18px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-  padding: 40px;
+  background: ${colors.white};
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  padding: 32px;
   max-width: 1300px;
   width: 100%;
-  margin: 0 auto 40px auto;
+  margin: 0 auto 32px auto;
   box-sizing: border-box;
+  
+  @media (max-width: 768px) {
+    padding: 24px 20px;
+  }
 `;
+
 const AdminLabel = styled.label`
-  font-weight: 700;
-  font-size: 1.08rem;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
   margin-bottom: 8px;
   display: block;
-  color: #222;
+  color: ${colors.black};
 `;
+
 const AdminInput = styled.input`
   width: 100%;
   padding: 12px 16px;
-  font-size: 1.08rem;
-  border: 1.5px solid #e0e0e0;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 1rem;
+  border: 1.5px solid ${colors.grayBorder};
   border-radius: 8px;
   margin-bottom: 24px;
-  background: #fafbfc;
+  background: ${colors.white};
   box-sizing: border-box;
+  transition: border-color 0.2s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: ${colors.primary};
+    box-shadow: 0 0 0 3px rgba(229, 0, 43, 0.1);
+  }
 `;
+
 const AdminTextarea = styled.textarea`
   width: 100%;
   padding: 12px 16px;
-  font-size: 1.08rem;
-  border: 1.5px solid #e0e0e0;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 1rem;
+  border: 1.5px solid ${colors.grayBorder};
   border-radius: 8px;
   margin-bottom: 24px;
-  background: #fafbfc;
+  background: ${colors.white};
   box-sizing: border-box;
+  transition: border-color 0.2s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: ${colors.primary};
+    box-shadow: 0 0 0 3px rgba(229, 0, 43, 0.1);
+  }
 `;
-const AdminButton = styled.button<{ $primary?: boolean }>`
+
+const AdminButton = styled.button<{ $primary?: boolean; $danger?: boolean; $loading?: boolean }>`
   width: 100%;
   padding: 14px 0;
-  font-size: 1.1rem;
-  font-weight: 700;
-  border-radius: 10px;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
   border: none;
-  background: ${({ $primary }) => $primary ? '#1976d2' : '#f5f5f5'};
-  color: ${({ $primary }) => $primary ? '#fff' : '#222'};
+  background: ${({ $primary, $danger, $loading }) => 
+    $loading ? colors.grayMedium : $danger ? colors.error : $primary ? colors.primary : colors.grayLight};
+  color: ${({ $primary, $danger, $loading }) => 
+    $loading ? colors.grayDark : $danger ? colors.white : $primary ? colors.white : colors.black};
   margin-top: 12px;
   margin-bottom: 8px;
-  cursor: pointer;
-  transition: background 0.2s;
-  &:hover { background: ${({ $primary }) => $primary ? '#1251a3' : '#e0e0e0'}; }
+  cursor: ${({ $loading }) => $loading ? 'not-allowed' : 'pointer'};
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  
+  &:hover { 
+    background: ${({ $primary, $danger, $loading }) => 
+      $loading ? colors.grayMedium : $danger ? '#c82333' : $primary ? '#c40023' : colors.grayBorder};
+    transform: ${({ $loading }) => $loading ? 'none' : 'translateY(-1px)'};
+    box-shadow: ${({ $loading }) => $loading ? 'none' : '0 4px 8px rgba(0,0,0,0.15)'};
+  }
 `;
+
 const AdminFileInput = styled.input`
   margin-bottom: 16px;
 `;
+
 const AdminFileLabel = styled.label`
   display: inline-block;
   padding: 8px 18px;
-  background: #f5f5f5;
+  background: ${colors.grayLight};
   border-radius: 8px;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 1rem;
   font-weight: 500;
-  color: #222;
+  color: ${colors.black};
   cursor: pointer;
   margin-bottom: 12px;
   margin-right: 12px;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: ${colors.grayBorder};
+    transform: translateY(-1px);
+  }
 `;
+
 const AdminPreview = styled.div`
   width: 250px;
   height: 140px;
-  background: #eee;
-  border-radius: 12px;
+  background: ${colors.grayLight};
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 24px;
   overflow: hidden;
+  border: 1px solid ${colors.grayBorder};
 `;
+
 const AdminQuill = styled(ReactQuill)`
   .ql-toolbar {
     border-radius: 8px 8px 0 0;
-    background: #fafbfc;
-    border: 1.5px solid #e0e0e0;
+    background: ${colors.white};
+    border: 1.5px solid ${colors.grayBorder};
     border-bottom: none;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
   }
+  
   .ql-container {
     border-radius: 0 0 8px 8px;
-    border: 1.5px solid #e0e0e0;
+    border: 1.5px solid ${colors.grayBorder};
     min-height: 120px;
-    font-size: 1.08rem;
-    background: #fff;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 1rem;
+    background: ${colors.white};
   }
+  
+  .ql-editor {
+    line-height: 1.6;
+  }
+  
+  .ql-editor:focus {
+    border-color: ${colors.primary};
+    box-shadow: 0 0 0 3px rgba(229, 0, 43, 0.1);
+  }
+  
   margin-bottom: 24px;
 `;
 
 const AdminGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 40px;
+  gap: 32px;
   max-width: 1300px;
   width: 100%;
   margin: 0 auto;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
 `;
 
 const AdminSuccessMessage = styled.div`
-  color: #28a745;
-  font-weight: 500;
+  color: ${colors.success};
+  font-weight: 600;
   margin-top: 16px;
   text-align: center;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
 `;
 
 const AdminErrorMessage = styled.div`
-  color: #dc3545;
-  font-weight: 500;
+  color: ${colors.error};
+  font-weight: 600;
   margin-top: 16px;
   text-align: center;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
 `;
 
 // 메뉴명 관리 페이지
@@ -1312,13 +1763,14 @@ function AdminStoreManage() {
   const [msg, setMsg] = useState('');
   const [newStore, setNewStore] = useState<{ name: string; image: string; address: string; mapUrl: string }>({ name: '', image: '', address: '', mapUrl: '' });
   const [uploading, setUploading] = useState(false);
+  const [expandedStores, setExpandedStores] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, STORES_COLLECTION), (snapshot: QuerySnapshot<DocumentData>) => {
       const stores = snapshot.docs.map((doc) => {
         const data = doc.data();
         return {
-          id: doc.id, // id 필드 추가
+          id: doc.id,
           name: data.name || '',
           image: data.image || '',
           address: data.address || '',
@@ -1326,10 +1778,9 @@ function AdminStoreManage() {
           order: data.order ?? 0
         };
       });
-      // order 기준 정렬
       stores.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-      console.log('[onSnapshot] stores:', stores);
       setStores(stores);
+      setLoading(false);
     });
     return () => unsubscribe();
   }, []);
@@ -1360,7 +1811,7 @@ function AdminStoreManage() {
       const order = stores.length;
       await addDoc(collection(db, STORES_COLLECTION), { ...newStore, order });
       setNewStore({ name: '', image: '', address: '', mapUrl: '' });
-      setMsg('매장이 추가되었습니다!');
+      setMsg('스토어가 추가되었습니다!');
       setTimeout(() => setMsg(''), 1500);
     } catch (error) {
       setMsg('추가 중 오류가 발생했습니다.');
@@ -1393,21 +1844,176 @@ function AdminStoreManage() {
     }
   };
 
-  const moveStore = async (fromIdx: number, toIdx: number) => {
-    if (fromIdx === toIdx || fromIdx < 0 || toIdx < 0 || toIdx >= stores.length) return;
-    const newArr = [...stores];
-    const [moved] = newArr.splice(fromIdx, 1);
-    newArr.splice(toIdx, 0, moved);
-    await Promise.all(newArr.map((store, idx) => updateDoc(doc(db, STORES_COLLECTION, store.id), { order: idx })));
-    setMsg('순서가 변경되었습니다.');
-    setTimeout(() => setMsg(''), 1500);
+  const handleReorder = async (newStores: Array<{ id: string; name: string; image: string; address: string; mapUrl: string; order?: number }>) => {
+    try {
+      await Promise.all(newStores.map((store, idx) => 
+        updateDoc(doc(db, STORES_COLLECTION, store.id), { order: idx })
+      ));
+      setMsg('순서가 변경되었습니다!');
+      setTimeout(() => setMsg(''), 1500);
+    } catch (error) {
+      setMsg('순서 변경 중 오류가 발생했습니다.');
+    }
+  };
+
+  const toggleStore = (storeId: string) => {
+    setExpandedStores(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(storeId)) {
+        newSet.delete(storeId);
+      } else {
+        newSet.add(storeId);
+      }
+      return newSet;
+    });
+  };
+
+  const renderStoreItem = (store: { id: string; name: string; image: string; address: string; mapUrl: string; order?: number }, index: number) => {
+    const isExpanded = expandedStores.has(store.id);
+    
+    return (
+      <div style={{ 
+        background: '#ffffff', 
+        border: '1px solid #e0e0e0', 
+        borderRadius: '12px', 
+        overflow: 'hidden',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+      }}>
+        <div 
+          style={{ 
+            padding: '20px 24px', 
+            background: isExpanded ? '#f8f9fa' : '#ffffff',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            borderBottom: isExpanded ? '1px solid #e0e0e0' : 'none',
+            transition: 'all 0.3s ease'
+          }}
+          onClick={() => toggleStore(store.id)}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ 
+              width: '50px', 
+              height: '50px', 
+              borderRadius: '8px', 
+              overflow: 'hidden',
+              border: '1px solid #e0e0e0'
+            }}>
+              <img 
+                src={store.image || '/placeholder-store.jpg'} 
+                alt={store.name}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            </div>
+            <div>
+              <h3 style={{ 
+                margin: 0, 
+                fontSize: '1.1rem', 
+                fontWeight: '600', 
+                color: '#111111',
+                fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif'
+              }}>
+                {store.name || '스토어명 없음'}
+              </h3>
+              <p style={{ 
+                margin: '4px 0 0 0', 
+                fontSize: '0.9rem', 
+                color: '#888888',
+                fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif'
+              }}>
+                {store.address || '주소 없음'}
+              </p>
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ 
+              fontSize: '20px', 
+              color: '#888888',
+              transition: 'transform 0.3s ease',
+              transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)'
+            }}>
+              ▼
+            </span>
+          </div>
+        </div>
+        
+        {isExpanded && (
+          <div style={{ padding: '24px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+              <div>
+                <AdminLabel>스토어 이미지</AdminLabel>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={e => handleImageUpload(e, index)}
+                  style={{ marginBottom: '12px' }}
+                  disabled={uploading}
+                />
+                {store.image && (
+                  <img 
+                    src={store.image} 
+                    alt={store.name}
+                    style={{ 
+                      width: '100%', 
+                      height: '200px', 
+                      objectFit: 'cover', 
+                      borderRadius: '8px',
+                      border: '1px solid #e0e0e0'
+                    }} 
+                  />
+                )}
+              </div>
+              <div>
+                <AdminLabel>스토어명</AdminLabel>
+                <AdminInput
+                  value={store.name}
+                  onChange={e => setStores(prev => { 
+                    const next = [...prev]; 
+                    next[index] = { ...next[index], name: e.target.value }; 
+                    return next; 
+                  })}
+                  placeholder="스토어명"
+                />
+                <AdminLabel>주소</AdminLabel>
+                <AdminInput
+                  value={store.address}
+                  onChange={e => setStores(prev => { 
+                    const next = [...prev]; 
+                    next[index] = { ...next[index], address: e.target.value }; 
+                    return next; 
+                  })}
+                  placeholder="주소"
+                />
+                <AdminLabel>지도 URL</AdminLabel>
+                <AdminInput
+                  value={store.mapUrl}
+                  onChange={e => setStores(prev => { 
+                    const next = [...prev]; 
+                    next[index] = { ...next[index], mapUrl: e.target.value }; 
+                    return next; 
+                  })}
+                  placeholder="지도 URL"
+                />
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+              <AdminButton onClick={() => handleSave(store)} $primary>저장</AdminButton>
+              <AdminButton onClick={() => handleDelete(store.id)} $danger>삭제</AdminButton>
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
     <AdminLayoutComponent backTo="/admin/mainpage" backLabel="메인페이지">
       <AdminHeader>스토어 관리</AdminHeader>
+      
+      {/* 스토어 추가 섹션 */}
       <AdminCard>
-        <AdminLabel>스토어 추가</AdminLabel>
+        <AdminLabel>새 스토어 추가</AdminLabel>
         <AdminGrid>
           <div>
             <AdminInput
@@ -1427,76 +2033,88 @@ function AdminStoreManage() {
               placeholder="지도 URL"
               style={{ marginTop: 8 }}
             />
+          </div>
+          <div>
             <input
               type="file"
               accept="image/*"
               onChange={e => handleImageUpload(e, null)}
-              style={{ marginTop: 8 }}
+              style={{ marginBottom: 12 }}
               disabled={uploading}
             />
             {newStore.image && (
-              <img src={newStore.image} alt="미리보기" style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: 8, marginTop: 8 }} />
+              <img 
+                src={newStore.image} 
+                alt="미리보기" 
+                style={{ 
+                  width: '100%', 
+                  height: '200px', 
+                  objectFit: 'cover', 
+                  borderRadius: '8px',
+                  border: '1px solid #e0e0e0'
+                }} 
+              />
             )}
-            <AdminButton onClick={handleAdd} $primary style={{ marginTop: 12 }}>스토어 추가</AdminButton>
+            <AdminButton 
+              onClick={handleAdd} 
+              $primary 
+              style={{ marginTop: 12, width: '100%' }}
+              disabled={!newStore.name.trim()}
+            >
+              스토어 추가
+            </AdminButton>
           </div>
         </AdminGrid>
       </AdminCard>
+
+      {/* 스토어 목록 섹션 */}
       <AdminCard>
-        <AdminGrid>
-          {stores.map((store, idx) => (
-            <div key={store.id} style={{ position: 'relative' }}>
-              <img
-                src={store.image}
-                alt={store.name}
-                style={{ width: '100%', height: 200, objectFit: 'cover', borderRadius: 8, marginBottom: 16 }}
-              />
-              <input
-                type="file"
-                accept="image/*"
-                onChange={e => handleImageUpload(e, idx)}
-                style={{ marginBottom: 8 }}
-                disabled={uploading}
-              />
-              <AdminLabel>스토어명</AdminLabel>
-              <AdminInput
-                value={store.name}
-                onChange={e => setStores(prev => {
-                  const next = [...prev];
-                  next[idx] = { ...next[idx], name: e.target.value };
-                  return next;
-                })}
-              />
-              <AdminLabel style={{ marginTop: 16 }}>주소</AdminLabel>
-              <AdminInput
-                value={store.address}
-                onChange={e => setStores(prev => {
-                  const next = [...prev];
-                  next[idx] = { ...next[idx], address: e.target.value };
-                  return next;
-                })}
-              />
-              <AdminLabel style={{ marginTop: 16 }}>지도 URL</AdminLabel>
-              <AdminInput
-                value={store.mapUrl}
-                onChange={e => setStores(prev => {
-                  const next = [...prev];
-                  next[idx] = { ...next[idx], mapUrl: e.target.value };
-                  return next;
-                })}
-              />
-              <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-                <AdminButton onClick={() => handleSave(store)} $primary>저장</AdminButton>
-                <AdminButton onClick={() => handleDelete(store.id)}>삭제</AdminButton>
+        <AdminLabel>스토어 목록 (드래그하여 순서 변경)</AdminLabel>
+        {loading ? (
+          <div style={{ textAlign: 'center', color: '#888', fontSize: 18, padding: '40px' }}>
+            로딩 중...
+          </div>
+        ) : stores.length === 0 ? (
+          <div style={{ textAlign: 'center', color: '#888', fontSize: 18, padding: '40px' }}>
+            등록된 스토어가 없습니다.
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {stores.map((store, index) => (
+              <div
+                key={store.id}
+                draggable
+                onDragStart={(e) => {
+                  e.dataTransfer.setData('text/plain', index.toString());
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.currentTarget.style.borderTop = '2px solid #F88D2A';
+                }}
+                onDragLeave={(e) => {
+                  e.currentTarget.style.borderTop = 'none';
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.currentTarget.style.borderTop = 'none';
+                  const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
+                  if (fromIndex !== index) {
+                    const newStores = [...stores];
+                    const [moved] = newStores.splice(fromIndex, 1);
+                    newStores.splice(index, 0, moved);
+                    handleReorder(newStores);
+                  }
+                }}
+                style={{ transition: 'all 0.2s ease' }}
+              >
+                {renderStoreItem(store, index)}
               </div>
-              <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                <AdminButton onClick={() => moveStore(idx, idx - 1)} disabled={idx === 0}>▲</AdminButton>
-                <AdminButton onClick={() => moveStore(idx, idx + 1)} disabled={idx === stores.length - 1}>▼</AdminButton>
-              </div>
-            </div>
-          ))}
-        </AdminGrid>
-        {msg && <AdminSuccessMessage>{msg}</AdminSuccessMessage>}
+            ))}
+          </div>
+        )}
       </AdminCard>
+      
+      {msg && <AdminSuccessMessage>{msg}</AdminSuccessMessage>}
     </AdminLayoutComponent>
   );
 }
@@ -1608,6 +2226,7 @@ function AdminBrandManage() {
   const [msg, setMsg] = useState('');
   const [uploading, setUploading] = useState(false);
   const [newBrand, setNewBrand] = useState<{ name: string; desc: string; subText?: string; image: string }>({ name: '', desc: '', subText: '', image: '' });
+  const [expandedBrands, setExpandedBrands] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'brands'), (snapshot: QuerySnapshot<DocumentData>) => {
@@ -1685,106 +2304,294 @@ function AdminBrandManage() {
     }
   };
 
-  const moveBrand = async (fromIdx: number, toIdx: number) => {
-    if (fromIdx === toIdx || fromIdx < 0 || toIdx < 0 || toIdx >= brands.length) return;
-    const newArr = [...brands];
-    const [moved] = newArr.splice(fromIdx, 1);
-    newArr.splice(toIdx, 0, moved);
-    await Promise.all(newArr.map((brand, idx) => updateDoc(doc(db, 'brands', brand.id), { order: idx })));
-    setMsg('순서가 변경되었습니다.');
-    setTimeout(() => setMsg(''), 1500);
+  const handleReorder = async (newBrands: Array<{ id: string; name: string; desc: string; subText?: string; image: string; order?: number }>) => {
+    try {
+      await Promise.all(newBrands.map((brand, idx) => 
+        updateDoc(doc(db, 'brands', brand.id), { order: idx })
+      ));
+      setMsg('순서가 변경되었습니다!');
+      setTimeout(() => setMsg(''), 1500);
+    } catch (error) {
+      setMsg('순서 변경 중 오류가 발생했습니다.');
+    }
+  };
+
+  const toggleBrand = (brandId: string) => {
+    setExpandedBrands(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(brandId)) {
+        newSet.delete(brandId);
+      } else {
+        newSet.add(brandId);
+      }
+      return newSet;
+    });
+  };
+
+  const renderBrandItem = (brand: { id: string; name: string; desc: string; subText?: string; image: string; order?: number }, index: number) => {
+    const isExpanded = expandedBrands.has(brand.id);
+    
+    return (
+      <div style={{ 
+        background: '#ffffff', 
+        border: '1px solid #e0e0e0', 
+        borderRadius: '12px', 
+        overflow: 'hidden',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+      }}>
+        <div 
+          style={{ 
+            padding: '20px 24px', 
+            background: isExpanded ? '#f8f9fa' : '#ffffff',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            borderBottom: isExpanded ? '1px solid #e0e0e0' : 'none',
+            transition: 'all 0.3s ease'
+          }}
+          onClick={() => toggleBrand(brand.id)}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ 
+              width: '50px', 
+              height: '50px', 
+              borderRadius: '8px', 
+              overflow: 'hidden',
+              border: '1px solid #e0e0e0'
+            }}>
+              <img 
+                src={brand.image || '/placeholder-brand.jpg'} 
+                alt={brand.name}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            </div>
+            <div>
+              <h3 style={{ 
+                margin: 0, 
+                fontSize: '1.1rem', 
+                fontWeight: '600', 
+                color: '#111111',
+                fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif'
+              }}>
+                {brand.name || '브랜드명 없음'}
+              </h3>
+              <p style={{ 
+                margin: '4px 0 0 0', 
+                fontSize: '0.9rem', 
+                color: '#888888',
+                fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif',
+                maxWidth: '300px',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}>
+                {brand.desc ? brand.desc.replace(/<[^>]*>/g, '') : '설명 없음'}
+              </p>
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ 
+              fontSize: '20px', 
+              color: '#888888',
+              transition: 'transform 0.3s ease',
+              transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)'
+            }}>
+              ▼
+            </span>
+          </div>
+        </div>
+        
+        {isExpanded && (
+          <div style={{ padding: '24px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+              <div>
+                <AdminLabel>브랜드 이미지</AdminLabel>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={e => handleImageUpload(e, index)}
+                  style={{ marginBottom: '12px' }}
+                  disabled={uploading}
+                />
+                {brand.image && (
+                  <img 
+                    src={brand.image} 
+                    alt={brand.name}
+                    style={{ 
+                      width: '100%', 
+                      height: '200px', 
+                      objectFit: 'cover', 
+                      borderRadius: '8px',
+                      border: '1px solid #e0e0e0'
+                    }} 
+                  />
+                )}
+              </div>
+              <div>
+                <AdminLabel>브랜드명</AdminLabel>
+                <AdminQuill
+                  value={brand.name}
+                  onChange={v => setBrands(prev => { 
+                    const next = [...prev]; 
+                    next[index] = { ...next[index], name: v }; 
+                    return next; 
+                  })}
+                  modules={quillModules}
+                  theme="snow"
+                  placeholder="브랜드명"
+                />
+                <AdminLabel>브랜드 설명</AdminLabel>
+                <AdminQuill
+                  value={brand.desc}
+                  onChange={v => setBrands(prev => { 
+                    const next = [...prev]; 
+                    next[index] = { ...next[index], desc: v }; 
+                    return next; 
+                  })}
+                  modules={quillModules}
+                  theme="snow"
+                  placeholder="브랜드 설명"
+                />
+                <AdminLabel>브랜드 서브텍스트</AdminLabel>
+                <AdminQuill
+                  value={brand.subText || ''}
+                  onChange={v => setBrands(prev => { 
+                    const next = [...prev]; 
+                    next[index] = { ...next[index], subText: v }; 
+                    return next; 
+                  })}
+                  modules={quillModules}
+                  theme="snow"
+                  placeholder="브랜드 서브텍스트"
+                />
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+              <AdminButton onClick={() => handleSave(brand)} $primary>저장</AdminButton>
+              <AdminButton onClick={() => handleDelete(brand.id)} $danger>삭제</AdminButton>
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
     <AdminLayoutComponent backTo="/admin/mainpage" backLabel="메인페이지">
       <AdminHeader>브랜드 관리</AdminHeader>
+      
+      {/* 브랜드 추가 섹션 */}
       <AdminCard>
-        <AdminLabel>브랜드 추가</AdminLabel>
-        <BrandAddRow>
-          <BrandAddLeft>
-            <BrandInputGroup>
-              <BrandLabel style={{ marginLeft: '70px' }}>브랜드명</BrandLabel>
-              <BrandQuill value={newBrand.name} onChange={v => setNewBrand(prev => ({ ...prev, name: v }))} modules={quillModules} theme="snow" placeholder="브랜드명" style={{ marginLeft: '70px' }} />
-            </BrandInputGroup>
-            <BrandInputGroup>
-              <BrandLabel style={{ marginLeft: '70px' }}>브랜드 설명</BrandLabel>
-              <BrandQuill value={newBrand.desc} onChange={v => setNewBrand(prev => ({ ...prev, desc: v }))} modules={quillModules} theme="snow" placeholder="브랜드 설명" style={{ marginLeft: '70px' }} />
-            </BrandInputGroup>
-            <BrandInputGroup>
-              <BrandLabel style={{ marginLeft: '70px' }}>브랜드 서브텍스트 (작은 글씨)</BrandLabel>
-              <BrandQuill value={newBrand.subText || ''} onChange={v => setNewBrand(prev => ({ ...prev, subText: v }))} modules={quillModules} theme="snow" placeholder="브랜드 서브텍스트" style={{ marginLeft: '70px' }} />
-            </BrandInputGroup>
-          </BrandAddLeft>
-          <BrandAddRight>
-                            <BrandCardBtnRow>
-                  <AdminButton onClick={handleAdd} $primary style={{ fontSize: 16, padding: '12px 32px', minWidth: 120, marginLeft: '-270px' }}>브랜드 추가</AdminButton>
-                </BrandCardBtnRow>
-                <BrandCardFileBox>
-                  <input type="file" accept="image/*" onChange={e => handleImageUpload(e, null)} style={{ marginTop: 2, marginLeft: '-100px' }} disabled={uploading} />
-                  {newBrand.image && (
-                    <img src={newBrand.image} alt="미리보기" style={{ width: 250, height: 140, objectFit: 'cover', borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.08)', border: '1px solid #eee', marginTop: 6, marginLeft: '-30px' }} />
-                  )}
-                </BrandCardFileBox>
-          </BrandAddRight>
-        </BrandAddRow>
+        <AdminLabel>새 브랜드 추가</AdminLabel>
+        <AdminGrid>
+          <div>
+            <AdminLabel>브랜드명</AdminLabel>
+            <AdminQuill
+              value={newBrand.name}
+              onChange={v => setNewBrand(prev => ({ ...prev, name: v }))}
+              modules={quillModules}
+              theme="snow"
+              placeholder="브랜드명"
+            />
+            <AdminLabel>브랜드 설명</AdminLabel>
+            <AdminQuill
+              value={newBrand.desc}
+              onChange={v => setNewBrand(prev => ({ ...prev, desc: v }))}
+              modules={quillModules}
+              theme="snow"
+              placeholder="브랜드 설명"
+            />
+            <AdminLabel>브랜드 서브텍스트</AdminLabel>
+            <AdminQuill
+              value={newBrand.subText || ''}
+              onChange={v => setNewBrand(prev => ({ ...prev, subText: v }))}
+              modules={quillModules}
+              theme="snow"
+              placeholder="브랜드 서브텍스트"
+            />
+          </div>
+          <div>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={e => handleImageUpload(e, null)}
+              style={{ marginBottom: 12 }}
+              disabled={uploading}
+            />
+            {newBrand.image && (
+              <img 
+                src={newBrand.image} 
+                alt="미리보기" 
+                style={{ 
+                  width: '100%', 
+                  height: '200px', 
+                  objectFit: 'cover', 
+                  borderRadius: '8px',
+                  border: '1px solid #e0e0e0'
+                }} 
+              />
+            )}
+            <AdminButton 
+              onClick={handleAdd} 
+              $primary 
+              style={{ marginTop: 12, width: '100%' }}
+              disabled={!newBrand.name.trim()}
+            >
+              브랜드 추가
+            </AdminButton>
+          </div>
+        </AdminGrid>
       </AdminCard>
+
+      {/* 브랜드 목록 섹션 */}
       <AdminCard>
-        <AdminLabel>브랜드 목록</AdminLabel>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
-          {brands.map((brand, idx) => (
-            <BrandCardRow key={brand.id}>
-              <BrandCardLeft>
-                <BrandInputGroup>
-                  <BrandLabel style={{ marginLeft: '70px' }}>브랜드명</BrandLabel>
-                  <BrandQuill
-                    value={brand.name}
-                    onChange={v => setBrands(prev => { const next = [...prev]; next[idx] = { ...next[idx], name: v }; return next; })}
-                    modules={quillModules}
-                    theme="snow"
-                    placeholder="브랜드명"
-                    style={{ marginLeft: '70px' }}
-                  />
-                </BrandInputGroup>
-                <BrandInputGroup>
-                  <BrandLabel style={{ marginLeft: '70px' }}>브랜드 설명</BrandLabel>
-                  <BrandQuill
-                    value={brand.desc}
-                    onChange={v => setBrands(prev => { const next = [...prev]; next[idx] = { ...next[idx], desc: v }; return next; })}
-                    modules={quillModules}
-                    theme="snow"
-                    placeholder="브랜드 설명"
-                    style={{ marginLeft: '70px' }}
-                  />
-                </BrandInputGroup>
-                <BrandInputGroup>
-                  <BrandLabel style={{ marginLeft: '70px' }}>브랜드 서브텍스트 (작은 글씨)</BrandLabel>
-                  <BrandQuill
-                    value={brand.subText || ''}
-                    onChange={v => setBrands(prev => { const next = [...prev]; next[idx] = { ...next[idx], subText: v }; return next; })}
-                    modules={quillModules}
-                    theme="snow"
-                    placeholder="브랜드 서브텍스트"
-                    style={{ marginLeft: '70px' }}
-                  />
-                </BrandInputGroup>
-              </BrandCardLeft>
-              <BrandCardRight>
-                <BrandCardBtnRow style={{ transform: 'translateX(-30px)' }}>
-                  <AdminButton $primary onClick={() => handleSave(brand)} style={{ minWidth: 70, fontSize: 15, borderRadius: 8, height: 40 }}>저장</AdminButton>
-                  <AdminButton onClick={() => handleDelete(brand.id)} style={{ background: '#f66', color: '#fff', minWidth: 70, fontSize: 15, borderRadius: 8, height: 40 }}>삭제</AdminButton>
-                  <AdminButton onClick={() => moveBrand(idx, idx - 1)} disabled={idx === 0} style={{ minWidth: 36, padding: '0 8px', fontSize: 15, borderRadius: 8, height: 40 }}>▲</AdminButton>
-                  <AdminButton onClick={() => moveBrand(idx, idx + 1)} disabled={idx === brands.length - 1} style={{ minWidth: 36, padding: '0 8px', fontSize: 15, borderRadius: 8, height: 40 }}>▼</AdminButton>
-                </BrandCardBtnRow>
-                <BrandCardFileBox>
-                  <input type="file" accept="image/*" onChange={e => handleImageUpload(e, idx)} style={{ marginBottom: 4, marginLeft: '-100px' }} disabled={uploading} />
-                  {brand.image && <img src={brand.image} alt={brand.name} style={{ width: 250, height: 140, objectFit: 'cover', borderRadius: 8, marginBottom: 4, border: '1px solid #eee', transform: 'translateX(-30px)' }} />}
-                </BrandCardFileBox>
-              </BrandCardRight>
-            </BrandCardRow>
-          ))}
-        </div>
-        {msg && <AdminSuccessMessage>{msg}</AdminSuccessMessage>}
+        <AdminLabel>브랜드 목록 (드래그하여 순서 변경)</AdminLabel>
+        {loading ? (
+          <div style={{ textAlign: 'center', color: '#888', fontSize: 18, padding: '40px' }}>
+            로딩 중...
+          </div>
+        ) : brands.length === 0 ? (
+          <div style={{ textAlign: 'center', color: '#888', fontSize: 18, padding: '40px' }}>
+            등록된 브랜드가 없습니다.
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {brands.map((brand, index) => (
+              <div
+                key={brand.id}
+                draggable
+                onDragStart={(e) => {
+                  e.dataTransfer.setData('text/plain', index.toString());
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.currentTarget.style.borderTop = '2px solid #F88D2A';
+                }}
+                onDragLeave={(e) => {
+                  e.currentTarget.style.borderTop = 'none';
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.currentTarget.style.borderTop = 'none';
+                  const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
+                  if (fromIndex !== index) {
+                    const newBrands = [...brands];
+                    const [moved] = newBrands.splice(fromIndex, 1);
+                    newBrands.splice(index, 0, moved);
+                    handleReorder(newBrands);
+                  }
+                }}
+                style={{ transition: 'all 0.2s ease' }}
+              >
+                {renderBrandItem(brand, index)}
+              </div>
+            ))}
+          </div>
+        )}
       </AdminCard>
+      
+      {msg && <AdminSuccessMessage>{msg}</AdminSuccessMessage>}
     </AdminLayoutComponent>
   );
 }
@@ -2114,43 +2921,45 @@ function App() {
   }, []);
 
   return (
-    <Router>
-      <Routes>
-        <Route path="/admin/login" element={<AdminLogin />} />
-        <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-        
-        {/* 메인페이지 하위 관리 기능들 */}
-        <Route path="/admin/mainpage" element={<AdminRoute><AdminMainPageManage /></AdminRoute>} />
-        <Route path="/admin/menu" element={<AdminRoute><AdminMenuManage /></AdminRoute>} />
-        <Route path="/admin/main" element={<AdminRoute><AdminMainManage /></AdminRoute>} />
-        <Route path="/admin/slogan" element={<AdminRoute><AdminSloganManage /></AdminRoute>} />
-        <Route path="/admin/store" element={<AdminRoute><AdminStoreManage /></AdminRoute>} />
-        <Route path="/admin/brand" element={<AdminRoute><AdminBrandManage /></AdminRoute>} />
-        <Route path="/admin/brandpage" element={<AdminRoute><AdminBrandPageManage /></AdminRoute>} />
-        
-        {/* 각 페이지별 관리 기능들 */}
-        <Route path="/admin/about" element={<AdminRoute><AdminAboutManage /></AdminRoute>} />
-        <Route path="/admin/foodservice" element={<AdminRoute><AdminFoodServiceManage /></AdminRoute>} />
-        <Route path="/admin/product" element={<AdminRoute><AdminProductManage /></AdminRoute>} />
-        <Route path="/admin/contact" element={<AdminRoute><AdminContactManage /></AdminRoute>} />
-        
-        <Route path="/brand" element={<BrandPage />} />
-        <Route path="/product" element={<ProductPage />} />
-        {/* 기존 홈페이지 라우트 */}
-        <Route path="/*" element={
-          <AppContainer>
-            <Header />
-            <VideoSection />
-            <SloganSection />
-            <StoreCards stores={(() => { console.log('[App] storeList:', storeList); return storeList; })()} />
-            <BrandSection>
-              <Brands />
-            </BrandSection>
-            <Footer />
-          </AppContainer>
-        } />
-      </Routes>
-    </Router>
+    <ToastProvider>
+      <Router>
+        <Routes>
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+          
+          {/* 메인페이지 하위 관리 기능들 */}
+          <Route path="/admin/mainpage" element={<AdminRoute><AdminMainPageManage /></AdminRoute>} />
+          <Route path="/admin/menu" element={<AdminRoute><AdminMenuManage /></AdminRoute>} />
+          <Route path="/admin/main" element={<AdminRoute><AdminMainManage /></AdminRoute>} />
+          <Route path="/admin/slogan" element={<AdminRoute><AdminSloganManage /></AdminRoute>} />
+          <Route path="/admin/store" element={<AdminRoute><AdminStoreManage /></AdminRoute>} />
+          <Route path="/admin/brand" element={<AdminRoute><AdminBrandManage /></AdminRoute>} />
+          <Route path="/admin/brandpage" element={<AdminRoute><AdminBrandPageManage /></AdminRoute>} />
+          
+          {/* 각 페이지별 관리 기능들 */}
+          <Route path="/admin/about" element={<AdminRoute><AdminAboutManage /></AdminRoute>} />
+          <Route path="/admin/foodservice" element={<AdminRoute><AdminFoodServiceManage /></AdminRoute>} />
+          <Route path="/admin/product" element={<AdminRoute><AdminProductManage /></AdminRoute>} />
+          <Route path="/admin/contact" element={<AdminRoute><AdminContactManage /></AdminRoute>} />
+          
+          <Route path="/brand" element={<BrandPage />} />
+          <Route path="/product" element={<ProductPage />} />
+          {/* 기존 홈페이지 라우트 */}
+          <Route path="/*" element={
+            <AppContainer>
+              <Header />
+              <VideoSection />
+              <SloganSection />
+              <StoreCards stores={(() => { console.log('[App] storeList:', storeList); return storeList; })()} />
+              <BrandSection>
+                <Brands />
+              </BrandSection>
+              <Footer />
+            </AppContainer>
+          } />
+        </Routes>
+      </Router>
+    </ToastProvider>
   );
 }
 

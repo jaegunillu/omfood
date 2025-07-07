@@ -6,13 +6,27 @@ import { db, storage } from '../firebase';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
-// Quill 툴바 옵션
+// 디자인 시스템 - 컬러 팔레트
+const colors = {
+  primary: '#E5002B',
+  secondary: '#F88D2A',
+  black: '#111111',
+  grayDark: '#444444',
+  grayLight: '#F5F5F5',
+  white: '#FFFFFF',
+  grayMedium: '#888888',
+  grayBorder: '#E0E0E0',
+  success: '#28a745',
+  error: '#dc3545',
+  info: '#17a2b8'
+};
+
+// Quill 툴바 옵션 (통일된 포맷팅)
 const quillModules = {
   toolbar: [
-    [{ 'header': [1, 2, false] }],
-    ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+    ['bold', 'italic', 'underline'],
     [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-    ['link', 'color', 'background'],
+    ['link'],
     ['clean']
   ]
 };
@@ -30,13 +44,15 @@ const ToastContainer = styled.div`
 
 const Toast = styled.div<{ $type: 'success' | 'error' | 'info' }>`
   background: ${({ $type }) => 
-    $type === 'success' ? '#28a745' : 
-    $type === 'error' ? '#dc3545' : '#17a2b8'};
-  color: white;
+    $type === 'success' ? colors.success : 
+    $type === 'error' ? colors.error : colors.info};
+  color: ${colors.white};
   padding: 16px 20px;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  font-weight: 500;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
   min-width: 300px;
   animation: slideIn 0.3s ease-out;
   
@@ -56,8 +72,8 @@ const Toast = styled.div<{ $type: 'success' | 'error' | 'info' }>`
 const Spinner = styled.div`
   width: 20px;
   height: 20px;
-  border: 2px solid #f3f3f3;
-  border-top: 2px solid #1976d2;
+  border: 2px solid ${colors.grayLight};
+  border-top: 2px solid ${colors.primary};
   border-radius: 50%;
   animation: spin 1s linear infinite;
   
@@ -71,7 +87,7 @@ const Spinner = styled.div`
 const ProgressBar = styled.div<{ $progress: number }>`
   width: 100%;
   height: 4px;
-  background: #e0e0e0;
+  background: ${colors.grayBorder};
   border-radius: 2px;
   overflow: hidden;
   margin: 8px 0;
@@ -81,16 +97,16 @@ const ProgressBar = styled.div<{ $progress: number }>`
     display: block;
     height: 100%;
     width: ${({ $progress }) => $progress}%;
-    background: #1976d2;
+    background: ${colors.primary};
     transition: width 0.3s ease;
   }
 `;
 
-// 스타일 컴포넌트
+// 메인 레이아웃
 const AdminLayout = styled.div`
   display: flex;
   min-height: 100vh;
-  background: #f7f7f7;
+  background: ${colors.grayLight};
   position: relative;
 `;
 
@@ -99,17 +115,24 @@ const AdminLogoutBtn = styled.button`
   top: 32px;
   right: 40px;
   z-index: 200;
-  background: #fff;
-  border: 1px solid #ddd;
+  background: ${colors.white};
+  border: 1px solid ${colors.grayBorder};
   border-radius: 8px;
-  padding: 10px 32px;
+  padding: 12px 24px;
   cursor: pointer;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
   font-weight: 600;
-  font-size: 16px;
-  color: #222;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-  transition: background 0.2s, color 0.2s;
-  &:hover { background: #ffd600; color: #222; }
+  font-size: 1rem;
+  color: ${colors.black};
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: all 0.2s ease;
+  
+  &:hover { 
+    background: ${colors.primary}; 
+    color: ${colors.white};
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  }
 `;
 
 const AdminMain = styled.main`
@@ -118,173 +141,204 @@ const AdminMain = styled.main`
   min-height: 100vh;
   max-width: 1400px;
   margin: 0 auto;
+  
   @media (max-width: 900px) {
     padding: 24px 16px;
   }
 `;
 
 const AdminHeader = styled.header`
-  font-size: 2rem;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 2.5rem;
   font-weight: 700;
   margin-bottom: 32px;
-  color: #222;
+  color: ${colors.black};
 `;
 
 const BackButton = styled.button`
   background: none;
   border: none;
-  color: #222;
-  font-size: 16px;
+  color: ${colors.black};
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
-  font-weight: 500;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0;
+  padding: 8px 0;
   margin-bottom: 24px;
+  transition: color 0.2s ease;
+  
   &:hover {
-    color: #666;
+    color: ${colors.primary};
   }
 `;
 
 const AdminCard = styled.div`
-  background: #fff;
-  border-radius: 18px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-  padding: 40px;
+  background: ${colors.white};
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  padding: 32px;
   max-width: 1300px;
   width: 100%;
-  margin: 0 auto 40px auto;
+  margin: 0 auto 32px auto;
   box-sizing: border-box;
+  
+  @media (max-width: 768px) {
+    padding: 24px 20px;
+  }
 `;
 
 const AdminLabel = styled.label`
-  font-weight: 700;
-  font-size: 1.08rem;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
   margin-bottom: 8px;
   display: block;
-  color: #222;
+  color: ${colors.black};
 `;
 
 const AdminInput = styled.input`
   width: 100%;
   padding: 12px 16px;
-  font-size: 1.08rem;
-  border: 1.5px solid #e0e0e0;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 1rem;
+  border: 1.5px solid ${colors.grayBorder};
   border-radius: 8px;
   margin-bottom: 24px;
-  background: #fafbfc;
+  background: ${colors.white};
   box-sizing: border-box;
+  transition: border-color 0.2s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: ${colors.primary};
+    box-shadow: 0 0 0 3px rgba(229, 0, 43, 0.1);
+  }
 `;
 
 const AdminButton = styled.button<{ $primary?: boolean; $danger?: boolean; $loading?: boolean }>`
   width: 100%;
   padding: 14px 0;
-  font-size: 1.1rem;
-  font-weight: 700;
-  border-radius: 10px;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
   border: none;
   background: ${({ $primary, $danger, $loading }) => 
-    $loading ? '#ccc' : $danger ? '#dc3545' : $primary ? '#1976d2' : '#f5f5f5'};
+    $loading ? colors.grayMedium : $danger ? colors.error : $primary ? colors.primary : colors.grayLight};
   color: ${({ $primary, $danger, $loading }) => 
-    $loading ? '#666' : $danger ? '#fff' : $primary ? '#fff' : '#222'};
+    $loading ? colors.grayDark : $danger ? colors.white : $primary ? colors.white : colors.black};
   margin-top: 12px;
   margin-bottom: 8px;
   cursor: ${({ $loading }) => $loading ? 'not-allowed' : 'pointer'};
-  transition: background 0.2s;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  
   &:hover { 
     background: ${({ $primary, $danger, $loading }) => 
-      $loading ? '#ccc' : $danger ? '#c82333' : $primary ? '#1251a3' : '#e0e0e0'}; 
+      $loading ? colors.grayMedium : $danger ? '#c82333' : $primary ? '#c40023' : colors.grayBorder};
+    transform: ${({ $loading }) => $loading ? 'none' : 'translateY(-1px)'};
+    box-shadow: ${({ $loading }) => $loading ? 'none' : '0 4px 8px rgba(0,0,0,0.15)'};
   }
 `;
 
 const AdminQuill = styled(ReactQuill)`
   .ql-toolbar {
     border-radius: 8px 8px 0 0;
-    background: #fafbfc;
-    border: 1.5px solid #e0e0e0;
+    background: ${colors.white};
+    border: 1.5px solid ${colors.grayBorder};
     border-bottom: none;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
   }
+  
   .ql-container {
     border-radius: 0 0 8px 8px;
-    border: 1.5px solid #e0e0e0;
+    border: 1.5px solid ${colors.grayBorder};
     min-height: 120px;
-    font-size: 1.08rem;
-    background: #fff;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 1rem;
+    background: ${colors.white};
   }
+  
+  .ql-editor {
+    line-height: 1.6;
+  }
+  
+  .ql-editor:focus {
+    border-color: ${colors.primary};
+    box-shadow: 0 0 0 3px rgba(229, 0, 43, 0.1);
+  }
+  
   margin-bottom: 24px;
 `;
 
-const AdminGrid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 40px;
-  max-width: 1300px;
-  width: 100%;
-  margin: 0 auto;
-`;
+
 
 const TabContainer = styled.div`
   display: flex;
   gap: 16px;
   margin-bottom: 32px;
-  border-bottom: 2px solid #f0f0f0;
+  border-bottom: 2px solid ${colors.grayBorder};
 `;
 
 const Tab = styled.button<{ $active: boolean }>`
   padding: 16px 32px;
-  font-size: 1.1rem;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 1rem;
   font-weight: 600;
   border: none;
   background: none;
-  color: ${({ $active }) => $active ? '#1976d2' : '#666'};
+  color: ${({ $active }) => $active ? colors.primary : colors.grayDark};
   cursor: pointer;
-  border-bottom: 3px solid ${({ $active }) => $active ? '#1976d2' : 'transparent'};
-  transition: all 0.3s;
+  border-bottom: 3px solid ${({ $active }) => $active ? colors.primary : 'transparent'};
+  transition: all 0.3s ease;
 
   &:hover {
-    color: #1976d2;
+    color: ${colors.primary};
   }
 `;
 
 const DragDropContainer = styled.div`
   min-height: 200px;
-  border: 2px dashed #e0e0e0;
-  border-radius: 12px;
+  border: 2px dashed ${colors.grayBorder};
+  border-radius: 8px;
   padding: 20px;
-  background: #fafbfc;
+  background: ${colors.grayLight};
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 `;
 
 const DragDropItem = styled.div<{ $isDragging: boolean }>`
-  background: #fff;
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
+  background: ${colors.white};
+  border: 1px solid ${colors.grayBorder};
+  border-radius: 8px;
   padding: 20px;
   cursor: move;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
   opacity: ${({ $isDragging }) => $isDragging ? 0.5 : 1};
   
   &:hover {
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
   }
 `;
 
 const ProductCard = styled.div`
-  background: #fff;
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
+  background: ${colors.white};
+  border: 1px solid ${colors.grayBorder};
+  border-radius: 8px;
   overflow: hidden;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
   
   &:hover {
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
   }
 `;
 
@@ -293,13 +347,13 @@ const ProductCardHeader = styled.div`
   display: flex;
   align-items: center;
   padding: 16px 20px;
-  background: #f8f9fa;
-  border-bottom: 1px solid #e0e0e0;
+  background: ${colors.grayLight};
+  border-bottom: 1px solid ${colors.grayBorder};
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s ease;
   
   &:hover {
-    background: #e9ecef;
+    background: ${colors.grayBorder};
   }
 `;
 
@@ -311,10 +365,15 @@ const ProductCardHeaderContent = styled.div`
 `;
 
 const DragHandle = styled.div`
-  color: #999;
+  color: ${colors.grayMedium};
   font-size: 18px;
   cursor: grab;
   padding: 4px;
+  transition: color 0.2s ease;
+  
+  &:hover {
+    color: ${colors.primary};
+  }
   
   &:active {
     cursor: grabbing;
@@ -326,7 +385,7 @@ const ProductThumbnail = styled.img`
   height: 50px;
   object-fit: cover;
   border-radius: 8px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid ${colors.grayBorder};
 `;
 
 const ProductInfo = styled.div`
@@ -334,54 +393,64 @@ const ProductInfo = styled.div`
 `;
 
 const ProductName = styled.div`
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
   font-weight: 600;
   font-size: 1.1rem;
-  color: #222;
+  color: ${colors.black};
   margin-bottom: 4px;
 `;
 
 const ProductCategory = styled.div`
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 0.9rem;
-  color: #666;
+  color: ${colors.grayMedium};
 `;
 
 const ModifiedIndicator = styled.div`
   width: 8px;
   height: 8px;
-  background: #1976d2;
+  background: ${colors.primary};
   border-radius: 50%;
   margin-left: 8px;
+  animation: pulse 2s infinite;
+  
+  @keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+  }
 `;
 
 const ToggleButton = styled.button`
   background: none;
   border: none;
-  color: #666;
+  color: ${colors.grayMedium};
   font-size: 20px;
   cursor: pointer;
   padding: 4px;
   border-radius: 4px;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
   
   &:hover {
-    background: #e0e0e0;
-    color: #333;
+    background: ${colors.grayBorder};
+    color: ${colors.black};
   }
 `;
 
 const DeleteButton = styled.button`
   background: none;
   border: none;
-  color: #dc3545;
+  color: ${colors.error};
   font-size: 18px;
   cursor: pointer;
   padding: 8px;
   border-radius: 4px;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
   
   &:hover {
-    background: #dc3545;
-    color: white;
+    background: ${colors.error};
+    color: ${colors.white};
+    transform: scale(1.1);
   }
 `;
 
@@ -395,9 +464,10 @@ const ProductImage = styled.img`
   width: 120px;
   height: 120px;
   object-fit: cover;
-  border-radius: 12px;
-  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  border: 1px solid ${colors.grayBorder};
   margin-bottom: 16px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 `;
 
 const ButtonGroup = styled.div`
@@ -408,41 +478,62 @@ const ButtonGroup = styled.div`
 
 const SmallButton = styled.button<{ $primary?: boolean; $danger?: boolean; $loading?: boolean }>`
   padding: 10px 20px;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 1rem;
   font-weight: 600;
   border-radius: 8px;
   border: none;
   background: ${({ $primary, $danger, $loading }) => 
-    $loading ? '#ccc' : $danger ? '#dc3545' : $primary ? '#1976d2' : '#f5f5f5'};
+    $loading ? colors.grayMedium : $danger ? colors.error : $primary ? colors.primary : colors.grayLight};
   color: ${({ $primary, $danger, $loading }) => 
-    $loading ? '#666' : $danger ? '#fff' : $primary ? '#fff' : '#222'};
+    $loading ? colors.grayDark : $danger ? colors.white : $primary ? colors.white : colors.black};
   cursor: ${({ $loading }) => $loading ? 'not-allowed' : 'pointer'};
-  transition: background 0.2s;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   gap: 6px;
   
   &:hover { 
     background: ${({ $primary, $danger, $loading }) => 
-      $loading ? '#ccc' : $danger ? '#c82333' : $primary ? '#1251a3' : '#e0e0e0'}; 
+      $loading ? colors.grayMedium : $danger ? '#c82333' : $primary ? '#c40023' : colors.grayBorder};
+    transform: ${({ $loading }) => $loading ? 'none' : 'translateY(-1px)'};
+    box-shadow: ${({ $loading }) => $loading ? 'none' : '0 2px 4px rgba(0,0,0,0.1)'};
   }
 `;
 
 // 전체 접기/펼치기 버튼
 const ToggleAllButton = styled.button`
-  background: #f8f9fa;
-  border: 1px solid #e0e0e0;
+  background: ${colors.grayLight};
+  border: 1px solid ${colors.grayBorder};
   border-radius: 8px;
   padding: 12px 20px;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 1rem;
   font-weight: 600;
-  color: #333;
+  color: ${colors.black};
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
   margin-bottom: 16px;
   
   &:hover {
-    background: #e9ecef;
+    background: ${colors.grayBorder};
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+`;
+
+// 그리드 레이아웃
+const AdminGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  max-width: 1300px;
+  width: 100%;
+  margin: 0 auto;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 24px;
   }
 `;
 
@@ -869,31 +960,39 @@ const AdminProductManage: React.FC = () => {
                     onDrop={(e) => handleDrop(e, index)}
                     $isDragging={false}
                   >
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      <AdminInput
-                        value={category.name}
-                        onChange={e => setCategories(prev => prev.map((c, i) => i === index ? { ...c, name: e.target.value } : c))}
-                        placeholder="카테고리명"
-                        style={{ marginBottom: 6 }}
-                      />
-                      <AdminQuill
-                        value={category.description || ''}
-                        onChange={value => setCategories(prev => prev.map((c, i) => i === index ? { ...c, description: value } : c))}
-                        modules={quillModules}
-                        theme="snow"
-                        placeholder="카테고리 설명"
-                      />
-                      <ButtonGroup>
-                        <SmallButton $primary onClick={async () => {
-                          const processedCategory = {
-                            ...category,
-                            description: category.description ? convertNewlinesToBr(category.description) : ''
-                          };
-                          await setDoc(doc(db, 'productCategories', category.id), processedCategory);
-                          addToast('카테고리가 저장되었습니다!');
-                        }}>저장</SmallButton>
-                        <SmallButton $danger onClick={() => handleDeleteCategory(category.id)}>삭제</SmallButton>
-                      </ButtonGroup>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', alignItems: 'start' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        <div>
+                          <AdminLabel>카테고리명</AdminLabel>
+                          <AdminInput
+                            value={category.name}
+                            onChange={e => setCategories(prev => prev.map((c, i) => i === index ? { ...c, name: e.target.value } : c))}
+                            placeholder="카테고리명"
+                          />
+                        </div>
+                        <ButtonGroup>
+                          <SmallButton $primary onClick={async () => {
+                            const processedCategory = {
+                              ...category,
+                              description: category.description ? convertNewlinesToBr(category.description) : ''
+                            };
+                            await setDoc(doc(db, 'productCategories', category.id), processedCategory);
+                            addToast('카테고리가 저장되었습니다!');
+                          }}>저장</SmallButton>
+                          <SmallButton $danger onClick={() => handleDeleteCategory(category.id)}>삭제</SmallButton>
+                        </ButtonGroup>
+                      </div>
+                      <div>
+                        <AdminLabel>카테고리 설명</AdminLabel>
+                        <AdminQuill
+                          value={category.description || ''}
+                          onChange={value => setCategories(prev => prev.map((c, i) => i === index ? { ...c, description: value } : c))}
+                          modules={quillModules}
+                          theme="snow"
+                          placeholder="카테고리 설명을 입력하세요..."
+                          style={{ minHeight: '120px' }}
+                        />
+                      </div>
                     </div>
                   </DragDropItem>
                 ))}
@@ -919,11 +1018,13 @@ const AdminProductManage: React.FC = () => {
                     style={{
                       width: '100%',
                       padding: '12px 16px',
-                      fontSize: '1.08rem',
-                      border: '1.5px solid #e0e0e0',
+                      fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif',
+                      fontSize: '1rem',
+                      border: `1.5px solid ${colors.grayBorder}`,
                       borderRadius: '8px',
                       marginBottom: '24px',
-                      background: '#fafbfc'
+                      background: colors.white,
+                      transition: 'border-color 0.2s ease'
                     }}
                   >
                     <option value="">카테고리 선택</option>
@@ -1054,11 +1155,13 @@ const AdminProductManage: React.FC = () => {
                               style={{
                                 width: '100%',
                                 padding: '12px 16px',
-                                fontSize: '1.08rem',
-                                border: '1.5px solid #e0e0e0',
+                                fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif',
+                                fontSize: '1rem',
+                                border: `1.5px solid ${colors.grayBorder}`,
                                 borderRadius: '8px',
                                 marginBottom: '12px',
-                                background: '#fafbfc'
+                                background: colors.white,
+                                transition: 'border-color 0.2s ease'
                               }}
                             >
                               <option value="">카테고리 선택</option>
@@ -1142,27 +1245,63 @@ const AdminProductManage: React.FC = () => {
         )}
 
         {activeTab === 'page' && (
-          <AdminCard>
-            <AdminLabel>페이지 슬로건</AdminLabel>
-            <AdminQuill
-              value={pageData.slogan}
-              onChange={value => setPageData(prev => ({ ...prev, slogan: value }))}
-              modules={quillModules}
-              theme="snow"
-              placeholder="메인 슬로건"
-            />
-            <AdminLabel>페이지 서브 슬로건</AdminLabel>
-            <AdminQuill
-              value={pageData.subSlogan}
-              onChange={value => setPageData(prev => ({ ...prev, subSlogan: value }))}
-              modules={quillModules}
-              theme="snow"
-              placeholder="서브 슬로건"
-            />
-            <AdminButton onClick={handleSavePageData} $primary>
-              페이지 데이터 저장
-            </AdminButton>
-          </AdminCard>
+          <>
+            <AdminCard>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
+                <div>
+                  <AdminLabel>페이지 슬로건</AdminLabel>
+                  <AdminQuill
+                    value={pageData.slogan}
+                    onChange={value => setPageData(prev => ({ ...prev, slogan: value }))}
+                    modules={quillModules}
+                    theme="snow"
+                    placeholder="메인 슬로건"
+                  />
+                  <AdminLabel>페이지 서브 슬로건</AdminLabel>
+                  <AdminQuill
+                    value={pageData.subSlogan}
+                    onChange={value => setPageData(prev => ({ ...prev, subSlogan: value }))}
+                    modules={quillModules}
+                    theme="snow"
+                    placeholder="서브 슬로건"
+                  />
+                  <AdminButton onClick={handleSavePageData} $primary>
+                    페이지 데이터 저장
+                  </AdminButton>
+                </div>
+                <div>
+                  <AdminLabel>실시간 Preview</AdminLabel>
+                  <div style={{
+                    background: colors.white,
+                    border: `1px solid ${colors.grayBorder}`,
+                    borderRadius: '8px',
+                    padding: '24px',
+                    minHeight: '200px'
+                  }}>
+                    <div style={{
+                      fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif',
+                      fontSize: '2rem',
+                      fontWeight: '700',
+                      color: colors.black,
+                      marginBottom: '16px',
+                      lineHeight: '1.4'
+                    }}
+                    dangerouslySetInnerHTML={{ __html: convertNewlinesToBr(pageData.slogan) }}
+                    />
+                    <div style={{
+                      fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif',
+                      fontSize: '1.2rem',
+                      fontWeight: '500',
+                      color: colors.grayDark,
+                      lineHeight: '1.6'
+                    }}
+                    dangerouslySetInnerHTML={{ __html: convertNewlinesToBr(pageData.subSlogan) }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </AdminCard>
+          </>
         )}
       </AdminMain>
     </AdminLayout>

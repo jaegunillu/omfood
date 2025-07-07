@@ -1,0 +1,106 @@
+.pageBg {
+  background: #fdf8f3;
+  min-height: 100vh;
+}
+
+.sloganContainer {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 80px 5%;
+  background: #fdf8f3;
+}
+.sloganTitle {
+  font-size: 32px;
+  font-weight: 700;
+  color: #5a3723;
+  text-align: center;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+.sloganSub {
+  font-size: 18px;
+  color: #8c6450;
+  text-align: center;
+  margin-top: 16px;
+  line-height: 1.6;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.categorySection {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 40px 0;
+}
+.categoryTitle {
+  font-size: 24px;
+  font-weight: 600;
+  color: #5a3723;
+  margin-bottom: 8px;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+.categoryDescription {
+  font-size: 16px;
+  color: #666;
+  line-height: 1.5;
+  margin-bottom: 24px;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+.productsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+@media (max-width: 1024px) {
+  .productsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (max-width: 768px) {
+  .productsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+.card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  transition: box-shadow 0.2s, transform 0.2s;
+  cursor: pointer;
+}
+.card:hover {
+  box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+  transform: scale(1.02);
+}
+.imageWrap {
+  width: 100%;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.image {
+  width: 100%;
+  max-height: 160px;
+  object-fit: contain;
+  transition: transform 0.2s;
+}
+.info {
+  padding: 20px 16px 16px 16px;
+  text-align: left;
+}
+.name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #333;
+  margin-top: 8px;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+.category {
+  font-size: 0.9rem;
+  color: #777;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+} 
