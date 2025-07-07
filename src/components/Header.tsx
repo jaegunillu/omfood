@@ -378,7 +378,10 @@ const Header: React.FC<{ isBrandPage?: boolean }> = ({ isBrandPage = false }) =>
           {menuItems.map((item) => (
             <MenuItem
               key={item}
-              href={item.toUpperCase() === 'BRAND' ? '/brand' : '#'}
+              href={
+                item.toUpperCase() === 'BRAND' ? '/brand' : 
+                item.toUpperCase() === 'PRODUCT' ? '/product' : '#'
+              }
               $isHovered={hoveredItem === item}
               $hover={isBrandPage ? true : isHeaderHover}
               style={isBrandPage ? { color: '#222' } : {}}

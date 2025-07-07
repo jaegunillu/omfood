@@ -9,9 +9,11 @@ import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage
 import { QuerySnapshot, DocumentData } from 'firebase/firestore';
 import Footer from './components/Footer';
 import BrandPage from './components/BrandPage';
+import ProductPage from './components/ProductPage';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import AdminProductManageComponent from './components/AdminProductManage';
 
 // Quill 툴바 옵션 (공통)
 const quillModules = {
@@ -861,16 +863,7 @@ function AdminFoodServiceManage() {
 
 // Product 관리 페이지
 function AdminProductManage() {
-  return (
-    <AdminLayoutComponent>
-      <AdminHeader>Product 관리</AdminHeader>
-      <AdminCard>
-        <div style={{ textAlign: 'center', color: '#888', fontSize: 16 }}>
-          Product 페이지 관리 기능이 준비 중입니다.
-        </div>
-      </AdminCard>
-    </AdminLayoutComponent>
-  );
+  return <AdminProductManageComponent />;
 }
 
 // Contact 관리 페이지
@@ -2142,6 +2135,7 @@ function App() {
         <Route path="/admin/contact" element={<AdminRoute><AdminContactManage /></AdminRoute>} />
         
         <Route path="/brand" element={<BrandPage />} />
+        <Route path="/product" element={<ProductPage />} />
         {/* 기존 홈페이지 라우트 */}
         <Route path="/*" element={
           <AppContainer>
