@@ -6,6 +6,13 @@ import { db } from '../firebase';
 import './BrandPage.css';
 import styled from 'styled-components';
 
+function stripHtmlTags(html: string) {
+  // 태그 제거, &nbsp; 등 공백 치환
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  return tmp.textContent || tmp.innerText || '';
+}
+
 const BrandAddRow = styled.div`
   display: flex;
   flex-direction: row;
@@ -105,10 +112,40 @@ const BrandPage: React.FC = () => {
             {idx % 2 === 0 ? (
               <>
                 <div className="brand-desc left">
-                  <h2 className={`brand-title${visibleArr[idx] ? ' brand-ani-in' : ' invisible'}`} style={{fontSize:'2.2rem',fontWeight:800,marginBottom:24,lineHeight:1.3}} dangerouslySetInnerHTML={{ __html: brand.mainText }} />
-                  <div className={`brand-desc-text${visibleArr[idx] ? ' brand-ani-in-sub' : ' invisible'}`} style={{fontSize:'1.18rem',marginBottom:28,lineHeight:1.7,color:'#222'}} dangerouslySetInnerHTML={{ __html: brand.subText }} />
+                  <h2
+                    className={`brand-title${visibleArr[idx] ? ' brand-ani-in' : ' invisible'}`}
+                    style={{ fontSize: '2.75rem', fontWeight: 800, marginBottom: 24, lineHeight: 1.2, letterSpacing: '-1px', color: '#111' }}
+                  >
+                    {stripHtmlTags(brand.mainText)}
+                  </h2>
+                  <div
+                    className={`brand-desc-text${visibleArr[idx] ? ' brand-ani-in-sub' : ' invisible'}`}
+                    style={{ fontSize: '1.18rem', marginBottom: 28, lineHeight: 1.7, color: '#222' }}
+                    dangerouslySetInnerHTML={{ __html: brand.subText }}
+                  />
                   {brand.link && (
-                    <a className={`brand-btn${visibleArr[idx] ? ' brand-ani-in-btn' : ' invisible'}`} href={brand.link} target="_blank" rel="noopener noreferrer" style={{marginTop:24,display:'inline-block',padding:'13px 36px',borderRadius:24,border:'1.5px solid #bbb',fontWeight:600,fontSize:'1.08rem',color:'#222',background:'#fff'}}>{brand.linkText || '자세히 보기'} &gt;&gt;</a>
+                    <a
+                      className={`brand-btn${visibleArr[idx] ? ' brand-ani-in-btn' : ' invisible'}`}
+                      href={brand.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        marginTop: 24,
+                        display: 'inline-block',
+                        padding: '18px 48px',
+                        borderRadius: 32,
+                        border: '1.5px solid #bbb',
+                        fontWeight: 700,
+                        fontSize: '1.18rem',
+                        color: '#222',
+                        background: '#fff',
+                        minWidth: 180,
+                        textAlign: 'center',
+                        letterSpacing: '0.01em',
+                      }}
+                    >
+                      {brand.linkText ? brand.linkText.replace(/<[^>]+>/g, '') : '자세히 보기'} &gt;&gt;
+                    </a>
                   )}
                 </div>
                 <div className={`brand-video-wrap right${visibleArr[idx] ? ' brand-ani-in-media right' : ' invisible'}`}>
@@ -129,10 +166,40 @@ const BrandPage: React.FC = () => {
                   )}
                 </div>
                 <div className="brand-desc right">
-                  <h2 className={`brand-title${visibleArr[idx] ? ' brand-ani-in' : ' invisible'}`} style={{fontSize:'2.2rem',fontWeight:800,marginBottom:24,lineHeight:1.3}} dangerouslySetInnerHTML={{ __html: brand.mainText }} />
-                  <div className={`brand-desc-text${visibleArr[idx] ? ' brand-ani-in-sub' : ' invisible'}`} style={{fontSize:'1.18rem',marginBottom:28,lineHeight:1.7,color:'#222'}} dangerouslySetInnerHTML={{ __html: brand.subText }} />
+                  <h2
+                    className={`brand-title${visibleArr[idx] ? ' brand-ani-in' : ' invisible'}`}
+                    style={{ fontSize: '2.75rem', fontWeight: 800, marginBottom: 24, lineHeight: 1.2, letterSpacing: '-1px', color: '#111' }}
+                  >
+                    {stripHtmlTags(brand.mainText)}
+                  </h2>
+                  <div
+                    className={`brand-desc-text${visibleArr[idx] ? ' brand-ani-in-sub' : ' invisible'}`}
+                    style={{ fontSize: '1.18rem', marginBottom: 28, lineHeight: 1.7, color: '#222' }}
+                    dangerouslySetInnerHTML={{ __html: brand.subText }}
+                  />
                   {brand.link && (
-                    <a className={`brand-btn${visibleArr[idx] ? ' brand-ani-in-btn' : ' invisible'}`} href={brand.link} target="_blank" rel="noopener noreferrer" style={{marginTop:24,display:'inline-block',padding:'13px 36px',borderRadius:24,border:'1.5px solid #bbb',fontWeight:600,fontSize:'1.08rem',color:'#222',background:'#fff'}}>{brand.linkText || '자세히 보기'} &gt;&gt;</a>
+                    <a
+                      className={`brand-btn${visibleArr[idx] ? ' brand-ani-in-btn' : ' invisible'}`}
+                      href={brand.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        marginTop: 24,
+                        display: 'inline-block',
+                        padding: '18px 48px',
+                        borderRadius: 32,
+                        border: '1.5px solid #bbb',
+                        fontWeight: 700,
+                        fontSize: '1.18rem',
+                        color: '#222',
+                        background: '#fff',
+                        minWidth: 180,
+                        textAlign: 'center',
+                        letterSpacing: '0.01em',
+                      }}
+                    >
+                      {brand.linkText ? brand.linkText.replace(/<[^>]+>/g, '') : '자세히 보기'} &gt;&gt;
+                    </a>
                   )}
                 </div>
               </>

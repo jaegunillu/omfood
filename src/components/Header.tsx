@@ -295,6 +295,7 @@ const Header: React.FC<{ isBrandPage?: boolean }> = ({ isBrandPage = false }) =>
   const [language, setLanguage] = useState<'en' | 'ko'>('en');
   const [logoWhite, setLogoWhite] = useState<string>('/logo_white.png');
   const [logoBlack, setLogoBlack] = useState<string>('/logo_black.png');
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleResize = () => {
@@ -348,7 +349,7 @@ const Header: React.FC<{ isBrandPage?: boolean }> = ({ isBrandPage = false }) =>
   };
 
   return (
-    <HeaderContainer $hover={isBrandPage ? true : isHeaderHover} $isMobile={isMobile} $brand={isBrandPage}>
+    <HeaderContainer $hover={true} $isMobile={isMobile} $brand={true}>
       <MobileMenuButton onClick={handleMobileMenuToggle}>
         {mobileMenuOpen ? '×' : '≡'}
       </MobileMenuButton>
@@ -357,14 +358,7 @@ const Header: React.FC<{ isBrandPage?: boolean }> = ({ isBrandPage = false }) =>
         onMouseLeave={() => setLogoHover(false)}
       >
         <a href="/" style={{ width: '100%', height: '100%', display: 'block', position: 'relative' }}>
-          {isBrandPage ? (
-            <LogoImg src={logoBlack} alt="logo" $visible={true} />
-          ) : (
-            <>
-              <LogoImg src={logoWhite} alt="logo" $visible={!isHeaderHover} />
-              <LogoImg src={logoBlack} alt="logo" $visible={isHeaderHover} />
-            </>
-          )}
+          <LogoImg src={logoBlack} alt="logo" $visible={true} />
         </a>
       </LogoWrapper>
       <NavWrapper>
@@ -379,14 +373,25 @@ const Header: React.FC<{ isBrandPage?: boolean }> = ({ isBrandPage = false }) =>
             <MenuItem
               key={item}
               href={
-                item.toUpperCase() === 'BRAND' ? '/brand' : 
-                item.toUpperCase() === 'PRODUCT' ? '/product' : '#'
+                item.toUpperCase() === 'BRAND' ? '/brand' :
+                item.toUpperCase() === 'PRODUCT' ? '/product' :
+                item.toUpperCase() === 'CONTACT' ? '/contact' :
+                item.toUpperCase() === 'ABOUT OMFOOD' ? '/about' :
+                item.toUpperCase() === 'FOOD SERVICE' ? '/foodservice' : '#'
               }
               $isHovered={hoveredItem === item}
-              $hover={isBrandPage ? true : isHeaderHover}
-              style={isBrandPage ? { color: '#222' } : {}}
+              $hover={true}
+              style={{ color: '#222', fontWeight: 700 }}
               onMouseEnter={() => setHoveredItem(item)}
               onMouseLeave={() => setHoveredItem(null)}
+              onClick={e => {
+                e.preventDefault();
+                if (item.toUpperCase() === 'BRAND') navigate('/brand');
+                else if (item.toUpperCase() === 'PRODUCT') navigate('/product');
+                else if (item.toUpperCase() === 'CONTACT') navigate('/contact');
+                else if (item.toUpperCase() === 'ABOUT OMFOOD') navigate('/about');
+                else if (item.toUpperCase() === 'FOOD SERVICE') navigate('/foodservice');
+              }}
             >
               {item.split('').map((char, idx) => (
                 <MenuChar
@@ -418,11 +423,25 @@ const Header: React.FC<{ isBrandPage?: boolean }> = ({ isBrandPage = false }) =>
         {menuItems.map((item) => (
           <MenuItem
             key={item}
-            href="#"
+            href={
+              item.toUpperCase() === 'BRAND' ? '/brand' :
+              item.toUpperCase() === 'PRODUCT' ? '/product' :
+              item.toUpperCase() === 'CONTACT' ? '/contact' :
+              item.toUpperCase() === 'ABOUT OMFOOD' ? '/about' :
+              item.toUpperCase() === 'FOOD SERVICE' ? '/foodservice' : '#'
+            }
             $isHovered={false}
             $hover={true}
-            style={{ fontSize: '1.5rem', margin: '24px 0', color: '#fff', fontWeight: 700 }}
-            onClick={handleMobileMenuClose}
+            style={{ fontSize: '1.5rem', margin: '24px 0', color: '#222', fontWeight: 700 }}
+            onClick={e => {
+              e.preventDefault();
+              setMobileMenuOpen(false);
+              if (item.toUpperCase() === 'BRAND') navigate('/brand');
+              else if (item.toUpperCase() === 'PRODUCT') navigate('/product');
+              else if (item.toUpperCase() === 'CONTACT') navigate('/contact');
+              else if (item.toUpperCase() === 'ABOUT OMFOOD') navigate('/about');
+              else if (item.toUpperCase() === 'FOOD SERVICE') navigate('/foodservice');
+            }}
           >
             {item}
           </MenuItem>

@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { collection, doc, getDocs, updateDoc, deleteDoc, addDoc, orderBy, query } from 'firebase/firestore';
+import { collection, doc, getDocs, updateDoc, deleteDoc, addDoc, orderBy, query, setDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, storage } from '../../firebase';
 import Accordion from '../common/Accordion';
 import DragDropList from '../common/DragDropList';
 import ImageUploader from '../common/ImageUploader';
 import Button from '../common/Button';
-import { useToast } from './ToastContext';
+import { useToast } from '../common/ToastContext';
 
 interface BrandPageData {
   id: string;
@@ -33,7 +33,7 @@ const BrandPageManage: React.FC = () => {
     mainVideo: ''
   });
   
-  const { showToast } = useToast();
+  const { success, error, info } = useToast();
 
   useEffect(() => {
     loadBrandPages();
@@ -46,9 +46,9 @@ const BrandPageManage: React.FC = () => {
       const brandSnapshot = await getDocs(brandQuery);
       const brandData = brandSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as BrandPageData));
       setBrandPages(brandData);
-    } catch (error) {
+    } catch (error: any) {
       console.error('브랜드 페이지 로드 실패:', error);
-      showToast('브랜드 페이지 로드에 실패했습니다.', 'error');
+      error('브랜드 페이지 로드에 실패했습니다.');
     } finally {
       setLoading(false);
     }
@@ -59,15 +59,17 @@ const BrandPageManage: React.FC = () => {
       const storageRef = ref(storage, `brandPages/${itemId}/${fieldName}`);
       await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(storageRef);
-      
       const docRef = doc(db, 'brandPages', itemId);
-      await updateDoc(docRef, { [fieldName]: downloadURL });
-      
-      showToast('이미지가 업로드되었습니다.', 'success');
+      try {
+        await updateDoc(docRef, { [fieldName]: downloadURL });
+      } catch (e) {
+        await setDoc(docRef, { [fieldName]: downloadURL }, { merge: true });
+      }
+      success('이미지가 업로드되었습니다.');
       loadBrandPages();
-    } catch (error) {
+    } catch (error: any) {
       console.error('이미지 업로드 실패:', error);
-      showToast('이미지 업로드에 실패했습니다.', 'error');
+      error('이미지 업로드에 실패했습니다.');
     }
   };
 
@@ -76,15 +78,17 @@ const BrandPageManage: React.FC = () => {
       const storageRef = ref(storage, `brandPages/${itemId}/${fieldName}`);
       await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(storageRef);
-      
       const docRef = doc(db, 'brandPages', itemId);
-      await updateDoc(docRef, { [fieldName]: downloadURL });
-      
-      showToast('영상이 업로드되었습니다.', 'success');
+      try {
+        await updateDoc(docRef, { [fieldName]: downloadURL });
+      } catch (e) {
+        await setDoc(docRef, { [fieldName]: downloadURL }, { merge: true });
+      }
+      success('영상이 업로드되었습니다.');
       loadBrandPages();
-    } catch (error) {
+    } catch (error: any) {
       console.error('영상 업로드 실패:', error);
-      showToast('영상 업로드에 실패했습니다.', 'error');
+      error('영상 업로드에 실패했습니다.');
     }
   };
 
@@ -96,13 +100,17 @@ const BrandPageManage: React.FC = () => {
       // Firestore 업데이트
       for (const item of updatedItems) {
         const docRef = doc(db, 'brandPages', item.id);
-        await updateDoc(docRef, { order: item.order });
+        try {
+          await updateDoc(docRef, { order: item.order });
+        } catch (e) {
+          await setDoc(docRef, { order: item.order }, { merge: true });
+        }
       }
       
-      showToast('순서가 변경되었습니다.', 'success');
-    } catch (error) {
+      success('순서가 변경되었습니다.');
+    } catch (error: any) {
       console.error('순서 변경 실패:', error);
-      showToast('순서 변경에 실패했습니다.', 'error');
+      error('순서 변경에 실패했습니다.');
     }
   };
 
@@ -113,16 +121,16 @@ const BrandPageManage: React.FC = () => {
       await deleteDoc(doc(db, 'brandPages', id));
       const updatedBrands = brandPages.filter(brand => brand.id !== id);
       setBrandPages(updatedBrands);
-      showToast('삭제되었습니다.', 'success');
-    } catch (error) {
+      success('삭제되었습니다.');
+    } catch (error: any) {
       console.error('삭제 실패:', error);
-      showToast('삭제에 실패했습니다.', 'error');
+      error('삭제에 실패했습니다.');
     }
   };
 
   const handleAddBrand = async () => {
     if (!newBrand.name.trim()) {
-      showToast('브랜드명을 입력해주세요.', 'error');
+      error('브랜드명을 입력해주세요.');
       return;
     }
 
@@ -144,11 +152,11 @@ const BrandPageManage: React.FC = () => {
         mainVideo: ''
       });
       setShowAddForm(false);
-      showToast('브랜드가 추가되었습니다.', 'success');
+      success('브랜드가 추가되었습니다.');
       loadBrandPages();
-    } catch (error) {
+    } catch (error: any) {
       console.error('브랜드 추가 실패:', error);
-      showToast('브랜드 추가에 실패했습니다.', 'error');
+      error('브랜드 추가에 실패했습니다.');
     }
   };
 

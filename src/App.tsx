@@ -14,7 +14,9 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import AdminProductManageComponent from './components/AdminProductManage';
-import { ToastProvider } from './components/admin/ToastContext';
+import { ToastProvider, useToast } from './components/common/ToastContext';
+import ContactUsPage from './components/ContactUsPage';
+import ContactUsAdminPage from './components/admin/ContactUsAdminPage';
 
 // 디자인 시스템 - 컬러 팔레트
 const colors = {
@@ -2613,8 +2615,8 @@ function AdminBrandPageManage() {
     link: '',
     linkText: ''
   });
-  const [msg, setMsg] = useState('');
   const [loading, setLoading] = useState(true);
+  const { success, error } = useToast();
 
   useEffect(() => {
     setLoading(true);
@@ -2653,7 +2655,6 @@ function AdminBrandPageManage() {
 
   // 메인 미디어 저장
   const handleSaveMainMedia = async () => {
-    setMsg('저장 중...');
     try {
       let url = mainMedia.url;
       let type = mainMedia.type;
@@ -2667,17 +2668,14 @@ function AdminBrandPageManage() {
       }
       await setDoc(doc(db, 'brandPage', 'mainMedia'), { url, type });
       setMainMedia((prev: any) => ({ ...prev, url, type, file: null }));
-      setMsg('저장되었습니다!');
+      success('저장되었습니다!');
     } catch (e) {
-      setMsg('저장 실패');
-    } finally {
-      setTimeout(() => setMsg(''), 1500);
+      error('저장 실패');
     }
   };
 
   // 브랜드 저장
   const handleSaveBrand = async (idx: number) => {
-    setMsg('저장 중...');
     try {
       const brand = brands[idx];
       let mediaUrl = brand.mediaUrl;
@@ -2702,27 +2700,22 @@ function AdminBrandPageManage() {
       if (brand.id) {
         await setDoc(doc(db, 'brandPage', 'brands', 'items', brand.id), data);
       }
-      setMsg('저장되었습니다!');
-      setTimeout(() => setMsg(''), 1500);
+      success('저장되었습니다!');
     } catch (e) {
-      setMsg('저장 실패');
-      setTimeout(() => setMsg(''), 1500);
+      error('저장 실패');
     }
   };
 
   // 브랜드 삭제
   const handleDeleteBrand = async (idx: number) => {
-    setMsg('삭제 중...');
     try {
       const brand = brands[idx];
       if (brand.id) {
         await deleteDoc(doc(db, 'brandPage', 'brands', 'items', brand.id));
       }
-      setMsg('삭제되었습니다!');
-      setTimeout(() => setMsg(''), 1500);
+      success('삭제되었습니다!');
     } catch (e) {
-      setMsg('삭제 실패');
-      setTimeout(() => setMsg(''), 1500);
+      error('삭제 실패');
     }
   };
 
@@ -2733,13 +2726,11 @@ function AdminBrandPageManage() {
     const [moved] = newArr.splice(fromIdx, 1);
     newArr.splice(toIdx, 0, moved);
     await Promise.all(newArr.map((brand, idx) => updateDoc(doc(db, 'brandPage', 'brands', 'items', brand.id), { order: idx })));
-    setMsg('순서가 변경되었습니다.');
-    setTimeout(() => setMsg(''), 1500);
+    success('순서가 변경되었습니다.');
   };
 
   // 브랜드 추가
   const handleAddBrand = async () => {
-    setMsg('추가 중...');
     try {
       let mediaUrl = '';
       let mediaType = addBrand.mediaType;
@@ -2762,11 +2753,9 @@ function AdminBrandPageManage() {
       };
       await addDoc(collection(db, 'brandPage', 'brands', 'items'), data);
       setAddBrand({ mainText: '', subText: '', mediaType: 'video', file: null, preview: '', link: '', linkText: '' });
-      setMsg('브랜드가 추가되었습니다!');
-      setTimeout(() => setMsg(''), 1500);
+      success('브랜드가 추가되었습니다!');
     } catch (e) {
-      setMsg('추가 실패');
-      setTimeout(() => setMsg(''), 1500);
+      error('추가 실패');
     }
   };
 
@@ -2778,7 +2767,7 @@ function AdminBrandPageManage() {
         </div>
         <h1 style={{ fontWeight: 800, fontSize: '2.1rem', marginBottom: 36, textAlign: 'center', letterSpacing: '-1px', color: '#222' }}>Brand 페이지 관리</h1>
       </div>
-      {msg && <div style={{ textAlign: 'center', color: '#007bff', fontWeight: 600, marginBottom: 16 }}>{msg}</div>}
+      {/* 상단 파란 메시지 완전 제거 */}
       {/* 브랜드 추가 + 메인 미디어 교체를 한 줄에 2개로 배치 */}
       <div style={{ display: 'flex', flexDirection: 'row', gap: 32, justifyContent: 'center', alignItems: 'flex-start', maxWidth: 960, margin: '0 auto 40px auto' }}>
         <div style={{ flex: 1, width: 555, minWidth: 555, maxWidth: 555, minHeight: 620, background: '#fff', borderRadius: 18, boxShadow: '0 4px 24px rgba(0,0,0,0.07)', boxSizing: 'border-box', padding: 32, display: 'flex', flexDirection: 'column', gap: 18 }}>
@@ -2940,7 +2929,9 @@ function App() {
           <Route path="/admin/about" element={<AdminRoute><AdminAboutManage /></AdminRoute>} />
           <Route path="/admin/foodservice" element={<AdminRoute><AdminFoodServiceManage /></AdminRoute>} />
           <Route path="/admin/product" element={<AdminRoute><AdminProductManage /></AdminRoute>} />
-          <Route path="/admin/contact" element={<AdminRoute><AdminContactManage /></AdminRoute>} />
+          <Route path="/admin/contact" element={<AdminRoute><ContactUsAdminPage /></AdminRoute>} />
+          <Route path="/contact" element={<ContactUsPage />} />
+          <Route path="/admin/contact-us" element={<AdminRoute><ContactUsAdminPage /></AdminRoute>} />
           
           <Route path="/brand" element={<BrandPage />} />
           <Route path="/product" element={<ProductPage />} />
@@ -2950,7 +2941,7 @@ function App() {
               <Header />
               <VideoSection />
               <SloganSection />
-              <StoreCards stores={(() => { console.log('[App] storeList:', storeList); return storeList; })()} />
+              <StoreCards stores={storeList} />
               <BrandSection>
                 <Brands />
               </BrandSection>

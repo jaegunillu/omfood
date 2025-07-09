@@ -5,6 +5,9 @@ import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage
 import { db, storage } from '../firebase';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import { useToast } from './common/ToastContext';
+import Toast from './common/Toast';
+import ToastContainer from './common/ToastContainer';
 
 // 디자인 시스템 - 컬러 팔레트
 const colors = {
@@ -30,43 +33,6 @@ const quillModules = {
     ['clean']
   ]
 };
-
-// 토스트 알림 컴포넌트
-const ToastContainer = styled.div`
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 3000;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-`;
-
-const Toast = styled.div<{ $type: 'success' | 'error' | 'info' }>`
-  background: ${({ $type }) => 
-    $type === 'success' ? colors.success : 
-    $type === 'error' ? colors.error : colors.info};
-  color: ${colors.white};
-  padding: 16px 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-weight: 600;
-  font-size: 1rem;
-  min-width: 300px;
-  animation: slideIn 0.3s ease-out;
-  
-  @keyframes slideIn {
-    from {
-      transform: translateX(100%);
-      opacity: 0;
-    }
-    to {
-      transform: translateX(0);
-      opacity: 1;
-    }
-  }
-`;
 
 // 로딩 스피너
 const Spinner = styled.div`

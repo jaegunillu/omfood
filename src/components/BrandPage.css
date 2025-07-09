@@ -503,3 +503,13 @@ header, .HeaderContainer, .header-container {
   align-items: stretch;
   justify-content: flex-start;
 }
+
+.brand-title,
+.brand-desc h2,
+.brand-desc h1 {
+  font-size: 2.75rem !important;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 24px;
+  letter-spacing: -1px;
+}

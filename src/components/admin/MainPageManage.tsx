@@ -6,7 +6,7 @@ import Accordion from '../common/Accordion';
 import DragDropList from '../common/DragDropList';
 import ImageUploader from '../common/ImageUploader';
 import Button from '../common/Button';
-import { useToast } from './ToastContext';
+import { useToast } from '../common/ToastContext';
 
 interface HeaderData {
   id: string;
@@ -54,7 +54,7 @@ const MainPageManage: React.FC = () => {
   const [stores, setStores] = useState<StoreData[]>([]);
   const [brands, setBrands] = useState<BrandData[]>([]);
   
-  const { showToast } = useToast();
+  const { success, error, info } = useToast();
 
   const tabs = [
     { id: 'header', name: '헤더 영역', icon: '🏠' },
@@ -100,9 +100,9 @@ const MainPageManage: React.FC = () => {
       const brandSnapshot = await getDocs(brandQuery);
       const brandData = brandSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as BrandData));
       setBrands(brandData);
-    } catch (error) {
+    } catch (error: any) {
       console.error('데이터 로드 실패:', error);
-      showToast('데이터 로드에 실패했습니다.', 'error');
+      error('데이터 로드에 실패했습니다.');
     } finally {
       setLoading(false);
     }
@@ -117,11 +117,11 @@ const MainPageManage: React.FC = () => {
       const docRef = doc(db, collectionName, itemId);
       await updateDoc(docRef, { [fieldName]: downloadURL });
       
-      showToast('이미지가 업로드되었습니다.', 'success');
+      success('이미지가 업로드되었습니다.');
       loadData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('이미지 업로드 실패:', error);
-      showToast('이미지 업로드에 실패했습니다.', 'error');
+      error('이미지 업로드에 실패했습니다.');
     }
   };
 
@@ -136,10 +136,10 @@ const MainPageManage: React.FC = () => {
         await updateDoc(docRef, { order: item.order });
       }
       
-      showToast('순서가 변경되었습니다.', 'success');
-    } catch (error) {
+      success('순서가 변경되었습니다.');
+    } catch (error: any) {
       console.error('순서 변경 실패:', error);
-      showToast('순서 변경에 실패했습니다.', 'error');
+      error('순서 변경에 실패했습니다.');
     }
   };
 
@@ -150,10 +150,10 @@ const MainPageManage: React.FC = () => {
       await deleteDoc(doc(db, collectionName, id));
       const updatedItems = currentItems.filter(item => item.id !== id);
       setter(updatedItems);
-      showToast('삭제되었습니다.', 'success');
-    } catch (error) {
+      success('삭제되었습니다.');
+    } catch (error: any) {
       console.error('삭제 실패:', error);
-      showToast('삭제에 실패했습니다.', 'error');
+      error('삭제에 실패했습니다.');
     }
   };
 
