@@ -2935,10 +2935,13 @@ function App() {
           
           <Route path="/brand" element={<BrandPage />} />
           <Route path="/product" element={<ProductPage />} />
+          <Route path="/about" element={<><Header /><div>About OMFOOD 페이지 준비중</div><Footer /></>} />
+          <Route path="/foodservice" element={<><Header /><div>Food Service 페이지 준비중</div><Footer /></>} />
+          <Route path="/contact" element={<><Header /><ContactUsPage /><Footer /></>} />
           {/* 기존 홈페이지 라우트 */}
           <Route path="/*" element={
             <AppContainer>
-              <Header />
+              <Header isMainPage />
               <VideoSection />
               <SloganSection />
               <StoreCards stores={storeList} />

@@ -70,7 +70,7 @@ const ProductPage: React.FC = () => {
 
   return (
     <>
-      <Header isBrandPage={true} />
+      <Header isBrandPage />
       <div className={styles.pageBg}>
         <section className={styles.sloganContainer}>
           <div className={styles.sloganTitle} dangerouslySetInnerHTML={{ __html: pageData.slogan.replace(/\n/g, '<br/>') }} />

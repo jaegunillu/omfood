@@ -7,8 +7,6 @@ import { db } from "../firebase";
 import { doc, onSnapshot } from "firebase/firestore";
 import privacyPolicy from "../assets/privacyPolicy.json";
 import { useToast } from './common/ToastContext';
-import Toast from './common/Toast';
-import ToastContainer from './common/ToastContainer';
 import Header from './Header';
 
 // 개인정보보호 약관 전문 (static 파일 import)
@@ -33,33 +31,35 @@ type FormValues = {
 
 const ContactUsPage: React.FC = () => {
   const [showPrivacy, setShowPrivacy] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState<null | "success" | "error">(null);
-  const [submitError, setSubmitError] = useState<string>("");
+
+  const { success, error } = useToast();
   const {
     register,
     handleSubmit,
     formState: { errors },
     setValue,
     watch,
+    reset,
   } = useForm<FormValues>({
     mode: "onBlur",
     defaultValues: { agreedPrivacy: false },
   });
 
   const onSubmit = async (data: FormValues) => {
-    setSubmitStatus(null);
-    setSubmitError("");
     try {
-      // Firebase Functions 엔드포인트 주소 (로컬/배포 환경에 따라 변경 필요)
-      const endpoint = process.env.REACT_APP_CONTACT_API || "/sendContactUs";
+      // Contact Us API 호출 경로를 항상 배포된 Cloud Function URL로 고정
+      const endpoint = 'https://us-central1-omfood-a621d.cloudfunctions.net/sendContactUs';
+      
       await axios.post(endpoint, {
         ...data,
         createdAt: new Date().toISOString(),
       });
-      setSubmitStatus("success");
+      success('문의가 성공적으로 접수되었습니다.');
+      reset(); // 폼 초기화
     } catch (err: any) {
-      setSubmitStatus("error");
-      setSubmitError(err?.response?.data?.error || "Submission failed");
+      console.error('Contact form submission error:', err);
+      const errorMessage = err?.response?.data?.error || "Submission failed. Please try again later.";
+      error(errorMessage);
     }
   };
 
@@ -108,12 +108,7 @@ const ContactUsPage: React.FC = () => {
               Have a question about our products, exploring partnership opportunities, or just want to learn more? We'd love to hear from you. Please fill out the form below and our team will get back to you as soon as possible.
             </p>
           </div>
-          {submitStatus === "success" && (
-            <div className="text-green-600 text-center mb-2">문의가 성공적으로 접수되었습니다.</div>
-          )}
-          {submitStatus === "error" && (
-            <div className="text-red-600 text-center mb-2">{submitError}</div>
-          )}
+
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-xs font-bold mb-1">
@@ -221,7 +216,13 @@ const ContactUsPage: React.FC = () => {
           </div>
           {showPrivacy && (
             <div className="mb-4 border rounded bg-gray-50 p-4 max-h-48 overflow-y-auto text-xs">
-              <pre className="whitespace-pre-wrap">{privacyPolicy.en}</pre>
+              <style>{`
+                .privacy-policy-table { border-collapse: collapse; width: 100%; margin-bottom: 16px; font-size: 13px; }
+                .privacy-policy-table th, .privacy-policy-table td { border: 1px solid #bbb; padding: 6px 8px; text-align: left; background: #fff; }
+                .privacy-policy-table th { background: #f5f5f5; font-weight: 700; }
+                .privacy-policy-table tr:nth-child(even) td { background: #fafafa; }
+              `}</style>
+              <div dangerouslySetInnerHTML={{ __html: privacyPolicy.en.replace(/<table /g, '<table class="privacy-policy-table" ') }} />
             </div>
           )}
           <button

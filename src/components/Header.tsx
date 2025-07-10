@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled, { css } from 'styled-components';
 import { db } from '../firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const HeaderContainer = styled.header<{ $hover: boolean; $isMobile: boolean; $brand?: boolean }>`
   position: fixed;
@@ -283,7 +283,12 @@ const MobileLanguageSelector = styled.div`
   }
 `;
 
-const Header: React.FC<{ isBrandPage?: boolean }> = ({ isBrandPage = false }) => {
+interface HeaderProps {
+  isMainPage?: boolean;
+  isBrandPage?: boolean;
+}
+
+const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false }) => {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [navHover, setNavHover] = useState(false);
   const [logoHover, setLogoHover] = useState(false);
@@ -296,6 +301,7 @@ const Header: React.FC<{ isBrandPage?: boolean }> = ({ isBrandPage = false }) =>
   const [logoWhite, setLogoWhite] = useState<string>('/logo_white.png');
   const [logoBlack, setLogoBlack] = useState<string>('/logo_black.png');
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const handleResize = () => {
@@ -331,7 +337,8 @@ const Header: React.FC<{ isBrandPage?: boolean }> = ({ isBrandPage = false }) =>
     return () => unsubscribe();
   }, []);
 
-  const isHeaderHover = navHover || logoHover;
+  const isAnimated = isMainPage; // 오직 메인페이지만 애니메이션
+  const isHeaderHover = isAnimated ? (navHover || logoHover) : true;
 
   const handleMobileMenuToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -348,8 +355,24 @@ const Header: React.FC<{ isBrandPage?: boolean }> = ({ isBrandPage = false }) =>
     // TODO: 국문 페이지 전환 로직 (추후 구현)
   };
 
+  // 메뉴 클릭 핸들러
+  const handleMenuClick = (item: string) => {
+    const key = item.toLowerCase().replace(/\s/g, '');
+    if (key.includes('brand')) {
+      navigate('/brand');
+    } else if (key.includes('product')) {
+      navigate('/product');
+    } else if (key === 'contact' || key === 'contactus') {
+      navigate('/contact');
+    } else if (key.includes('about')) {
+      navigate('/about');
+    } else if (key.includes('foodservice')) {
+      navigate('/foodservice');
+    }
+  };
+
   return (
-    <HeaderContainer $hover={true} $isMobile={isMobile} $brand={true}>
+    <HeaderContainer $hover={isAnimated ? isHeaderHover : true} $isMobile={isMobile} $brand={false} style={isAnimated ? {} : {background: '#fff', boxShadow: '0 2px 20px rgba(0,0,0,0.08)'}}>
       <MobileMenuButton onClick={handleMobileMenuToggle}>
         {mobileMenuOpen ? '×' : '≡'}
       </MobileMenuButton>
@@ -358,7 +381,7 @@ const Header: React.FC<{ isBrandPage?: boolean }> = ({ isBrandPage = false }) =>
         onMouseLeave={() => setLogoHover(false)}
       >
         <a href="/" style={{ width: '100%', height: '100%', display: 'block', position: 'relative' }}>
-          <LogoImg src={logoBlack} alt="logo" $visible={true} />
+          <LogoImg src={isAnimated ? (isHeaderHover ? logoBlack : logoWhite) : logoBlack} alt="logo" $visible={true} />
         </a>
       </LogoWrapper>
       <NavWrapper>
@@ -372,25 +395,14 @@ const Header: React.FC<{ isBrandPage?: boolean }> = ({ isBrandPage = false }) =>
           {menuItems.map((item) => (
             <MenuItem
               key={item}
-              href={
-                item.toUpperCase() === 'BRAND' ? '/brand' :
-                item.toUpperCase() === 'PRODUCT' ? '/product' :
-                item.toUpperCase() === 'CONTACT' ? '/contact' :
-                item.toUpperCase() === 'ABOUT OMFOOD' ? '/about' :
-                item.toUpperCase() === 'FOOD SERVICE' ? '/foodservice' : '#'
-              }
+              href="#"
               $isHovered={hoveredItem === item}
-              $hover={true}
-              style={{ color: '#222', fontWeight: 700 }}
+              $hover={isAnimated ? isHeaderHover : true}
               onMouseEnter={() => setHoveredItem(item)}
               onMouseLeave={() => setHoveredItem(null)}
               onClick={e => {
                 e.preventDefault();
-                if (item.toUpperCase() === 'BRAND') navigate('/brand');
-                else if (item.toUpperCase() === 'PRODUCT') navigate('/product');
-                else if (item.toUpperCase() === 'CONTACT') navigate('/contact');
-                else if (item.toUpperCase() === 'ABOUT OMFOOD') navigate('/about');
-                else if (item.toUpperCase() === 'FOOD SERVICE') navigate('/foodservice');
+                handleMenuClick(item);
               }}
             >
               {item.split('').map((char, idx) => (
@@ -423,24 +435,14 @@ const Header: React.FC<{ isBrandPage?: boolean }> = ({ isBrandPage = false }) =>
         {menuItems.map((item) => (
           <MenuItem
             key={item}
-            href={
-              item.toUpperCase() === 'BRAND' ? '/brand' :
-              item.toUpperCase() === 'PRODUCT' ? '/product' :
-              item.toUpperCase() === 'CONTACT' ? '/contact' :
-              item.toUpperCase() === 'ABOUT OMFOOD' ? '/about' :
-              item.toUpperCase() === 'FOOD SERVICE' ? '/foodservice' : '#'
-            }
+            href="#"
             $isHovered={false}
-            $hover={true}
+            $hover={isAnimated ? true : true}
             style={{ fontSize: '1.5rem', margin: '24px 0', color: '#222', fontWeight: 700 }}
             onClick={e => {
               e.preventDefault();
               setMobileMenuOpen(false);
-              if (item.toUpperCase() === 'BRAND') navigate('/brand');
-              else if (item.toUpperCase() === 'PRODUCT') navigate('/product');
-              else if (item.toUpperCase() === 'CONTACT') navigate('/contact');
-              else if (item.toUpperCase() === 'ABOUT OMFOOD') navigate('/about');
-              else if (item.toUpperCase() === 'FOOD SERVICE') navigate('/foodservice');
+              handleMenuClick(item);
             }}
           >
             {item}
