@@ -27,12 +27,19 @@ const colors = {
 // Quill 툴바 옵션 (통일된 포맷팅)
 const quillModules = {
   toolbar: [
-    ['bold', 'italic', 'underline'],
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ 'header': 1 }, { 'header': 2 }],
     [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+    [{ 'indent': '-1'}, { 'indent': '+1' }],
+    [{ 'align': [] }],
     ['link'],
     ['clean']
   ]
 };
+
+const formats = [
+  'bold', 'italic', 'underline', 'strike', 'align', 'link', 'header', 'list', 'indent', 'clean'
+];
 
 // 로딩 스피너
 const Spinner = styled.div`
@@ -904,6 +911,7 @@ const AdminProductManage: React.FC = () => {
                     value={newCategory.description}
                     onChange={value => setNewCategory({ ...newCategory, description: value })}
                     modules={quillModules}
+                    formats={formats}
                     theme="snow"
                     placeholder="카테고리 설명"
                   />
@@ -954,6 +962,7 @@ const AdminProductManage: React.FC = () => {
                           value={category.description || ''}
                           onChange={value => setCategories(prev => prev.map((c, i) => i === index ? { ...c, description: value } : c))}
                           modules={quillModules}
+                          formats={formats}
                           theme="snow"
                           placeholder="카테고리 설명을 입력하세요..."
                           style={{ minHeight: '120px' }}
@@ -1026,6 +1035,7 @@ const AdminProductManage: React.FC = () => {
                     value={newProduct.allergens}
                     onChange={value => setNewProduct(prev => ({ ...prev, allergens: value }))}
                     modules={quillModules}
+                    formats={formats}
                     theme="snow"
                     placeholder="알레르기 정보"
                   />
@@ -1034,6 +1044,7 @@ const AdminProductManage: React.FC = () => {
                     value={newProduct.ingredients}
                     onChange={value => setNewProduct(prev => ({ ...prev, ingredients: value }))}
                     modules={quillModules}
+                    formats={formats}
                     theme="snow"
                     placeholder="성분 정보"
                   />
@@ -1042,6 +1053,7 @@ const AdminProductManage: React.FC = () => {
                     value={newProduct.nutrition}
                     onChange={value => setNewProduct(prev => ({ ...prev, nutrition: value }))}
                     modules={quillModules}
+                    formats={formats}
                     theme="snow"
                     placeholder="영양 정보"
                   />
@@ -1158,6 +1170,7 @@ const AdminProductManage: React.FC = () => {
                                 handleProductChange(product.id);
                               }}
                               modules={quillModules}
+                              formats={formats}
                               theme="snow"
                               placeholder="알레르기 정보"
                             />
@@ -1169,6 +1182,7 @@ const AdminProductManage: React.FC = () => {
                                 handleProductChange(product.id);
                               }}
                               modules={quillModules}
+                              formats={formats}
                               theme="snow"
                               placeholder="성분 정보"
                             />
@@ -1180,6 +1194,7 @@ const AdminProductManage: React.FC = () => {
                                 handleProductChange(product.id);
                               }}
                               modules={quillModules}
+                              formats={formats}
                               theme="snow"
                               placeholder="영양 정보"
                             />
@@ -1213,58 +1228,64 @@ const AdminProductManage: React.FC = () => {
         {activeTab === 'page' && (
           <>
             <AdminCard>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
-                <div>
-                  <AdminLabel>페이지 슬로건</AdminLabel>
+              <div style={{ maxWidth: 1440, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 32 }}>
+                <AdminLabel>페이지 슬로건</AdminLabel>
+                <div style={{ width: '100%' }}>
                   <AdminQuill
                     value={pageData.slogan}
                     onChange={value => setPageData(prev => ({ ...prev, slogan: value }))}
                     modules={quillModules}
+                    formats={formats}
                     theme="snow"
                     placeholder="메인 슬로건"
+                    style={{ width: '100%' }}
                   />
-                  <AdminLabel>페이지 서브 슬로건</AdminLabel>
+                </div>
+                <AdminLabel>페이지 서브 슬로건</AdminLabel>
+                <div style={{ width: '100%' }}>
                   <AdminQuill
                     value={pageData.subSlogan}
                     onChange={value => setPageData(prev => ({ ...prev, subSlogan: value }))}
                     modules={quillModules}
+                    formats={formats}
                     theme="snow"
                     placeholder="서브 슬로건"
+                    style={{ width: '100%' }}
                   />
-                  <AdminButton onClick={handleSavePageData} $primary>
+                </div>
+                <div style={{ width: '100%' }}>
+                  <AdminButton onClick={handleSavePageData} $primary style={{ width: '100%', marginTop: 24 }}>
                     페이지 데이터 저장
                   </AdminButton>
                 </div>
-                <div>
-                  <AdminLabel>실시간 Preview</AdminLabel>
-                  <div style={{
-                    background: colors.white,
-                    border: `1px solid ${colors.grayBorder}`,
-                    borderRadius: '8px',
-                    padding: '24px',
-                    minHeight: '200px'
-                  }}>
-                    <div style={{
-                      fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif',
-                      fontSize: '2rem',
-                      fontWeight: '700',
-                      color: colors.black,
-                      marginBottom: '16px',
-                      lineHeight: '1.4'
-                    }}
-                    dangerouslySetInnerHTML={{ __html: convertNewlinesToBr(pageData.slogan) }}
-                    />
-                    <div style={{
-                      fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif',
-                      fontSize: '1.2rem',
-                      fontWeight: '500',
-                      color: colors.grayDark,
-                      lineHeight: '1.6'
-                    }}
-                    dangerouslySetInnerHTML={{ __html: convertNewlinesToBr(pageData.subSlogan) }}
-                    />
-                  </div>
-                </div>
+              </div>
+              <div style={{ maxWidth: 1440, margin: '40px auto 0 auto', background: '#fdf8f3', border: `1px solid ${colors.grayBorder}`, borderRadius: '12px', padding: '48px 32px', minHeight: '200px', boxShadow: '0 2px 10px rgba(0,0,0,0.06)' }}>
+                <AdminLabel style={{ fontWeight: 700, fontSize: 18, color: colors.black, marginBottom: 24, display: 'block' }}>실시간 Preview</AdminLabel>
+                <div style={{
+                  fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif',
+                  fontSize: '2rem',
+                  fontWeight: '700',
+                  color: '#5a3723',
+                  marginBottom: '16px',
+                  lineHeight: '1.4',
+                  textAlign: 'center'
+                }}
+                dangerouslySetInnerHTML={{ __html: convertNewlinesToBr(pageData.slogan) }}
+                />
+                <div style={{
+                  fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif',
+                  fontSize: '1.13rem',
+                  fontWeight: '500',
+                  color: '#8c6450',
+                  lineHeight: '1.45',
+                  textAlign: 'center',
+                  maxWidth: 1200,
+                  margin: '0 auto',
+                  padding: '0 10px',
+                  whiteSpace: 'pre-line'
+                }}
+                dangerouslySetInnerHTML={{ __html: convertNewlinesToBr(pageData.subSlogan) }}
+                />
               </div>
             </AdminCard>
           </>

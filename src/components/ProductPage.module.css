@@ -4,25 +4,31 @@
 }
 
 .sloganContainer {
-  max-width: 1440px;
+  max-width: 1800px;
   margin: 0 auto;
   padding: 80px 5%;
   background: #fdf8f3;
 }
 .sloganTitle {
-  font-size: 32px;
+  font-size: 38.4px;
   font-weight: 700;
   color: #5a3723;
   text-align: center;
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  margin-bottom: 10px;
 }
-.sloganSub {
-  font-size: 18px;
-  color: #8c6450;
-  text-align: center;
-  margin-top: 16px;
-  line-height: 1.6;
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+.productPageSloganSub {
+  font-size: 1.13rem !important;
+  color: #8c6450 !important;
+  text-align: center !important;
+  margin-top: 16px !important;
+  line-height: 1.45 !important;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  max-width: 1200px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding: 0 10px !important;
+  white-space: pre-line !important;
 }
 
 .categorySection {
@@ -31,18 +37,30 @@
   padding: 40px 0;
 }
 .categoryTitle {
-  font-size: 24px;
-  font-weight: 600;
-  color: #5a3723;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #4a2c13;
   margin-bottom: 8px;
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  margin-top: 32px;
+  letter-spacing: -0.5px;
+  text-shadow: 0 2px 8px rgba(90,55,35,0.04);
+  padding-bottom: 4px;
+  border-bottom: 2px solid #f3e3d1;
+  display: inline-block;
 }
 .categoryDescription {
-  font-size: 16px;
-  color: #666;
-  line-height: 1.5;
-  margin-bottom: 24px;
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 1.08rem;
+  color: #7a5a3a;
+  line-height: 1.7;
+  margin-bottom: 28px;
+  margin-top: 8px;
+  font-weight: 400;
+  padding-left: 2px;
+  padding-right: 2px;
+  max-width: 700px;
+  background: rgba(253,248,243,0.7);
+  border-radius: 6px;
+  display: block;
 }
 .productsGrid {
   display: grid;

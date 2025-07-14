@@ -36,8 +36,11 @@ const colors = {
 // Quill 툴바 옵션 (통일된 포맷팅)
 const quillModules = {
   toolbar: [
-    ['bold', 'italic', 'underline'],
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ 'header': 1 }, { 'header': 2 }],
     [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+    [{ 'indent': '-1'}, { 'indent': '+1' }],
+    [{ 'align': [] }],
     ['link'],
     ['clean']
   ]
@@ -1671,6 +1674,7 @@ function AdminMainManage() {
           value={data.mainText}
           onChange={v => handleChange('mainText', v)}
           modules={quillModules}
+          formats={formats}
           theme="snow"
           placeholder="메인 텍스트를 입력하세요"
         />
@@ -1679,6 +1683,7 @@ function AdminMainManage() {
           value={data.subText}
           onChange={v => handleChange('subText', v)}
           modules={quillModules}
+          formats={formats}
           theme="snow"
           placeholder="서브 텍스트를 입력하세요"
         />
@@ -1731,6 +1736,7 @@ function AdminSloganManage() {
                 value={mainText}
                 onChange={setMainText}
                 modules={quillModules}
+                formats={formats}
                 theme="snow"
                 placeholder="메인 슬로건을 입력하세요"
                 style={{ height: 120, marginBottom: 12, background: '#fff' }}
@@ -1742,6 +1748,7 @@ function AdminSloganManage() {
                 value={subText}
                 onChange={setSubText}
                 modules={quillModules}
+                formats={formats}
                 theme="snow"
                 placeholder="서브 슬로건을 입력하세요"
                 style={{ height: 120, marginBottom: 12, background: '#fff' }}
@@ -2440,6 +2447,7 @@ function AdminBrandManage() {
                     return next; 
                   })}
                   modules={quillModules}
+                  formats={formats}
                   theme="snow"
                   placeholder="브랜드명"
                 />
@@ -2452,6 +2460,7 @@ function AdminBrandManage() {
                     return next; 
                   })}
                   modules={quillModules}
+                  formats={formats}
                   theme="snow"
                   placeholder="브랜드 설명"
                 />
@@ -2464,6 +2473,7 @@ function AdminBrandManage() {
                     return next; 
                   })}
                   modules={quillModules}
+                  formats={formats}
                   theme="snow"
                   placeholder="브랜드 서브텍스트"
                 />
@@ -2493,6 +2503,7 @@ function AdminBrandManage() {
               value={newBrand.name}
               onChange={v => setNewBrand(prev => ({ ...prev, name: v }))}
               modules={quillModules}
+              formats={formats}
               theme="snow"
               placeholder="브랜드명"
             />
@@ -2501,6 +2512,7 @@ function AdminBrandManage() {
               value={newBrand.desc}
               onChange={v => setNewBrand(prev => ({ ...prev, desc: v }))}
               modules={quillModules}
+              formats={formats}
               theme="snow"
               placeholder="브랜드 설명"
             />
@@ -2509,6 +2521,7 @@ function AdminBrandManage() {
               value={newBrand.subText || ''}
               onChange={v => setNewBrand(prev => ({ ...prev, subText: v }))}
               modules={quillModules}
+              formats={formats}
               theme="snow"
               placeholder="브랜드 서브텍스트"
             />
@@ -2853,13 +2866,13 @@ function AdminBrandPageManage() {
                 </div>
                 <input type="file" accept="image/png,image/jpeg,video/mp4" onChange={e => handleFile(e, idx)} style={{ marginBottom: 8 }} />
                 <AdminLabel style={{ marginBottom: 8, fontSize: '1.12rem', fontWeight: 700, color: '#222' }}>메인 텍스트</AdminLabel>
-                <AdminQuill value={brand.mainText} onChange={v => setBrands(prev => { const next = [...prev]; next[idx] = { ...next[idx], mainText: v }; return next; })} modules={quillModules} theme="snow" placeholder="브랜드 메인 텍스트" />
+                <AdminQuill value={brand.mainText} onChange={v => setBrands(prev => { const next = [...prev]; next[idx] = { ...next[idx], mainText: v }; return next; })} modules={quillModules} formats={formats} theme="snow" placeholder="브랜드 메인 텍스트" />
                 <AdminLabel style={{ marginTop: 4, fontSize: '1.12rem', fontWeight: 700, color: '#222' }}>서브 텍스트</AdminLabel>
-                <AdminQuill value={brand.subText} onChange={v => setBrands(prev => { const next = [...prev]; next[idx] = { ...next[idx], subText: v }; return next; })} modules={quillModules} theme="snow" placeholder="브랜드 서브 텍스트" />
+                <AdminQuill value={brand.subText} onChange={v => setBrands(prev => { const next = [...prev]; next[idx] = { ...next[idx], subText: v }; return next; })} modules={quillModules} formats={formats} theme="snow" placeholder="브랜드 서브 텍스트" />
                 <AdminLabel style={{ marginTop: 4, fontSize: '1.12rem', fontWeight: 700, color: '#222' }}>링크 URL (선택사항)</AdminLabel>
                 <AdminInput value={brand.link || ''} onChange={e => setBrands(prev => { const next = [...prev]; next[idx] = { ...next[idx], link: e.target.value }; return next; })} style={{ fontSize: 16, padding: '10px 12px', borderRadius: 8, border: '1.5px solid #e5e5e5', marginBottom: 4 }} placeholder="https://example.com" />
                 <AdminLabel style={{ marginTop: 4, fontSize: '1.12rem', fontWeight: 700, color: '#222' }}>링크 텍스트 (선택사항)</AdminLabel>
-                <AdminQuill value={brand.linkText || ''} onChange={v => setBrands(prev => { const next = [...prev]; next[idx] = { ...next[idx], linkText: v }; return next; })} modules={quillModules} theme="snow" placeholder="자세히 보기" />
+                <AdminQuill value={brand.linkText || ''} onChange={v => setBrands(prev => { const next = [...prev]; next[idx] = { ...next[idx], linkText: v }; return next; })} modules={quillModules} formats={formats} theme="snow" placeholder="자세히 보기" />
                 <div style={{ display: 'flex', gap: 8, marginTop: 16, justifyContent: 'center' }}>
                   <AdminButton $primary onClick={() => handleSaveBrand(idx)} style={{ minWidth: 70, fontSize: 15, borderRadius: 8, height: 40 }}>저장</AdminButton>
                   <AdminButton onClick={() => handleDeleteBrand(idx)} style={{ background: '#f66', color: '#fff', minWidth: 70, fontSize: 15, borderRadius: 8, height: 40 }}>삭제</AdminButton>
@@ -2881,6 +2894,11 @@ function AdminBrandPageManage() {
           }
         `}</style>
       </AdminCard>
+      <style>{`
+        .ql-size-small { font-size: 0.75em; }
+        .ql-size-large { font-size: 1.5em; }
+        .ql-size-huge  { font-size: 2.5em; }
+      `}</style>
     </div>
   );
 }
@@ -2963,3 +2981,7 @@ export default App;
 function isVideo(url: string) {
   return /\.(mp4|webm|ogg)$/i.test(url);
 }
+
+const formats = [
+  'bold', 'italic', 'underline', 'strike', 'align', 'link', 'size', 'header', 'list', 'indent', 'clean'
+];

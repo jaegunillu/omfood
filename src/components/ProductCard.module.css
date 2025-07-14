@@ -23,9 +23,9 @@
   overflow: hidden;
 }
 .image {
-  width: 80%;
+  width: 160%;
   height: auto;
-  max-height: 180px;
+  max-height: 360px;
   object-fit: contain;
   transition: transform 0.2s;
 }
