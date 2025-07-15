@@ -532,6 +532,7 @@ interface Product {
 interface ProductPageData {
   slogan: string;
   subSlogan: string;
+  bottomText: string;
 }
 
 interface Toast {
@@ -541,12 +542,13 @@ interface Toast {
 }
 
 const AdminProductManage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'categories' | 'products' | 'page'>('categories');
+  const [activeTab, setActiveTab] = useState<'categories' | 'products' | 'page' | 'bottomText'>('categories');
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [pageData, setPageData] = useState<ProductPageData>({
     slogan: 'Signature Flavors. Global Standards.',
-    subSlogan: 'OM FOOD supplies sauces and seasoning powders to its overseas stores in Taiwan, Vietnam, and Mongolia, as well as to local Korean restaurants and various kitchens abroad. Crafted to capture the rich, authentic flavors of Korean cuisine while blending seamlessly into local food cultures, these products win over local palates and further enhance the value and appeal of K-Food.'
+    subSlogan: 'OM FOOD supplies sauces and seasoning powders to its overseas stores in Taiwan, Vietnam, and Mongolia, as well as to local Korean restaurants and various kitchens abroad. Crafted to capture the rich, authentic flavors of Korean cuisine while blending seamlessly into local food cultures, these products win over local palates and further enhance the value and appeal of K-Food.',
+    bottomText: 'OM FOOD supplies sauces and seasoning powders to its overseas stores in Taiwan, Vietnam, and Mongolia, as well as to local Korean restaurants and various kitchens abroad. Crafted to capture the rich, authentic flavors of Korean cuisine while blending seamlessly into local food cultures, these products win over local palates and further enhance the value and appeal of K-Food.'
   });
   const [msg, setMsg] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -648,7 +650,8 @@ const AdminProductManage: React.FC = () => {
       if (docSnap.exists()) {
         setPageData({
           slogan: docSnap.data().slogan || 'Signature Flavors. Global Standards.',
-          subSlogan: docSnap.data().subSlogan || 'OM FOOD supplies sauces and seasoning powders to its overseas stores in Taiwan, Vietnam, and Mongolia, as well as to local Korean restaurants and various kitchens abroad. Crafted to capture the rich, authentic flavors of Korean cuisine while blending seamlessly into local food cultures, these products win over local palates and further enhance the value and appeal of K-Food.'
+          subSlogan: docSnap.data().subSlogan || 'OM FOOD supplies sauces and seasoning powders to its overseas stores in Taiwan, Vietnam, and Mongolia, as well as to local Korean restaurants and various kitchens abroad. Crafted to capture the rich, authentic flavors of Korean cuisine while blending seamlessly into local food cultures, these products win over local palates and further enhance the value and appeal of K-Food.',
+          bottomText: docSnap.data().bottomText || 'OM FOOD supplies sauces and seasoning powders to its overseas stores in Taiwan, Vietnam, and Mongolia, as well as to local Korean restaurants and various kitchens abroad. Crafted to capture the rich, authentic flavors of Korean cuisine while blending seamlessly into local food cultures, these products win over local palates and further enhance the value and appeal of K-Food.'
         });
       }
     };
@@ -819,14 +822,27 @@ const AdminProductManage: React.FC = () => {
   // 페이지 데이터 저장
   const handleSavePageData = async () => {
     try {
-      const processedData = {
-        slogan: convertNewlinesToBr(pageData.slogan),
-        subSlogan: convertNewlinesToBr(pageData.subSlogan)
-      };
-      await setDoc(doc(db, 'productPage', 'content'), processedData);
+      await setDoc(doc(db, 'productPage', 'content'), {
+        slogan: pageData.slogan,
+        subSlogan: pageData.subSlogan,
+        bottomText: pageData.bottomText
+      });
       addToast('페이지 데이터가 저장되었습니다!');
     } catch (error) {
-      addToast('페이지 데이터 저장 중 오류가 발생했습니다.', 'error');
+      addToast('저장 중 오류가 발생했습니다.', 'error');
+    }
+  };
+
+  const handleSaveBottomText = async () => {
+    try {
+      await setDoc(doc(db, 'productPage', 'content'), {
+        slogan: pageData.slogan,
+        subSlogan: pageData.subSlogan,
+        bottomText: pageData.bottomText
+      });
+      addToast('하단 문구가 저장되었습니다!');
+    } catch (error) {
+      addToast('저장 중 오류가 발생했습니다.', 'error');
     }
   };
 
@@ -893,6 +909,12 @@ const AdminProductManage: React.FC = () => {
             onClick={() => setActiveTab('page')}
           >
             페이지 설정
+          </Tab>
+          <Tab 
+            $active={activeTab === 'bottomText'} 
+            onClick={() => setActiveTab('bottomText')}
+          >
+            하단 문구 설정
           </Tab>
         </TabContainer>
 
@@ -1290,9 +1312,95 @@ const AdminProductManage: React.FC = () => {
             </AdminCard>
           </>
         )}
+
+        {activeTab === 'bottomText' && (
+          <>
+            <AdminCard>
+              <div style={{ maxWidth: 1440, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 32 }}>
+                <AdminLabel>하단 문구</AdminLabel>
+                <div style={{ width: '100%' }}>
+                  <AdminQuill
+                    value={pageData.bottomText}
+                    onChange={value => setPageData(prev => ({ ...prev, bottomText: value }))}
+                    modules={quillModules}
+                    formats={formats}
+                    theme="snow"
+                    placeholder="하단 문구를 입력하세요..."
+                    style={{ width: '100%' }}
+                  />
+                </div>
+                <div style={{ width: '100%' }}>
+                  <AdminButton onClick={handleSaveBottomText} $primary style={{ width: '100%', marginTop: 24 }}>
+                    하단 문구 저장
+                  </AdminButton>
+                </div>
+              </div>
+              <div style={{ 
+                maxWidth: 1440, 
+                margin: '40px auto 0 auto', 
+                background: 'linear-gradient(135deg, #fdf8f3 0%, #f9f2e8 100%)', 
+                border: `1px solid ${colors.grayBorder}`, 
+                borderRadius: '20px', 
+                padding: '48px 32px', 
+                minHeight: '200px', 
+                boxShadow: '0 8px 32px rgba(90, 55, 35, 0.08)',
+                position: 'relative',
+                overflow: 'hidden'
+              }}>
+
+                <AdminLabel style={{ fontWeight: 700, fontSize: 18, color: colors.black, marginBottom: 24, display: 'block' }}>실시간 Preview</AdminLabel>
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  width: '100%'
+                }}>
+                  <div style={{
+                    fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif',
+                    fontSize: '1.58rem',
+                    fontWeight: '600',
+                    color: '#5a3723',
+                    lineHeight: '1.7',
+                    textAlign: 'center',
+                    maxWidth: 1440,
+                    margin: '24px auto 32px auto',
+                    padding: '24px 32px',
+                    whiteSpace: 'pre-line',
+                    background: 'rgba(255, 255, 255, 0.7)',
+                    borderRadius: '16px',
+                    backdropFilter: 'blur(10px)',
+                    boxShadow: '0 4px 20px rgba(90, 55, 35, 0.1)',
+                    border: '1px solid rgba(90, 55, 35, 0.1)',
+                    position: 'relative'
+                  }}
+                  dangerouslySetInnerHTML={{ __html: convertNewlinesToBr(pageData.bottomText) }}
+                  />
+                  <button 
+                    style={{
+                      background: 'linear-gradient(135deg, #5a3723 0%, #7a5a3a 100%)',
+                      color: '#fff',
+                      border: 'none',
+                      padding: '14px 36px',
+                      fontSize: '1.1rem',
+                      fontWeight: '600',
+                      borderRadius: '12px',
+                      cursor: 'pointer',
+                      fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif',
+                      transition: 'all 0.3s ease',
+                      boxShadow: '0 4px 16px rgba(90, 55, 35, 0.25)',
+                      marginTop: '16px'
+                    }}
+                  >
+                    More &gt;&gt;
+                  </button>
+                </div>
+              </div>
+            </AdminCard>
+          </>
+        )}
       </AdminMain>
     </AdminLayout>
   );
-};
-
+  };
+  
 export default AdminProductManage; 

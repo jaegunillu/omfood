@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { collection, onSnapshot, doc, getDoc } from 'firebase/firestore';
+import { useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
 import Header from './Header';
 import Footer from './Footer';
@@ -24,6 +25,7 @@ interface Product {
 interface ProductPageData {
   slogan: string;
   subSlogan: string;
+  bottomText: string;
 }
 
 // 상세정보 모달 컴포넌트
@@ -92,9 +94,11 @@ const ProductPage: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [pageData, setPageData] = useState<ProductPageData>({
     slogan: 'Signature Flavors\nGlobal Standards',
-    subSlogan: 'OM FOOD supplies sauces and seasoning powders to its overseas stores in Taiwan, Vietnam, and Mongolia,\nas well as to local Korean restaurants and various kitchens abroad. Crafted to capture the rich, authentic flavors of Korean cuisine while blending seamlessly into local food cultures, these products win over local palates and further enhance the value and appeal of K-Food.'
+    subSlogan: 'OM FOOD supplies sauces and seasoning powders to its overseas stores in Taiwan, Vietnam, and Mongolia,\nas well as to local Korean restaurants and various kitchens abroad. Crafted to capture the rich, authentic flavors of Korean cuisine while blending seamlessly into local food cultures, these products win over local palates and further enhance the value and appeal of K-Food.',
+    bottomText: 'With certified domestic manufacturing expertise and proprietary recipes,\nwe can produce customized products tailored to buyer needs.'
   });
   const [modalProduct, setModalProduct] = useState<any>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const unsubscribeCategories = onSnapshot(collection(db, 'productCategories'), (snapshot) => {
@@ -119,7 +123,8 @@ const ProductPage: React.FC = () => {
       if (docSnap.exists()) {
         setPageData({
           slogan: docSnap.data().slogan || 'Signature Flavors\nGlobal Standards',
-          subSlogan: docSnap.data().subSlogan || 'OM FOOD supplies sauces and seasoning powders to its overseas stores in Taiwan, Vietnam, and Mongolia,\nas well as to local Korean restaurants and various kitchens abroad. Crafted to capture the rich, authentic flavors of Korean cuisine while blending seamlessly into local food cultures, these products win over local palates and further enhance the value and appeal of K-Food.'
+          subSlogan: docSnap.data().subSlogan || 'OM FOOD supplies sauces and seasoning powders to its overseas stores in Taiwan, Vietnam, and Mongolia,\nas well as to local Korean restaurants and various kitchens abroad. Crafted to capture the rich, authentic flavors of Korean cuisine while blending seamlessly into local food cultures, these products win over local palates and further enhance the value and appeal of K-Food.',
+          bottomText: docSnap.data().bottomText || 'With certified domestic manufacturing expertise and proprietary recipes,\nwe can produce customized products tailored to buyer needs.'
         });
       }
     };
@@ -200,6 +205,15 @@ const ProductPage: React.FC = () => {
             </div>
           </section>
         ))}
+        <section className={styles.customSection}>
+          <div className={styles.customText} dangerouslySetInnerHTML={{ __html: pageData.bottomText.replace(/\n/g, '<br/>') }} />
+          <button 
+            className={styles.moreButton}
+            onClick={() => navigate('/contact')}
+          >
+            More &gt;&gt;
+          </button>
+        </section>
       </div>
       {modalProduct && (
         <ProductDetailModal product={modalProduct} onClose={() => setModalProduct(null)} />

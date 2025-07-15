@@ -1457,6 +1457,7 @@ const AdminErrorMessage = styled.div`
 
 // 메뉴명 관리 페이지
 function AdminMenuManage() {
+  const { success } = useToast();
   const [names, setNames] = useState<string[]>(["ABOUT OMFOOD", "FOOD SERVICE", "BRAND", "PRODUCT", "CONTACT"]);
   const [msg, setMsg] = useState('');
   const [loading, setLoading] = useState(true);
@@ -1510,8 +1511,7 @@ function AdminMenuManage() {
 
   const handleSave = async () => {
     await setDoc(doc(db, 'menu', 'names'), { items: names });
-    setMsg('저장되었습니다!');
-    setTimeout(() => setMsg(''), 1500);
+    success('헤더 영역이 저장되었습니다!');
   };
 
   const handleLogoUpload = async (type: 'white' | 'black') => {
@@ -1579,7 +1579,6 @@ function AdminMenuManage() {
             <div style={{ display: 'flex', justifyContent: 'center', marginTop: 42 }}>
               <AdminButton onClick={handleSave} $primary style={{ fontSize: 20, padding: '16px 0', minWidth: 180 }}>저장하기</AdminButton>
             </div>
-            {msg && <AdminSuccessMessage>{msg}</AdminSuccessMessage>}
           </AdminCard>
         </>
       )}
@@ -1590,6 +1589,7 @@ function AdminMenuManage() {
 // 메인 섹션 관리 페이지
 function AdminMainManage() {
   const navigate = useNavigate();
+  const { success } = useToast();
   const [data, setData] = useState({
     mediaType: 'video',
     mediaUrl: '',
@@ -1643,11 +1643,10 @@ function AdminMainManage() {
 
       await setDoc(doc(db, 'mainSection', 'content'), mainData);
       localStorage.setItem(MAIN_KEY, JSON.stringify(mainData));
-      setMsg('저장되었습니다.');
-      setTimeout(() => setMsg(''), 2000);
+      success('메인 섹션이 저장되었습니다!');
     } catch (error) {
       console.error('Error saving data:', error);
-      setMsg('저장 중 오류가 발생했습니다.');
+      success('저장 중 오류가 발생했습니다.');
     }
   };
 
@@ -1687,8 +1686,25 @@ function AdminMainManage() {
           theme="snow"
           placeholder="서브 텍스트를 입력하세요"
         />
+        
+        {/* 실시간 프리뷰 */}
+        <div style={{ marginTop: 32, padding: 24, background: '#f8f9fa', borderRadius: 8, border: '1px solid #e0e0e0' }}>
+          <h5 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 16, color: '#333' }}>실시간 Preview</h5>
+          <div style={{ background: '#ffffff', padding: 24, borderRadius: 8, border: '1px solid #e0e0e0' }}>
+            <div style={{ maxWidth: '800px', margin: '0 auto', paddingTop: 16 }}>
+              <div 
+                style={{ fontSize: '2rem', fontWeight: 700, marginBottom: 16, color: '#222', textAlign: 'center' }}
+                dangerouslySetInnerHTML={{ __html: data.mainText || '<em>메인 텍스트를 입력하세요...</em>' }}
+              />
+              <div 
+                style={{ fontSize: '1.1rem', lineHeight: 1.6, color: '#666', textAlign: 'center' }}
+                dangerouslySetInnerHTML={{ __html: data.subText || '<em>서브 텍스트를 입력하세요...</em>' }}
+              />
+            </div>
+          </div>
+        </div>
+        
         <AdminButton $primary onClick={handleSave}>저장하기</AdminButton>
-        {msg && <AdminSuccessMessage>{msg}</AdminSuccessMessage>}
       </AdminCard>
     </AdminLayoutComponent>
   );
@@ -1696,6 +1712,7 @@ function AdminMainManage() {
 
 // 슬로건 관리 페이지
 function AdminSloganManage() {
+  const { success } = useToast();
   const [mainText, setMainText] = useState('Global Taste, Local Touch');
   const [subText, setSubText] = useState('From sauces to stores, we blend Korean flavor with local culture for every market we serve.');
   const [msg, setMsg] = useState('');
@@ -1718,8 +1735,7 @@ function AdminSloganManage() {
 
   const handleSave = async () => {
     await setDoc(doc(db, 'slogan', 'main'), { mainText, subText });
-    setMsg('저장되었습니다!');
-    setTimeout(() => setMsg(''), 1500);
+    success('슬로건이 저장되었습니다!');
   };
 
   return (
@@ -1754,10 +1770,27 @@ function AdminSloganManage() {
                 style={{ height: 120, marginBottom: 12, background: '#fff' }}
               />
             </div>
+            
+            {/* 실시간 프리뷰 */}
+            <div style={{ marginTop: 32, padding: 24, background: '#f8f9fa', borderRadius: 8, border: '1px solid #e0e0e0' }}>
+              <h5 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 16, color: '#333' }}>실시간 Preview</h5>
+              <div style={{ background: '#fff', padding: 24, borderRadius: 8, border: '1px solid #e0e0e0' }}>
+                <div style={{ maxWidth: '1440px', margin: '0 auto', textAlign: 'center' }}>
+                  <div 
+                    style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: 16, color: '#222' }}
+                    dangerouslySetInnerHTML={{ __html: mainText || '<em>메인 슬로건을 입력하세요...</em>' }}
+                  />
+                  <div 
+                    style={{ fontSize: '1rem', lineHeight: 1.6, color: '#666' }}
+                    dangerouslySetInnerHTML={{ __html: subText || '<em>서브 슬로건을 입력하세요...</em>' }}
+                  />
+                </div>
+              </div>
+            </div>
+            
             <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 32 }}>
               <AdminButton onClick={handleSave} $primary>저장하기</AdminButton>
             </div>
-            {msg && <AdminSuccessMessage>{msg}</AdminSuccessMessage>}
           </AdminCard>
         </>
       )}
@@ -1767,6 +1800,7 @@ function AdminSloganManage() {
 
 // 스토어 관리 페이지
 function AdminStoreManage() {
+  const { success } = useToast();
   const [stores, setStores] = useState<Array<{ id: string; name: string; image: string; address: string; mapUrl: string; order?: number }>>([]);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState('');
@@ -1797,20 +1831,18 @@ function AdminStoreManage() {
   const handleSave = async (store: any) => {
     try {
       await setDoc(doc(db, STORES_COLLECTION, store.id), store);
-      setMsg('저장되었습니다!');
-      setTimeout(() => setMsg(''), 1500);
+      success('스토어가 저장되었습니다!');
     } catch (error) {
-      setMsg('저장 중 오류가 발생했습니다.');
+      success('저장 중 오류가 발생했습니다.');
     }
   };
 
   const handleDelete = async (id: string) => {
     try {
       await deleteDoc(doc(db, STORES_COLLECTION, id));
-      setMsg('삭제되었습니다!');
-      setTimeout(() => setMsg(''), 1500);
+      success('스토어가 삭제되었습니다!');
     } catch (error) {
-      setMsg('삭제 중 오류가 발생했습니다.');
+      success('삭제 중 오류가 발생했습니다.');
     }
   };
 
@@ -1820,10 +1852,9 @@ function AdminStoreManage() {
       const order = stores.length;
       await addDoc(collection(db, STORES_COLLECTION), { ...newStore, order });
       setNewStore({ name: '', image: '', address: '', mapUrl: '' });
-      setMsg('스토어가 추가되었습니다!');
-      setTimeout(() => setMsg(''), 1500);
+      success('스토어가 추가되었습니다!');
     } catch (error) {
-      setMsg('추가 중 오류가 발생했습니다.');
+      success('추가 중 오류가 발생했습니다.');
     }
   };
 
@@ -1847,7 +1878,7 @@ function AdminStoreManage() {
         });
       }
     } catch (error) {
-      setMsg('이미지 업로드 중 오류가 발생했습니다.');
+      success('이미지 업로드 중 오류가 발생했습니다.');
     } finally {
       setUploading(false);
     }
@@ -1858,10 +1889,9 @@ function AdminStoreManage() {
       await Promise.all(newStores.map((store, idx) => 
         updateDoc(doc(db, STORES_COLLECTION, store.id), { order: idx })
       ));
-      setMsg('순서가 변경되었습니다!');
-      setTimeout(() => setMsg(''), 1500);
+      success('순서가 변경되었습니다!');
     } catch (error) {
-      setMsg('순서 변경 중 오류가 발생했습니다.');
+      success('순서 변경 중 오류가 발생했습니다.');
     }
   };
 
@@ -2230,6 +2260,7 @@ const BrandQuill = styled(ReactQuill)`
 `;
 
 function AdminBrandManage() {
+  const { success } = useToast();
   const [brands, setBrands] = useState<Array<{ id: string; name: string; desc: string; subText?: string; image: string; order?: number }>>([]);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState('');
@@ -2257,20 +2288,18 @@ function AdminBrandManage() {
   const handleSave = async (brand: any) => {
     try {
       await setDoc(doc(db, 'brands', brand.id), brand);
-      setMsg('저장되었습니다!');
-      setTimeout(() => setMsg(''), 1500);
+      success('브랜드가 저장되었습니다!');
     } catch (error) {
-      setMsg('저장 중 오류가 발생했습니다.');
+      success('저장 중 오류가 발생했습니다.');
     }
   };
 
   const handleDelete = async (id: string) => {
     try {
       await deleteDoc(doc(db, 'brands', id));
-      setMsg('삭제되었습니다!');
-      setTimeout(() => setMsg(''), 1500);
+      success('브랜드가 삭제되었습니다!');
     } catch (error) {
-      setMsg('삭제 중 오류가 발생했습니다.');
+      success('삭제 중 오류가 발생했습니다.');
     }
   };
 
@@ -2280,10 +2309,9 @@ function AdminBrandManage() {
       const order = brands.length;
       await addDoc(collection(db, 'brands'), { ...newBrand, order });
       setNewBrand({ name: '', desc: '', subText: '', image: '' });
-      setMsg('브랜드가 추가되었습니다!');
-      setTimeout(() => setMsg(''), 1500);
+      success('브랜드가 추가되었습니다!');
     } catch (error) {
-      setMsg('추가 중 오류가 발생했습니다.');
+      success('추가 중 오류가 발생했습니다.');
     }
   };
 
@@ -2307,7 +2335,7 @@ function AdminBrandManage() {
         });
       }
     } catch (error) {
-      setMsg('이미지 업로드 중 오류가 발생했습니다.');
+      success('이미지 업로드 중 오류가 발생했습니다.');
     } finally {
       setUploading(false);
     }
@@ -2318,10 +2346,9 @@ function AdminBrandManage() {
       await Promise.all(newBrands.map((brand, idx) => 
         updateDoc(doc(db, 'brands', brand.id), { order: idx })
       ));
-      setMsg('순서가 변경되었습니다!');
-      setTimeout(() => setMsg(''), 1500);
+      success('순서가 변경되었습니다!');
     } catch (error) {
-      setMsg('순서 변경 중 오류가 발생했습니다.');
+      success('순서 변경 중 오류가 발생했습니다.');
     }
   };
 
@@ -2382,9 +2409,9 @@ function AdminBrandManage() {
                 fontWeight: '600', 
                 color: '#111111',
                 fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif'
-              }}>
-                {brand.name || '브랜드명 없음'}
-              </h3>
+              }}
+                dangerouslySetInnerHTML={{ __html: brand.name || '브랜드명 없음' }}
+              />
               <p style={{ 
                 margin: '4px 0 0 0', 
                 fontSize: '0.9rem', 
