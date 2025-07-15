@@ -191,7 +191,7 @@ const AdminInput = styled.input`
   }
 `;
 
-const AdminButton = styled.button<{ $primary?: boolean; $danger?: boolean; $loading?: boolean }>`
+export const AdminButton = styled.button<{ $primary?: boolean; $danger?: boolean; $loading?: boolean }>`
   width: 100%;
   padding: 14px 0;
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;

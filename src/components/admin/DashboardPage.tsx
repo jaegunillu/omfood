@@ -35,6 +35,13 @@ const DashboardPage: React.FC = () => {
       color: 'bg-gradient-to-br from-purple-500 to-purple-600'
     },
     {
+      title: '푸터 영역 관리',
+      description: '홈페이지 하단 링크/SNS/카피라이트 관리',
+      icon: '🦶',
+      path: '/admin/footer',
+      color: 'bg-gradient-to-br from-orange-400 to-orange-600'
+    },
+    {
       title: '시스템 설정',
       description: '사이트 설정 및 관리자 계정 관리',
       icon: '⚙️',

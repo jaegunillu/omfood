@@ -8,6 +8,7 @@ import { doc, onSnapshot } from "firebase/firestore";
 import privacyPolicy from "../assets/privacyPolicy.json";
 import { useToast } from './common/ToastContext';
 import Header from './Header';
+import Footer from './Footer';
 
 // 개인정보보호 약관 전문 (static 파일 import)
 // const privacyPolicy = `...`; // 기존 코드 제거
@@ -258,6 +259,7 @@ const ContactUsPage: React.FC = () => {
         </div>
       </main>
       {/* 푸터 등은 별도 컴포넌트 사용 */}
+      <Footer />
     </div>
   );
 };

@@ -17,6 +17,7 @@ import AdminProductManageComponent from './components/AdminProductManage';
 import { ToastProvider, useToast } from './components/common/ToastContext';
 import ContactUsPage from './components/ContactUsPage';
 import ContactUsAdminPage from './components/admin/ContactUsAdminPage';
+import FooterManagePage from './components/admin/FooterManagePage';
 
 // 디자인 시스템 - 컬러 팔레트
 const colors = {
@@ -1192,6 +1193,47 @@ function AdminMainPageManage() {
             textAlign: 'center',
             lineHeight: '1.3'
           }}>브랜드 정보/이미지 관리</span>
+        </div>
+        {/* 푸터 영역 관리 버튼 추가 */}
+        <div style={{ 
+          background: colors.white, 
+          borderRadius: '12px', 
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)', 
+          padding: '24px 16px', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          cursor: 'pointer', 
+          transition: 'all 0.3s ease',
+          border: `1px solid ${colors.grayBorder}`,
+          minHeight: '160px'
+        }} 
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-6px) scale(1.02)';
+          e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0) scale(1)';
+          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
+        }}
+        onClick={() => navigate('/admin/footer')}>
+          <span style={{ fontSize: '28px', marginBottom: '12px' }}>🦶</span>
+          <span style={{ 
+            fontWeight: '600', 
+            fontSize: '1rem', 
+            marginBottom: '4px',
+            fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif',
+            color: colors.black,
+            textAlign: 'center'
+          }}>푸터 영역 관리</span>
+          <span style={{ 
+            color: colors.grayDark, 
+            fontSize: '0.8rem',
+            fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif',
+            textAlign: 'center',
+            lineHeight: '1.3'
+          }}>홈페이지 하단 링크/SNS/카피라이트 관리</span>
         </div>
       </div>
       
@@ -2969,6 +3011,7 @@ function App() {
           <Route path="/admin/store" element={<AdminRoute><AdminStoreManage /></AdminRoute>} />
           <Route path="/admin/brand" element={<AdminRoute><AdminBrandManage /></AdminRoute>} />
           <Route path="/admin/brandpage" element={<AdminRoute><AdminBrandPageManage /></AdminRoute>} />
+          <Route path="/admin/footer" element={<AdminRoute><FooterManagePage /></AdminRoute>} />
           
           {/* 각 페이지별 관리 기능들 */}
           <Route path="/admin/about" element={<AdminRoute><AdminAboutManage /></AdminRoute>} />
