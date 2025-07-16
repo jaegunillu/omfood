@@ -37,7 +37,7 @@ const DashboardPage: React.FC = () => {
     {
       title: '푸터 영역 관리',
       description: '홈페이지 하단 링크/SNS/카피라이트 관리',
-      icon: '🦶',
+      icon: '📄',
       path: '/admin/footer',
       color: 'bg-gradient-to-br from-orange-400 to-orange-600'
     },

@@ -1218,7 +1218,7 @@ function AdminMainPageManage() {
           e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
         }}
         onClick={() => navigate('/admin/footer')}>
-          <span style={{ fontSize: '28px', marginBottom: '12px' }}>🦶</span>
+          <span style={{ fontSize: '28px', marginBottom: '12px' }}>📄</span>
           <span style={{ 
             fontWeight: '600', 
             fontSize: '1rem', 

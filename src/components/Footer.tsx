@@ -1,5 +1,13 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
+import { db } from '../firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
+
+interface FooterConfig {
+  links: { name: string; url: string }[];
+  sns: { icon: string; url: string }[];
+  copyright: string;
+}
 
 const FooterContainer = styled.footer`
   width: 100%;
@@ -99,32 +107,77 @@ const Copyright = styled.div`
 `;
 
 export default function Footer() {
+  const [footerConfig, setFooterConfig] = useState<FooterConfig | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const ref = doc(db, 'footer_config', 'main');
+    const unsub = onSnapshot(ref, (snap) => {
+      if (snap.exists()) {
+        const data = snap.data() as FooterConfig;
+        setFooterConfig(data);
+      } else {
+        setFooterConfig(null);
+      }
+      setLoading(false);
+    });
+    return () => unsub();
+  }, []);
+
+  if (loading) {
+    return (
+      <FooterContainer>
+        <LeftBlock>
+          <BrandTitle>OUR BRAND</BrandTitle>
+          <BrandList>
+            <div style={{ color: '#aaa', fontSize: '0.9rem' }}>로딩 중...</div>
+          </BrandList>
+        </LeftBlock>
+        <RightBlock>
+          <Copyright>COPYRIGHT(C) OMFOOD ALL RIGHT RESERVED.</Copyright>
+        </RightBlock>
+      </FooterContainer>
+    );
+  }
+
   return (
     <FooterContainer>
       <LeftBlock>
         <BrandTitle>OUR BRAND</BrandTitle>
         <BrandList>
-          <BrandLink href="https://ovenmaru.com/" target="_blank" rel="noopener noreferrer">Ovenmaru</BrandLink>
-          <BrandLink href="http://www.odduk.net/" target="_blank" rel="noopener noreferrer">Odduk</BrandLink>
+          {footerConfig?.links && footerConfig.links.length > 0 ? (
+            footerConfig.links.map((link, index) => (
+              <BrandLink 
+                key={index} 
+                href={link.url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+              >
+                {link.name}
+              </BrandLink>
+            ))
+          ) : (
+            <div style={{ color: '#aaa', fontSize: '0.9rem' }}>등록된 브랜드가 없습니다.</div>
+          )}
         </BrandList>
         <SNSList>
-          <a href="https://www.instagram.com/ovenmaru_official/" target="_blank" rel="noopener noreferrer">
-            <SNSIcon src={process.env.PUBLIC_URL + '/footer-icons/instagram.png'} alt="instagram" />
-          </a>
-          <a href="https://www.facebook.com/ovenmaruofficial" target="_blank" rel="noopener noreferrer">
-            <SNSIcon src={process.env.PUBLIC_URL + '/footer-icons/facebook.png'} alt="facebook" />
-          </a>
-          <a href="https://blog.naver.com/ovenmaru" target="_blank" rel="noopener noreferrer">
-            <SNSIcon src={process.env.PUBLIC_URL + '/footer-icons/naverblog.png'} alt="naver blog" />
-          </a>
-          <a href="https://www.youtube.com/channel/UCA6MTVlrRI8jfhdKJp0H3bQ" target="_blank" rel="noopener noreferrer">
-            <SNSIcon src={process.env.PUBLIC_URL + '/footer-icons/youtube.png'} alt="youtube" />
-          </a>
+          {footerConfig?.sns && footerConfig.sns.length > 0 ? (
+            footerConfig.sns.map((sns, index) => (
+              <a 
+                key={index} 
+                href={sns.url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+              >
+                <SNSIcon src={sns.icon} alt={`sns-${index}`} />
+              </a>
+            ))
+          ) : null}
         </SNSList>
       </LeftBlock>
       <RightBlock>
         <Copyright>
-          COPYRIGHT(C) OMFOOD ALL RIGHT RESERVED.
+          {footerConfig?.copyright || 'COPYRIGHT(C) OMFOOD ALL RIGHT RESERVED.'}
         </Copyright>
       </RightBlock>
     </FooterContainer>
