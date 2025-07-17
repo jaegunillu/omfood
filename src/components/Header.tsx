@@ -131,7 +131,7 @@ const MenuChar = styled.span<{ $isActive: boolean; $delay: number }>`
   transition-delay: ${props => props.$delay}ms;
 `;
 
-const MobileMenuButton = styled.button`
+const MobileMenuButton = styled.button<{ $isMainPage: boolean }>`
   display: none;
   @media (max-width: 1162px) {
     display: flex;
@@ -142,7 +142,7 @@ const MobileMenuButton = styled.button`
     border: none;
     z-index: 10;
     font-size: 2rem;
-    color: #fff;
+    color: ${({ $isMainPage }) => $isMainPage ? '#fff' : '#111'};
     align-items: center;
     justify-content: center;
     cursor: pointer;
@@ -373,7 +373,7 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
 
   return (
     <HeaderContainer $hover={isAnimated ? isHeaderHover : true} $isMobile={isMobile} $brand={false} style={isAnimated ? {} : {background: '#fff', boxShadow: '0 2px 20px rgba(0,0,0,0.08)'}}>
-      <MobileMenuButton onClick={handleMobileMenuToggle}>
+      <MobileMenuButton $isMainPage={isMainPage} onClick={handleMobileMenuToggle}>
         {mobileMenuOpen ? '×' : '≡'}
       </MobileMenuButton>
       <LogoWrapper
@@ -430,7 +430,9 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
       </LanguageSelector>
       <MobileNav $open={mobileMenuOpen}>
         {mobileMenuOpen && (
-          <MobileCloseButton onClick={handleMobileMenuClose} title="닫기">×</MobileCloseButton>
+          <MobileCloseButton onClick={handleMobileMenuClose} title="닫기" style={{color:'#fff', zIndex:10001, background:'none'}}>
+            ×
+          </MobileCloseButton>
         )}
         {menuItems.map((item) => (
           <MenuItem
@@ -438,7 +440,7 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
             href="#"
             $isHovered={false}
             $hover={isAnimated ? true : true}
-            style={{ fontSize: '1.5rem', margin: '24px 0', color: '#222', fontWeight: 700 }}
+            style={{ fontSize: '1.5rem', margin: '24px 0', color: '#fff', fontWeight: 700, textShadow: '0 1px 8px rgba(0,0,0,0.18)' }}
             onClick={e => {
               e.preventDefault();
               setMobileMenuOpen(false);
@@ -451,11 +453,11 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
         <MobileLanguageSelector>
           <FlagWrapper onClick={() => handleLanguageChange('en')} title="English">
             {language === 'en' && <RedDot />}
-            <FlagIcon src="/america.png" alt="English" />
+            <FlagIcon src="/america.png" alt="English" style={{background:'#fff', border:'2px solid #fff'}} />
           </FlagWrapper>
           <FlagWrapper onClick={() => handleLanguageChange('ko')} title="한국어">
             {language === 'ko' && <RedDot />}
-            <FlagIcon src="/korea.png" alt="한국어" />
+            <FlagIcon src="/korea.png" alt="한국어" style={{background:'#fff', border:'2px solid #fff'}} />
           </FlagWrapper>
         </MobileLanguageSelector>
       </MobileNav>

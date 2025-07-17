@@ -94,7 +94,28 @@ const BrandPage: React.FC = () => {
       <Header isBrandPage />
       {/* 메인 비디오 영역 */}
       <section className="brand-fullscreen-section brand-main-video-section" style={{position:'relative',height:'100vh',minHeight:600,display:'flex',alignItems:'center',justifyContent:'center'}}>
-        <video className="brand-main-video" src="/brand.mp4" autoPlay muted loop playsInline poster="/logo_black.png" style={{width:'100vw',height:'100vh',objectFit:'cover',position:'absolute',top:0,left:0,zIndex:0}} onError={e => { alert('비디오 로드 실패!'); }} />
+        <video 
+          className="brand-main-video" 
+          src="/brand.mp4" 
+          autoPlay 
+          muted 
+          loop 
+          playsInline 
+          poster="/logo_black.png" 
+          style={{
+            width:'100%',
+            height:'100%',
+            objectFit:'cover',
+            position:'absolute',
+            top:0,
+            left:0,
+            zIndex:0,
+            maxWidth:'100%',
+            maxHeight:'100%',
+            aspectRatio:'16/9'
+          }} 
+          onError={e => { alert('비디오 로드 실패!'); }} 
+        />
         <div className="brand-main-overlay" style={{position:'relative',zIndex:1,width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center'}}>
           
         </div>
@@ -106,104 +127,95 @@ const BrandPage: React.FC = () => {
           className="brand-fullscreen-section"
           key={brand.id}
           ref={el => { sectionRefs.current[idx] = el as HTMLDivElement | null; }}
-          style={{background:'#fff',display:'flex',alignItems:'center',justifyContent:'center',minHeight:600}}
+          style={{background:'#fff',display:'flex',alignItems:'center',justifyContent:'center',minHeight:500,marginTop:0,paddingTop:0}}
         >
           <div className="brand-section-inner horizontal">
-            {idx % 2 === 0 ? (
-              <>
-                <div className="brand-desc left">
-                  <h2
-                    className={`brand-title${visibleArr[idx] ? ' brand-ani-in' : ' invisible'}`}
-                    style={{ fontSize: '2.75rem', fontWeight: 800, marginBottom: 24, lineHeight: 1.2, letterSpacing: '-1px', color: '#111' }}
-                  >
-                    {stripHtmlTags(brand.mainText)}
-                  </h2>
-                  <div
-                    className={`brand-desc-text${visibleArr[idx] ? ' brand-ani-in-sub' : ' invisible'}`}
-                    style={{ fontSize: '1.18rem', marginBottom: 28, lineHeight: 1.7, color: '#222' }}
-                    dangerouslySetInnerHTML={{ __html: brand.subText }}
-                  />
-                  {brand.link && (
-                    <a
-                      className={`brand-btn${visibleArr[idx] ? ' brand-ani-in-btn' : ' invisible'}`}
-                      href={brand.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{
-                        marginTop: 24,
-                        display: 'inline-block',
-                        padding: '18px 48px',
-                        borderRadius: 32,
-                        border: '1.5px solid #bbb',
-                        fontWeight: 700,
-                        fontSize: '1.18rem',
-                        color: '#222',
-                        background: '#fff',
-                        minWidth: 180,
-                        textAlign: 'center',
-                        letterSpacing: '0.01em',
-                      }}
-                    >
-                      {brand.linkText ? brand.linkText.replace(/<[^>]+>/g, '') : '자세히 보기'} &gt;&gt;
-                    </a>
-                  )}
-                </div>
-                <div className={`brand-video-wrap right${visibleArr[idx] ? ' brand-ani-in-media right' : ' invisible'}`}>
-                  {brand.mediaType === 'video' ? (
-                    <video src={brand.mediaUrl} autoPlay muted playsInline style={{width:600,height:600,objectFit:'cover',borderRadius:24,background:'#eee'}} onEnded={e => e.currentTarget.pause()} />
-                  ) : (
-                    <img src={brand.mediaUrl} alt={brand.mainText} style={{width:600,height:600,objectFit:'cover',borderRadius:24,background:'#eee'}} />
-                  )}
-                </div>
-              </>
-            ) : (
-              <>
-                <div className={`brand-video-wrap left${visibleArr[idx] ? ' brand-ani-in-media left' : ' invisible'}`}>
-                  {brand.mediaType === 'video' ? (
-                    <video src={brand.mediaUrl} autoPlay muted playsInline style={{width:600,height:600,objectFit:'cover',borderRadius:24,background:'#eee'}} onEnded={e => e.currentTarget.pause()} />
-                  ) : (
-                    <img src={brand.mediaUrl} alt={brand.mainText} style={{width:600,height:600,objectFit:'cover',borderRadius:24,background:'#eee'}} />
-                  )}
-                </div>
-                <div className="brand-desc right">
-                  <h2
-                    className={`brand-title${visibleArr[idx] ? ' brand-ani-in' : ' invisible'}`}
-                    style={{ fontSize: '2.75rem', fontWeight: 800, marginBottom: 24, lineHeight: 1.2, letterSpacing: '-1px', color: '#111' }}
-                  >
-                    {stripHtmlTags(brand.mainText)}
-                  </h2>
-                  <div
-                    className={`brand-desc-text${visibleArr[idx] ? ' brand-ani-in-sub' : ' invisible'}`}
-                    style={{ fontSize: '1.18rem', marginBottom: 28, lineHeight: 1.7, color: '#222' }}
-                    dangerouslySetInnerHTML={{ __html: brand.subText }}
-                  />
-                  {brand.link && (
-                    <a
-                      className={`brand-btn${visibleArr[idx] ? ' brand-ani-in-btn' : ' invisible'}`}
-                      href={brand.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{
-                        marginTop: 24,
-                        display: 'inline-block',
-                        padding: '18px 48px',
-                        borderRadius: 32,
-                        border: '1.5px solid #bbb',
-                        fontWeight: 700,
-                        fontSize: '1.18rem',
-                        color: '#222',
-                        background: '#fff',
-                        minWidth: 180,
-                        textAlign: 'center',
-                        letterSpacing: '0.01em',
-                      }}
-                    >
-                      {brand.linkText ? brand.linkText.replace(/<[^>]+>/g, '') : '자세히 보기'} &gt;&gt;
-                    </a>
-                  )}
-                </div>
-              </>
-            )}
+            <div className="brand-desc left">
+              <h2
+                className={`brand-title${visibleArr[idx] ? ' brand-ani-in' : ' invisible'}`}
+                style={{ 
+                  fontSize: '3.575rem', // 기존 2.75rem에서 30% 확대 (2.75 * 1.3 = 3.575)
+                  fontWeight: 800, 
+                  marginBottom: 24, 
+                  lineHeight: 1.2, 
+                  letterSpacing: '-1px', 
+                  color: '#111', 
+                  textAlign: 'left' 
+                }}
+              >
+                {stripHtmlTags(brand.mainText)}
+              </h2>
+              <div
+                className={`brand-desc-text${visibleArr[idx] ? ' brand-ani-in-sub' : ' invisible'}`}
+                style={{ 
+                  fontSize: '0.826rem', // 기존 1.18rem에서 30% 축소 (1.18 * 0.7 = 0.826)
+                  marginBottom: 8, // 서브텍스트와 버튼 간격 총합 20px 이하로 조정
+                  lineHeight: 1.7, 
+                  color: '#222', 
+                  textAlign: 'left' 
+                }}
+                dangerouslySetInnerHTML={{ __html: brand.subText }}
+              />
+              {brand.link && (
+                <a
+                  className={`brand-btn${visibleArr[idx] ? ' brand-ani-in-btn' : ' invisible'}`}
+                  href={brand.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    marginTop: 12, // 서브텍스트와 버튼 간격 총합 20px 이하로 조정 (8px + 12px = 20px)
+                    display: 'inline-block',
+                    padding: '18px 48px',
+                    borderRadius: 32,
+                    border: '1.5px solid #bbb',
+                    fontWeight: 700,
+                    fontSize: '1.18rem',
+                    color: '#222',
+                    background: '#fff',
+                    minWidth: 180,
+                    textAlign: 'center',
+                    letterSpacing: '0.01em',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {brand.linkText ? brand.linkText.replace(/<[^>]+>/g, '') : '자세히 보기'} &gt;&gt;
+                </a>
+              )}
+            </div>
+            <div className={`brand-video-wrap right${visibleArr[idx] ? ' brand-ani-in-media right' : ' invisible'}`}>
+              {brand.mediaType === 'video' ? (
+                <video 
+                  src={brand.mediaUrl} 
+                  autoPlay 
+                  muted 
+                  playsInline 
+                  style={{
+                    width: 500,
+                    height: 500,
+                    objectFit: 'cover',
+                    borderRadius: 24,
+                    background: 'transparent',
+                    maxWidth: '100%',
+                    aspectRatio: '1/1'
+                  }} 
+                  onEnded={e => e.currentTarget.pause()} 
+                />
+              ) : (
+                <img 
+                  src={brand.mediaUrl} 
+                  alt={brand.mainText} 
+                  style={{
+                    width: 500,
+                    height: 500,
+                    objectFit: 'cover',
+                    borderRadius: 24,
+                    background: 'transparent',
+                    maxWidth: '100%',
+                    aspectRatio: '1/1'
+                  }} 
+                />
+              )}
+            </div>
           </div>
         </section>
       ))}

@@ -115,25 +115,36 @@ const ContactUsPage: React.FC = () => {
               <label className="block text-xs font-bold mb-1">
                 Please select the subject of your inquiry
               </label>
-              <select
-                {...register("subject", { required: true })}
-                className="w-full border rounded px-3 py-2 text-sm"
-                onFocus={() => setFocus((f) => ({ ...f, subject: true }))}
-                onBlur={() => setFocus((f) => ({ ...f, subject: false }))}
-                defaultValue=""
-              >
-                <option value="" disabled hidden>
-                  {focus.subject ? "" : "Choose here"}
-                </option>
-                {SUBJECT_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
+              <div style={{ position: 'relative', width: '100%' }}>
+                <select
+                  {...register("subject", { required: true })}
+                  className="w-full border rounded px-3 py-2 text-sm"
+                  style={{ appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none', width: '100%' }}
+                  onFocus={() => setFocus((f) => ({ ...f, subject: true }))}
+                  onBlur={() => setFocus((f) => ({ ...f, subject: false }))}
+                  defaultValue=""
+                >
+                  <option value="" disabled hidden>
+                    {focus.subject ? "" : "Choose here"}
                   </option>
-                ))}
-              </select>
-              {errors.subject && (
-                <span className="text-xs text-red-500">Required</span>
-              )}
+                  {SUBJECT_OPTIONS.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+                <span
+                  style={{
+                    position: "absolute",
+                    right: "10px",
+                    top: "50%",
+                    transform: "translateY(-50%) scale(0.5)",
+                    pointerEvents: "none",
+                    fontSize: "1.2em",
+                    lineHeight: 1
+                  }}
+                >▼</span>
+              </div>
             </div>
             <div>
               <label className="block text-xs font-bold mb-1">Product Name</label>
@@ -158,7 +169,7 @@ const ContactUsPage: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-xs font-bold mb-1">Contact Address</label>
+              <label className="block text-xs font-bold mb-1">Email</label>
               <input
                 {...register("email", {
                   required: true,
@@ -235,25 +246,25 @@ const ContactUsPage: React.FC = () => {
           </button>
         </form>
         {/* 하단 정보 */}
-        <div className="grid grid-cols-4 gap-6 mt-16 w-full max-w-4xl">
-          <div className="flex flex-col items-center border rounded-2xl p-6 bg-white shadow font-pretendard">
+        <div className="grid grid-cols-4 gap-6 mt-16 w-full max-w-4xl items-stretch">
+          <div className="h-48 flex-1 flex flex-col items-center justify-center border rounded-2xl p-6 bg-white shadow font-pretendard">
             <LocationOn fontSize="large" className="text-[#E5002B]" />
-            <div className="font-bold mt-2 text-base">OUR MAIN OFFICE</div>
+            <div className="font-bold mt-2 text-base text-center">OUR MAIN OFFICE</div>
             <div className="text-xs text-center mt-1 text-[#5a3723]">{mainInfo.address}</div>
           </div>
-          <div className="flex flex-col items-center border rounded-2xl p-6 bg-white shadow font-pretendard">
+          <div className="h-48 flex-1 flex flex-col items-center justify-center border rounded-2xl p-6 bg-white shadow font-pretendard">
             <Phone fontSize="large" className="text-[#E5002B]" />
-            <div className="font-bold mt-2 text-base">PHONE NUMBER</div>
+            <div className="font-bold mt-2 text-base text-center">PHONE NUMBER</div>
             <div className="text-xs text-center mt-1 whitespace-pre-line text-[#5a3723]">{mainInfo.phone}</div>
           </div>
-          <div className="flex flex-col items-center border rounded-2xl p-6 bg-white shadow font-pretendard">
+          <div className="h-48 flex-1 flex flex-col items-center justify-center border rounded-2xl p-6 bg-white shadow font-pretendard">
             <Fax fontSize="large" className="text-[#E5002B]" />
-            <div className="font-bold mt-2 text-base">FAX</div>
+            <div className="font-bold mt-2 text-base text-center">FAX</div>
             <div className="text-xs text-center mt-1 whitespace-pre-line text-[#5a3723]">{mainInfo.fax}</div>
           </div>
-          <div className="flex flex-col items-center border rounded-2xl p-6 bg-white shadow font-pretendard">
+          <div className="h-48 flex-1 flex flex-col items-center justify-center border rounded-2xl p-6 bg-white shadow font-pretendard">
             <Email fontSize="large" className="text-[#E5002B]" />
-            <div className="font-bold mt-2 text-base">EMAIL</div>
+            <div className="font-bold mt-2 text-base text-center">EMAIL</div>
             <div className="text-xs text-center mt-1 text-[#5a3723]">{mainInfo.email}</div>
           </div>
         </div>
