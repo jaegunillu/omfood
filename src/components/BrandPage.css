@@ -898,3 +898,10 @@ header, .HeaderContainer, .header-container {
     min-height: 400px !important;
   }
 }
+
+@media (max-width: 768px) {
+  .brand-desc-text {
+    padding-left: 30px !important;
+    padding-right: 30px !important;
+  }
+}

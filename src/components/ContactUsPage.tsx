@@ -246,26 +246,26 @@ const ContactUsPage: React.FC = () => {
           </button>
         </form>
         {/* 하단 정보 */}
-        <div className="grid grid-cols-4 gap-6 mt-16 w-full max-w-4xl items-stretch">
-          <div className="h-48 flex-1 flex flex-col items-center justify-center border rounded-2xl p-6 bg-white shadow font-pretendard">
+        <div className="contactBoxGrid mt-16 w-full max-w-4xl items-stretch">
+          <div className="h-48 flex-1 flex flex-col items-center justify-center border rounded-2xl p-6 bg-white shadow font-pretendard contactBox w-full min-w-0 break-words">
             <LocationOn fontSize="large" className="text-[#E5002B]" />
             <div className="font-bold mt-2 text-base text-center">OUR MAIN OFFICE</div>
-            <div className="text-xs text-center mt-1 text-[#5a3723]">{mainInfo.address}</div>
+            <div className="text-xs text-center mt-1 text-[#5a3723] break-words">{mainInfo.address}</div>
           </div>
-          <div className="h-48 flex-1 flex flex-col items-center justify-center border rounded-2xl p-6 bg-white shadow font-pretendard">
+          <div className="h-48 flex-1 flex flex-col items-center justify-center border rounded-2xl p-6 bg-white shadow font-pretendard contactBox w-full min-w-0 break-words">
             <Phone fontSize="large" className="text-[#E5002B]" />
             <div className="font-bold mt-2 text-base text-center">PHONE NUMBER</div>
-            <div className="text-xs text-center mt-1 whitespace-pre-line text-[#5a3723]">{mainInfo.phone}</div>
+            <div className="text-xs text-center mt-1 whitespace-pre-line text-[#5a3723] break-words">{mainInfo.phone}</div>
           </div>
-          <div className="h-48 flex-1 flex flex-col items-center justify-center border rounded-2xl p-6 bg-white shadow font-pretendard">
+          <div className="h-48 flex-1 flex flex-col items-center justify-center border rounded-2xl p-6 bg-white shadow font-pretendard contactBox w-full min-w-0 break-words">
             <Fax fontSize="large" className="text-[#E5002B]" />
             <div className="font-bold mt-2 text-base text-center">FAX</div>
-            <div className="text-xs text-center mt-1 whitespace-pre-line text-[#5a3723]">{mainInfo.fax}</div>
+            <div className="text-xs text-center mt-1 whitespace-pre-line text-[#5a3723] break-words">{mainInfo.fax}</div>
           </div>
-          <div className="h-48 flex-1 flex flex-col items-center justify-center border rounded-2xl p-6 bg-white shadow font-pretendard">
+          <div className="h-48 flex-1 flex flex-col items-center justify-center border rounded-2xl p-6 bg-white shadow font-pretendard contactBox w-full min-w-0 break-words">
             <Email fontSize="large" className="text-[#E5002B]" />
             <div className="font-bold mt-2 text-base text-center">EMAIL</div>
-            <div className="text-xs text-center mt-1 text-[#5a3723]">{mainInfo.email}</div>
+            <div className="text-xs text-center mt-1 text-[#5a3723] break-words">{mainInfo.email}</div>
           </div>
         </div>
       </main>
