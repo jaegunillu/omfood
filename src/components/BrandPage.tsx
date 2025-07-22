@@ -111,8 +111,7 @@ const BrandPage: React.FC = () => {
             left:0,
             zIndex:0,
             maxWidth:'100%',
-            maxHeight:'100%',
-            aspectRatio:'16/9'
+            maxHeight:'100%'
           }} 
           onError={e => { alert('비디오 로드 실패!'); }} 
         />
@@ -129,7 +128,7 @@ const BrandPage: React.FC = () => {
           ref={el => { sectionRefs.current[idx] = el as HTMLDivElement | null; }}
           style={{background:'#fff',display:'flex',alignItems:'center',justifyContent:'center',minHeight:500,marginTop:0,paddingTop:0}}
         >
-          <div className="brand-section-inner horizontal">
+          <div className={`brand-section-inner horizontal${idx % 2 === 1 ? ' reverse' : ''}`}>
             <div className="brand-desc left">
               <h2
                 className={`brand-title${visibleArr[idx] ? ' brand-ani-in' : ' invisible'}`}

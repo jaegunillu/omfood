@@ -208,6 +208,18 @@
   overflow: hidden;
 }
 
+/* 메인 비디오 섹션 특별 처리 */
+.brand-main-video-section {
+  width: 100vw;
+  height: 100vh;
+  min-height: 600px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
 /* 브랜드 섹션 간 여백 축소 */
 .brand-fullscreen-section:not(.brand-main-video-section) {
   height: 75vh;
@@ -242,6 +254,11 @@
 /* 메인 비디오(헤더 포함 풀스크린) */
 .brand-main-video-section {
   padding: 0;
+  width: 100vw;
+  height: 100vh;
+  min-height: 600px;
+  position: relative;
+  overflow: hidden;
 }
 .brand-main-video {
   width: 100% !important;
@@ -252,20 +269,19 @@
   z-index: 0;
   max-width: 100% !important;
   max-height: 100% !important;
-  aspect-ratio: 16/9 !important;
 }
 
 /* 770px 이상에서 메인 비디오 반응형 개선 */
 @media (min-width: 771px) {
   .brand-main-video {
     width: 100% !important;
-    height: auto !important;
+    height: 100% !important;
     max-width: 100% !important;
     max-height: 100vh !important;
     object-fit: cover !important;
   }
   .brand-main-video-section {
-    height: auto !important;
+    height: 100vh !important;
     min-height: 600px !important;
     max-height: 100vh !important;
   }
@@ -903,5 +919,11 @@ header, .HeaderContainer, .header-container {
   .brand-desc-text {
     padding-left: 30px !important;
     padding-right: 30px !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .brand-section-inner.horizontal.reverse {
+    flex-direction: row-reverse !important;
   }
 }
