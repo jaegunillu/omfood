@@ -6,6 +6,7 @@ import styled from 'styled-components';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { useToast } from '../common/ToastContext';
+import { useAdminLang } from '../../App';
 
 // 디자인 시스템 - 컬러 팔레트
 const colors = {
@@ -409,7 +410,6 @@ const FooterManagePage: React.FC = () => {
   const [uploadingIdx, setUploadingIdx] = useState<number | null>(null);
   const [uploadingNew, setUploadingNew] = useState(false);
   const [copyright, setCopyright] = useState('');
-  const [activeLang, setActiveLang] = useState<'ko' | 'en'>('ko');
   const [privacyPolicy, setPrivacyPolicy] = useState({
     ko: { ...DEFAULT_PRIVACY_POLICY_KO },
     en: { ...DEFAULT_PRIVACY_POLICY_EN },
@@ -421,6 +421,12 @@ const FooterManagePage: React.FC = () => {
   const [privacyPolicyHtmlMode, setPrivacyPolicyHtmlMode] = useState(false);
   const [emailRejectHtmlMode, setEmailRejectHtmlMode] = useState(false);
   const { success } = useToast();
+  const { adminLang, setAdminLang } = useAdminLang();
+
+  // 언어 변경 핸들러
+  const handleAdminLangChange = (lang: 'ko' | 'en') => {
+    setAdminLang(lang);
+  };
 
   // 실시간 구독
   useEffect(() => {
@@ -619,12 +625,20 @@ const FooterManagePage: React.FC = () => {
           <BackButton onClick={() => window.history.back()}>
             <span style={{ fontSize: 20 }}>←</span> 대시보드로
           </BackButton>
-          <AdminLogoutBtn onClick={() => {
-            localStorage.removeItem('admin_login');
-            window.location.href = '/admin/login';
-          }}>
-            로그아웃
-          </AdminLogoutBtn>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <button onClick={() => handleAdminLangChange('en')} style={{ background: 'none', border: 'none', padding: 0, margin: 0, cursor: 'pointer', outline: 'none', opacity: adminLang === 'en' ? 1 : 0.5 }}>
+              <img src={process.env.PUBLIC_URL + '/america.png'} alt="EN" style={{ width: 32, height: 32, objectFit: 'contain' }} />
+            </button>
+            <button onClick={() => handleAdminLangChange('ko')} style={{ background: 'none', border: 'none', padding: 0, margin: 0, cursor: 'pointer', outline: 'none', opacity: adminLang === 'ko' ? 1 : 0.5 }}>
+              <img src={process.env.PUBLIC_URL + '/korea.png'} alt="KO" style={{ width: 32, height: 32, objectFit: 'contain' }} />
+            </button>
+            <AdminLogoutBtn onClick={() => {
+              localStorage.removeItem('admin_login');
+              window.location.href = '/admin/login';
+            }}>
+              로그아웃
+            </AdminLogoutBtn>
+          </div>
         </div>
         
         <AdminHeader>푸터 영역 관리</AdminHeader>
@@ -811,21 +825,21 @@ const FooterManagePage: React.FC = () => {
         <AdminCard>
           <SectionTitle>개인정보처리방침 / 이메일무단수집거부 관리</SectionTitle>
           <div style={{ display: 'flex', gap: 12, marginBottom: 18 }}>
-            <AdminButton $primary={activeLang === 'ko'} onClick={() => setActiveLang('ko')} style={{ padding: '8px 18px', margin: 0 }}>한국어 관리</AdminButton>
-            <AdminButton $primary={activeLang === 'en'} onClick={() => setActiveLang('en')} style={{ padding: '8px 18px', margin: 0 }}>English 관리</AdminButton>
+            <AdminButton $primary={adminLang === 'ko'} disabled style={{ padding: '8px 18px', margin: 0 }}>한국어 관리</AdminButton>
+            <AdminButton $primary={adminLang === 'en'} disabled style={{ padding: '8px 18px', margin: 0 }}>English 관리</AdminButton>
           </div>
           <AdminLabel>개인정보처리방침 버튼명</AdminLabel>
           <AdminInput
-            value={privacyPolicy[activeLang]?.button ?? ''}
-            onChange={e => setPrivacyPolicy(prev => ({ ...prev, [activeLang]: { ...prev[activeLang], button: e.target.value } }))}
-            placeholder={activeLang === 'ko' ? '개인정보처리방침' : 'Privacy Policy'}
+            value={privacyPolicy[adminLang]?.button ?? ''}
+            onChange={e => setPrivacyPolicy(prev => ({ ...prev, [adminLang]: { ...prev[adminLang], button: e.target.value } }))}
+            placeholder={adminLang === 'ko' ? '개인정보처리방침' : 'Privacy Policy'}
             style={{ marginBottom: 12 }}
           />
           <AdminLabel>개인정보처리방침 모달 제목</AdminLabel>
           <AdminInput
-            value={privacyPolicy[activeLang]?.title ?? ''}
-            onChange={e => setPrivacyPolicy(prev => ({ ...prev, [activeLang]: { ...prev[activeLang], title: e.target.value } }))}
-            placeholder={activeLang === 'ko' ? '개인정보처리방침' : 'Privacy Policy'}
+            value={privacyPolicy[adminLang]?.title ?? ''}
+            onChange={e => setPrivacyPolicy(prev => ({ ...prev, [adminLang]: { ...prev[adminLang], title: e.target.value } }))}
+            placeholder={adminLang === 'ko' ? '개인정보처리방침' : 'Privacy Policy'}
             style={{ marginBottom: 12 }}
           />
           <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
@@ -836,9 +850,9 @@ const FooterManagePage: React.FC = () => {
             <>
               <AdminLabel>개인정보처리방침 본문 (HTML 가능)</AdminLabel>
               <textarea
-                value={privacyPolicy[activeLang]?.content ?? ''}
-                onChange={e => setPrivacyPolicy(prev => ({ ...prev, [activeLang]: { ...prev[activeLang], content: e.target.value } }))}
-                placeholder={activeLang === 'ko' ? '개인정보처리방침 내용을 입력하세요.' : 'Enter privacy policy content.'}
+                value={privacyPolicy[adminLang]?.content ?? ''}
+                onChange={e => setPrivacyPolicy(prev => ({ ...prev, [adminLang]: { ...prev[adminLang], content: e.target.value } }))}
+                placeholder={adminLang === 'ko' ? '개인정보처리방침 내용을 입력하세요.' : 'Enter privacy policy content.'}
                 style={{ width: '100%', minHeight: 180, fontSize: '1rem', fontFamily: 'Pretendard, sans-serif', marginBottom: 18, borderRadius: 8, border: `1.5px solid ${colors.grayBorder}`, padding: 16 }}
               />
             </>
@@ -846,8 +860,8 @@ const FooterManagePage: React.FC = () => {
             <>
               <AdminLabel>개인정보처리방침 본문 (시각 편집)</AdminLabel>
               <ReactQuill
-                value={privacyPolicy[activeLang]?.content ?? ''}
-                onChange={val => setPrivacyPolicy(prev => ({ ...prev, [activeLang]: { ...prev[activeLang], content: val } }))}
+                value={privacyPolicy[adminLang]?.content ?? ''}
+                onChange={val => setPrivacyPolicy(prev => ({ ...prev, [adminLang]: { ...prev[adminLang], content: val } }))}
                 style={{ marginBottom: 18, background: '#fff' }}
                 theme="snow"
               />
@@ -855,16 +869,16 @@ const FooterManagePage: React.FC = () => {
           )}
           <AdminLabel>이메일무단수집거부 버튼명</AdminLabel>
           <AdminInput
-            value={emailReject[activeLang]?.button ?? ''}
-            onChange={e => setEmailReject(prev => ({ ...prev, [activeLang]: { ...prev[activeLang], button: e.target.value } }))}
-            placeholder={activeLang === 'ko' ? '이메일무단수집거부' : 'Email Rejection Notice'}
+            value={emailReject[adminLang]?.button ?? ''}
+            onChange={e => setEmailReject(prev => ({ ...prev, [adminLang]: { ...prev[adminLang], button: e.target.value } }))}
+            placeholder={adminLang === 'ko' ? '이메일무단수집거부' : 'Email Rejection Notice'}
             style={{ marginBottom: 12 }}
           />
           <AdminLabel>이메일무단수집거부 모달 제목</AdminLabel>
           <AdminInput
-            value={emailReject[activeLang]?.title ?? ''}
-            onChange={e => setEmailReject(prev => ({ ...prev, [activeLang]: { ...prev[activeLang], title: e.target.value } }))}
-            placeholder={activeLang === 'ko' ? '이메일무단수집거부' : 'Email Rejection Notice'}
+            value={emailReject[adminLang]?.title ?? ''}
+            onChange={e => setEmailReject(prev => ({ ...prev, [adminLang]: { ...prev[adminLang], title: e.target.value } }))}
+            placeholder={adminLang === 'ko' ? '이메일무단수집거부' : 'Email Rejection Notice'}
             style={{ marginBottom: 12 }}
           />
           <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
@@ -875,9 +889,9 @@ const FooterManagePage: React.FC = () => {
             <>
               <AdminLabel>이메일무단수집거부 본문 (HTML 가능)</AdminLabel>
               <textarea
-                value={emailReject[activeLang]?.content ?? ''}
-                onChange={e => setEmailReject(prev => ({ ...prev, [activeLang]: { ...prev[activeLang], content: e.target.value } }))}
-                placeholder={activeLang === 'ko' ? '이메일무단수집거부 내용을 입력하세요.' : 'Enter email rejection notice content.'}
+                value={emailReject[adminLang]?.content ?? ''}
+                onChange={e => setEmailReject(prev => ({ ...prev, [adminLang]: { ...prev[adminLang], content: e.target.value } }))}
+                placeholder={adminLang === 'ko' ? '이메일무단수집거부 내용을 입력하세요.' : 'Enter email rejection notice content.'}
                 style={{ width: '100%', minHeight: 120, fontSize: '1rem', fontFamily: 'Pretendard, sans-serif', marginBottom: 18, borderRadius: 8, border: `1.5px solid ${colors.grayBorder}`, padding: 16 }}
               />
             </>
@@ -885,8 +899,8 @@ const FooterManagePage: React.FC = () => {
             <>
               <AdminLabel>이메일무단수집거부 본문 (시각 편집)</AdminLabel>
               <ReactQuill
-                value={emailReject[activeLang]?.content ?? ''}
-                onChange={val => setEmailReject(prev => ({ ...prev, [activeLang]: { ...prev[activeLang], content: val } }))}
+                value={emailReject[adminLang]?.content ?? ''}
+                onChange={val => setEmailReject(prev => ({ ...prev, [adminLang]: { ...prev[adminLang], content: val } }))}
                 style={{ marginBottom: 18, background: '#fff' }}
                 theme="snow"
               />
@@ -897,9 +911,9 @@ const FooterManagePage: React.FC = () => {
           </AdminButton>
           <PreviewBox>
             <strong>개인정보처리방침 (프리뷰)</strong>
-            <div style={{ marginTop: 8, background: '#fff', padding: 12, borderRadius: 8, minHeight: 80 }} dangerouslySetInnerHTML={{ __html: String(privacyPolicy[activeLang]?.content || (activeLang === 'ko' ? '개인정보처리방침 미입력' : 'No privacy policy content')) }} />
+            <div style={{ marginTop: 8, background: '#fff', padding: 12, borderRadius: 8, minHeight: 80 }} dangerouslySetInnerHTML={{ __html: String(privacyPolicy[adminLang]?.content || (adminLang === 'ko' ? '개인정보처리방침 미입력' : 'No privacy policy content')) }} />
             <strong style={{ marginTop: 18, display: 'block' }}>이메일무단수집거부 (프리뷰)</strong>
-            <div style={{ marginTop: 8, background: '#fff', padding: 12, borderRadius: 8, minHeight: 60 }} dangerouslySetInnerHTML={{ __html: String(emailReject[activeLang]?.content || (activeLang === 'ko' ? '이메일무단수집거부 미입력' : 'No email rejection notice content')) }} />
+            <div style={{ marginTop: 8, background: '#fff', padding: 12, borderRadius: 8, minHeight: 60 }} dangerouslySetInnerHTML={{ __html: String(emailReject[adminLang]?.content || (adminLang === 'ko' ? '이메일무단수집거부 미입력' : 'No email rejection notice content')) }} />
           </PreviewBox>
         </AdminCard>
       </AdminMain>

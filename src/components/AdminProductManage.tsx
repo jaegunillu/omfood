@@ -8,6 +8,7 @@ import 'react-quill/dist/quill.snow.css';
 import { useToast } from './common/ToastContext';
 import Toast from './common/Toast';
 import ToastContainer from './common/ToastContainer';
+import { useAdminLang, LangKey } from '../hooks/useAdminLang';
 
 // 디자인 시스템 - 컬러 팔레트
 const colors = {
@@ -513,26 +514,26 @@ const AdminGrid = styled.div`
 // 타입 정의
 interface Category {
   id: string;
-  name: string;
-  description?: string;
+  name: { en: string; ko: string };
+  description: { en: string; ko: string };
   order: number;
 }
 
 interface Product {
   id: string;
-  name: string;
+  name: { en: string; ko: string };
   category: string;
+  allergens?: { en: string; ko: string };
+  ingredients?: { en: string; ko: string };
+  nutrition?: { en: string; ko: string };
   image: string;
-  allergens?: string;
-  ingredients?: string;
-  nutrition?: string;
   order: number;
 }
 
 interface ProductPageData {
-  slogan: string;
-  subSlogan: string;
-  bottomText: string;
+  slogan: { en: string; ko: string };
+  subSlogan: { en: string; ko: string };
+  bottomText: { en: string; ko: string };
 }
 
 interface Toast {
@@ -546,9 +547,9 @@ const AdminProductManage: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [pageData, setPageData] = useState<ProductPageData>({
-    slogan: 'Signature Flavors. Global Standards.',
-    subSlogan: 'OM FOOD supplies sauces and seasoning powders to its overseas stores in Taiwan, Vietnam, and Mongolia, as well as to local Korean restaurants and various kitchens abroad. Crafted to capture the rich, authentic flavors of Korean cuisine while blending seamlessly into local food cultures, these products win over local palates and further enhance the value and appeal of K-Food.',
-    bottomText: 'OM FOOD supplies sauces and seasoning powders to its overseas stores in Taiwan, Vietnam, and Mongolia, as well as to local Korean restaurants and various kitchens abroad. Crafted to capture the rich, authentic flavors of Korean cuisine while blending seamlessly into local food cultures, these products win over local palates and further enhance the value and appeal of K-Food.'
+    slogan: { en: '', ko: '' },
+    subSlogan: { en: '', ko: '' },
+    bottomText: { en: '', ko: '' }
   });
   const [msg, setMsg] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -557,17 +558,11 @@ const AdminProductManage: React.FC = () => {
   const [expandedProducts, setExpandedProducts] = useState<Set<string>>(new Set());
   const [modifiedProducts, setModifiedProducts] = useState<Set<string>>(new Set());
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [adminLang] = useAdminLang(); // adminLang: LangKey ('en' | 'ko')
 
   // 새 카테고리/제품 상태
-  const [newCategory, setNewCategory] = useState({ name: '', description: '' });
-  const [newProduct, setNewProduct] = useState({
-    name: '',
-    category: '',
-    image: '',
-    allergens: '',
-    ingredients: '',
-    nutrition: ''
-  });
+  const [newCategory, setNewCategory] = useState<Category>({ id: '', name: { en: '', ko: '' }, description: { en: '', ko: '' }, order: 0 });
+  const [newProduct, setNewProduct] = useState<Product>({ id: '', name: { en: '', ko: '' }, category: '', allergens: { en: '', ko: '' }, ingredients: { en: '', ko: '' }, nutrition: { en: '', ko: '' }, image: '', order: 0 });
 
   // 토스트 알림 추가
   const addToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
@@ -617,30 +612,46 @@ const AdminProductManage: React.FC = () => {
   // 카테고리 데이터 로드
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'productCategories'), (snapshot) => {
-      const cats = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Category));
+      const cats = snapshot.docs.map(doc => {
+        const data = doc.data();
+        // 마이그레이션: 기존 string이면 en으로 간주
+        return {
+          id: doc.id,
+          name: typeof data.name === 'string' ? { en: data.name, ko: '' } : { en: data.name?.[adminLang] || '', ko: data.name?.[adminLang === 'ko' ? 'en' : 'ko'] || '' },
+          description: typeof data.description === 'string' ? { en: data.description, ko: '' } : { en: data.description?.[adminLang] || '', ko: data.description?.[adminLang === 'ko' ? 'en' : 'ko'] || '' },
+          order: data.order ?? 0
+        };
+      });
       cats.sort((a, b) => a.order - b.order);
       setCategories(cats);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [adminLang]);
 
   // 제품 데이터 로드
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'products'), (snapshot) => {
-      const prods = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Product));
+      const prods = snapshot.docs.map(doc => {
+        const data = doc.data();
+        // 마이그레이션: 기존 string이면 en으로 간주
+        return {
+          id: doc.id,
+          name: typeof data.name === 'string' ? { en: data.name, ko: '' } : { en: data.name?.[adminLang] || '', ko: data.name?.[adminLang === 'ko' ? 'en' : 'ko'] || '' },
+          category: data.category || '',
+          image: data.image || '',
+          allergens: typeof data.allergens === 'string' ? { en: data.allergens, ko: '' } : { en: data.allergens?.[adminLang] || '', ko: data.allergens?.[adminLang === 'ko' ? 'en' : 'ko'] || '' },
+          ingredients: typeof data.ingredients === 'string' ? { en: data.ingredients, ko: '' } : { en: data.ingredients?.[adminLang] || '', ko: data.ingredients?.[adminLang === 'ko' ? 'en' : 'ko'] || '' },
+          nutrition: typeof data.nutrition === 'string' ? { en: data.nutrition, ko: '' } : { en: data.nutrition?.[adminLang] || '', ko: data.nutrition?.[adminLang === 'ko' ? 'en' : 'ko'] || '' },
+          order: data.order ?? 0
+        };
+      });
       prods.sort((a, b) => a.order - b.order);
       setProducts(prods);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [adminLang]);
 
   // 페이지 데이터 로드
   useEffect(() => {
@@ -648,29 +659,26 @@ const AdminProductManage: React.FC = () => {
       const docRef = doc(db, 'productPage', 'content');
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
+        const data = docSnap.data();
+        // 마이그레이션: 기존 string이면 en으로 간주
         setPageData({
-          slogan: docSnap.data().slogan || 'Signature Flavors. Global Standards.',
-          subSlogan: docSnap.data().subSlogan || 'OM FOOD supplies sauces and seasoning powders to its overseas stores in Taiwan, Vietnam, and Mongolia, as well as to local Korean restaurants and various kitchens abroad. Crafted to capture the rich, authentic flavors of Korean cuisine while blending seamlessly into local food cultures, these products win over local palates and further enhance the value and appeal of K-Food.',
-          bottomText: docSnap.data().bottomText || 'OM FOOD supplies sauces and seasoning powders to its overseas stores in Taiwan, Vietnam, and Mongolia, as well as to local Korean restaurants and various kitchens abroad. Crafted to capture the rich, authentic flavors of Korean cuisine while blending seamlessly into local food cultures, these products win over local palates and further enhance the value and appeal of K-Food.'
+          slogan: typeof data.slogan === 'string' ? { en: data.slogan, ko: '' } : { en: data.slogan?.[adminLang] || '', ko: data.slogan?.[adminLang === 'ko' ? 'en' : 'ko'] || '' },
+          subSlogan: typeof data.subSlogan === 'string' ? { en: data.subSlogan, ko: '' } : { en: data.subSlogan?.[adminLang] || '', ko: data.subSlogan?.[adminLang === 'ko' ? 'en' : 'ko'] || '' },
+          bottomText: typeof data.bottomText === 'string' ? { en: data.bottomText, ko: '' } : { en: data.bottomText?.[adminLang] || '', ko: data.bottomText?.[adminLang === 'ko' ? 'en' : 'ko'] || '' }
         });
       }
     };
 
     loadPageData();
-  }, []);
+  }, [adminLang]);
 
   // 카테고리 추가
   const handleAddCategory = async () => {
-    if (!newCategory.name.trim()) return;
+    if (!newCategory.name[adminLang].trim()) return;
     try {
       const order = categories.length;
-      const processedCategory = {
-        ...newCategory,
-        description: newCategory.description ? convertNewlinesToBr(newCategory.description) : '',
-        order
-      };
-      await addDoc(collection(db, 'productCategories'), processedCategory);
-      setNewCategory({ name: '', description: '' });
+      await addDoc(collection(db, 'productCategories'), { ...newCategory, order });
+      setNewCategory({ name: { en: '', ko: '' }, description: { en: '', ko: '' }, id: '', order: 0 });
       addToast('카테고리가 추가되었습니다!');
     } catch (error) {
       addToast('카테고리 추가 중 오류가 발생했습니다.', 'error');
@@ -707,18 +715,11 @@ const AdminProductManage: React.FC = () => {
 
   // 제품 추가
   const handleAddProduct = async () => {
-    if (!newProduct.name.trim() || !newProduct.category) return;
+    if (!newProduct.name[adminLang].trim() || !newProduct.category) return;
     try {
       const order = products.length;
       await addDoc(collection(db, 'products'), { ...newProduct, order });
-      setNewProduct({
-        name: '',
-        category: '',
-        image: '',
-        allergens: '',
-        ingredients: '',
-        nutrition: ''
-      });
+      setNewProduct({ name: { en: '', ko: '' }, category: '', image: '', allergens: { en: '', ko: '' }, ingredients: { en: '', ko: '' }, nutrition: { en: '', ko: '' }, id: '', order: 0 });
       addToast('제품이 추가되었습니다!');
     } catch (error) {
       addToast('제품 추가 중 오류가 발생했습니다.', 'error');
@@ -822,11 +823,7 @@ const AdminProductManage: React.FC = () => {
   // 페이지 데이터 저장
   const handleSavePageData = async () => {
     try {
-      await setDoc(doc(db, 'productPage', 'content'), {
-        slogan: pageData.slogan,
-        subSlogan: pageData.subSlogan,
-        bottomText: pageData.bottomText
-      });
+      await setDoc(doc(db, 'productPage', 'content'), pageData);
       addToast('페이지 데이터가 저장되었습니다!');
     } catch (error) {
       addToast('저장 중 오류가 발생했습니다.', 'error');
@@ -835,11 +832,7 @@ const AdminProductManage: React.FC = () => {
 
   const handleSaveBottomText = async () => {
     try {
-      await setDoc(doc(db, 'productPage', 'content'), {
-        slogan: pageData.slogan,
-        subSlogan: pageData.subSlogan,
-        bottomText: pageData.bottomText
-      });
+      await setDoc(doc(db, 'productPage', 'content'), pageData);
       addToast('하단 문구가 저장되었습니다!');
     } catch (error) {
       addToast('저장 중 오류가 발생했습니다.', 'error');
@@ -925,13 +918,16 @@ const AdminProductManage: React.FC = () => {
               <AdminGrid>
                 <div>
                   <AdminInput
-                    value={newCategory.name}
-                    onChange={e => setNewCategory({ ...newCategory, name: e.target.value })}
+                    value={newCategory.name[adminLang]}
+                    onChange={e => setNewCategory({ ...newCategory, name: { ...newCategory.name, [adminLang]: e.target.value }, description: newCategory.description, id: newCategory.id, order: newCategory.order })}
                     placeholder="카테고리명"
                   />
                   <AdminQuill
-                    value={newCategory.description}
-                    onChange={value => setNewCategory({ ...newCategory, description: value })}
+                    value={newCategory.description?.[adminLang] || ''}
+                    onChange={value => setNewCategory({ 
+                      ...newCategory, 
+                      description: { ...(newCategory.description || { en: '', ko: '' }), [adminLang]: value } 
+                    })}
                     modules={quillModules}
                     formats={formats}
                     theme="snow"
@@ -947,7 +943,7 @@ const AdminProductManage: React.FC = () => {
             <AdminCard>
               <AdminLabel>카테고리 목록 (드래그하여 순서 변경)</AdminLabel>
               <DragDropContainer>
-                {categories.map((category, index) => (
+                {Array.isArray(categories) ? categories.map((category, index) => (
                   <DragDropItem
                     key={category.id}
                     draggable
@@ -961,8 +957,8 @@ const AdminProductManage: React.FC = () => {
                         <div>
                           <AdminLabel>카테고리명</AdminLabel>
                           <AdminInput
-                            value={category.name}
-                            onChange={e => setCategories(prev => prev.map((c, i) => i === index ? { ...c, name: e.target.value } : c))}
+                            value={category.name[adminLang]}
+                            onChange={e => setCategories(prev => prev.map((c, i) => i === index ? { ...c, name: { ...c.name, [adminLang]: e.target.value } } : c))}
                             placeholder="카테고리명"
                           />
                         </div>
@@ -970,7 +966,7 @@ const AdminProductManage: React.FC = () => {
                           <SmallButton $primary onClick={async () => {
                             const processedCategory = {
                               ...category,
-                              description: category.description ? convertNewlinesToBr(category.description) : ''
+                              description: category.description ? convertNewlinesToBr(category.description[adminLang]) : ''
                             };
                             await setDoc(doc(db, 'productCategories', category.id), processedCategory);
                             addToast('카테고리가 저장되었습니다!');
@@ -981,8 +977,11 @@ const AdminProductManage: React.FC = () => {
                       <div>
                         <AdminLabel>카테고리 설명</AdminLabel>
                         <AdminQuill
-                          value={category.description || ''}
-                          onChange={value => setCategories(prev => prev.map((c, i) => i === index ? { ...c, description: value } : c))}
+                          value={category.description?.[adminLang] || ''}
+                          onChange={value => setCategories(prev => prev.map((c, i) => i === index ? { 
+                            ...c, 
+                            description: { ...(c.description || { en: '', ko: '' }), [adminLang]: value } 
+                          } : c))}
                           modules={quillModules}
                           formats={formats}
                           theme="snow"
@@ -992,7 +991,7 @@ const AdminProductManage: React.FC = () => {
                       </div>
                     </div>
                   </DragDropItem>
-                ))}
+                )) : null}
               </DragDropContainer>
             </AdminCard>
           </>
@@ -1005,13 +1004,13 @@ const AdminProductManage: React.FC = () => {
               <AdminGrid>
                 <div>
                   <AdminInput
-                    value={newProduct.name}
-                    onChange={e => setNewProduct(prev => ({ ...prev, name: e.target.value }))}
+                    value={newProduct.name[adminLang]}
+                    onChange={e => setNewProduct({ ...newProduct, name: { ...newProduct.name, [adminLang]: e.target.value }, allergens: newProduct.allergens, ingredients: newProduct.ingredients, nutrition: newProduct.nutrition, id: newProduct.id, order: newProduct.order, category: newProduct.category, image: newProduct.image })}
                     placeholder="제품명"
                   />
                   <select
                     value={newProduct.category}
-                    onChange={e => setNewProduct(prev => ({ ...prev, category: e.target.value }))}
+                    onChange={e => setNewProduct({ ...newProduct, category: e.target.value })}
                     style={{
                       width: '100%',
                       padding: '12px 16px',
@@ -1025,9 +1024,9 @@ const AdminProductManage: React.FC = () => {
                     }}
                   >
                     <option value="">카테고리 선택</option>
-                    {categories.map(cat => (
-                      <option key={cat.id} value={cat.name}>{cat.name}</option>
-                    ))}
+                    {Array.isArray(categories) ? categories.map(cat => (
+                      <option key={cat.id} value={cat.id}>{cat.name[adminLang]}</option>
+                    )) : null}
                   </select>
                   <input
                     type="file"
@@ -1054,8 +1053,11 @@ const AdminProductManage: React.FC = () => {
                 <div>
                   <AdminLabel>Allergens</AdminLabel>
                   <AdminQuill
-                    value={newProduct.allergens}
-                    onChange={value => setNewProduct(prev => ({ ...prev, allergens: value }))}
+                    value={newProduct.allergens?.[adminLang] || ''}
+                    onChange={value => setNewProduct({ 
+                      ...newProduct, 
+                      allergens: { ...(newProduct.allergens || { en: '', ko: '' }), [adminLang]: value } 
+                    })}
                     modules={quillModules}
                     formats={formats}
                     theme="snow"
@@ -1063,8 +1065,11 @@ const AdminProductManage: React.FC = () => {
                   />
                   <AdminLabel>Ingredients</AdminLabel>
                   <AdminQuill
-                    value={newProduct.ingredients}
-                    onChange={value => setNewProduct(prev => ({ ...prev, ingredients: value }))}
+                    value={newProduct.ingredients?.[adminLang] || ''}
+                    onChange={value => setNewProduct({ 
+                      ...newProduct, 
+                      ingredients: { ...(newProduct.ingredients || { en: '', ko: '' }), [adminLang]: value } 
+                    })}
                     modules={quillModules}
                     formats={formats}
                     theme="snow"
@@ -1072,8 +1077,11 @@ const AdminProductManage: React.FC = () => {
                   />
                   <AdminLabel>Nutrition Facts</AdminLabel>
                   <AdminQuill
-                    value={newProduct.nutrition}
-                    onChange={value => setNewProduct(prev => ({ ...prev, nutrition: value }))}
+                    value={newProduct.nutrition?.[adminLang] || ''}
+                    onChange={value => setNewProduct({ 
+                      ...newProduct, 
+                      nutrition: { ...(newProduct.nutrition || { en: '', ko: '' }), [adminLang]: value } 
+                    })}
                     modules={quillModules}
                     formats={formats}
                     theme="snow"
@@ -1096,7 +1104,7 @@ const AdminProductManage: React.FC = () => {
                 </div>
               </div>
               <DragDropContainer>
-                {products.map((product, index) => (
+                {Array.isArray(products) ? products.map((product, index) => (
                   <DragDropItem
                     key={product.id}
                     draggable
@@ -1110,11 +1118,11 @@ const AdminProductManage: React.FC = () => {
                         <ProductCardHeaderContent>
                           <DragHandle>⋮⋮</DragHandle>
                           {product.image && (
-                            <ProductThumbnail src={product.image} alt={product.name} />
+                            <ProductThumbnail src={product.image} alt={product.name[adminLang]} />
                           )}
                           <ProductInfo>
                             <ProductName>
-                              {product.name || '제품명 없음'}
+                              {product.name[adminLang] || '제품명 없음'}
                               {modifiedProducts.has(product.id) && <ModifiedIndicator />}
                             </ProductName>
                             <ProductCategory>{product.category || '카테고리 없음'}</ProductCategory>
@@ -1134,13 +1142,13 @@ const AdminProductManage: React.FC = () => {
                       <ProductCardBody $expanded={expandedProducts.has(product.id)}>
                         <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
                           {product.image && (
-                            <ProductImage src={product.image} alt={product.name} />
+                            <ProductImage src={product.image} alt={product.name[adminLang]} />
                           )}
                           <div style={{ flex: 1 }}>
                             <AdminInput
-                              value={product.name}
+                              value={product.name[adminLang]}
                               onChange={e => {
-                                setProducts(prev => prev.map((p, i) => i === index ? { ...p, name: e.target.value } : p));
+                                setProducts(prev => prev.map((p, i) => i === index ? { ...p, name: { ...p.name, [adminLang]: e.target.value } } : p));
                                 handleProductChange(product.id);
                               }}
                               placeholder="제품명"
@@ -1165,9 +1173,9 @@ const AdminProductManage: React.FC = () => {
                               }}
                             >
                               <option value="">카테고리 선택</option>
-                              {categories.map(cat => (
-                                <option key={cat.id} value={cat.name}>{cat.name}</option>
-                              ))}
+                              {Array.isArray(categories) ? categories.map(cat => (
+                                <option key={cat.id} value={cat.id}>{cat.name[adminLang]}</option>
+                              )) : null}
                             </select>
                             <input
                               type="file"
@@ -1186,9 +1194,12 @@ const AdminProductManage: React.FC = () => {
                             )}
                             <AdminLabel>Allergens</AdminLabel>
                             <AdminQuill
-                              value={product.allergens || ''}
+                              value={product.allergens?.[adminLang] || ''}
                               onChange={value => {
-                                setProducts(prev => prev.map((p, i) => i === index ? { ...p, allergens: value } : p));
+                                setProducts(prev => prev.map((p, i) => i === index ? { 
+                                  ...p, 
+                                  allergens: { ...(p.allergens || { en: '', ko: '' }), [adminLang]: value } 
+                                } : p));
                                 handleProductChange(product.id);
                               }}
                               modules={quillModules}
@@ -1198,9 +1209,12 @@ const AdminProductManage: React.FC = () => {
                             />
                             <AdminLabel>Ingredients</AdminLabel>
                             <AdminQuill
-                              value={product.ingredients || ''}
+                              value={product.ingredients?.[adminLang] || ''}
                               onChange={value => {
-                                setProducts(prev => prev.map((p, i) => i === index ? { ...p, ingredients: value } : p));
+                                setProducts(prev => prev.map((p, i) => i === index ? { 
+                                  ...p, 
+                                  ingredients: { ...(p.ingredients || { en: '', ko: '' }), [adminLang]: value } 
+                                } : p));
                                 handleProductChange(product.id);
                               }}
                               modules={quillModules}
@@ -1210,9 +1224,12 @@ const AdminProductManage: React.FC = () => {
                             />
                             <AdminLabel>Nutrition Facts</AdminLabel>
                             <AdminQuill
-                              value={product.nutrition || ''}
+                              value={product.nutrition?.[adminLang] || ''}
                               onChange={value => {
-                                setProducts(prev => prev.map((p, i) => i === index ? { ...p, nutrition: value } : p));
+                                setProducts(prev => prev.map((p, i) => i === index ? { 
+                                  ...p, 
+                                  nutrition: { ...(p.nutrition || { en: '', ko: '' }), [adminLang]: value } 
+                                } : p));
                                 handleProductChange(product.id);
                               }}
                               modules={quillModules}
@@ -1241,7 +1258,7 @@ const AdminProductManage: React.FC = () => {
                       </ProductCardBody>
                     </ProductCard>
                   </DragDropItem>
-                ))}
+                )) : null}
               </DragDropContainer>
             </AdminCard>
           </>
@@ -1254,8 +1271,8 @@ const AdminProductManage: React.FC = () => {
                 <AdminLabel>페이지 슬로건</AdminLabel>
                 <div style={{ width: '100%' }}>
                   <AdminQuill
-                    value={pageData.slogan}
-                    onChange={value => setPageData(prev => ({ ...prev, slogan: value }))}
+                    value={pageData.slogan[adminLang]}
+                    onChange={value => setPageData(prev => ({ ...prev, slogan: { ...prev.slogan, [adminLang]: value } }))}
                     modules={quillModules}
                     formats={formats}
                     theme="snow"
@@ -1266,8 +1283,8 @@ const AdminProductManage: React.FC = () => {
                 <AdminLabel>페이지 서브 슬로건</AdminLabel>
                 <div style={{ width: '100%' }}>
                   <AdminQuill
-                    value={pageData.subSlogan}
-                    onChange={value => setPageData(prev => ({ ...prev, subSlogan: value }))}
+                    value={pageData.subSlogan[adminLang]}
+                    onChange={value => setPageData(prev => ({ ...prev, subSlogan: { ...prev.subSlogan, [adminLang]: value } }))}
                     modules={quillModules}
                     formats={formats}
                     theme="snow"
@@ -1292,7 +1309,7 @@ const AdminProductManage: React.FC = () => {
                   lineHeight: '1.4',
                   textAlign: 'center'
                 }}
-                dangerouslySetInnerHTML={{ __html: convertNewlinesToBr(pageData.slogan) }}
+                dangerouslySetInnerHTML={{ __html: convertNewlinesToBr(pageData.slogan[adminLang]) }}
                 />
                 <div style={{
                   fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif',
@@ -1306,7 +1323,7 @@ const AdminProductManage: React.FC = () => {
                   padding: '0 10px',
                   whiteSpace: 'pre-line'
                 }}
-                dangerouslySetInnerHTML={{ __html: convertNewlinesToBr(pageData.subSlogan) }}
+                dangerouslySetInnerHTML={{ __html: convertNewlinesToBr(pageData.subSlogan[adminLang]) }}
                 />
               </div>
             </AdminCard>
@@ -1320,8 +1337,8 @@ const AdminProductManage: React.FC = () => {
                 <AdminLabel>하단 문구</AdminLabel>
                 <div style={{ width: '100%' }}>
                   <AdminQuill
-                    value={pageData.bottomText}
-                    onChange={value => setPageData(prev => ({ ...prev, bottomText: value }))}
+                    value={pageData.bottomText[adminLang]}
+                    onChange={value => setPageData(prev => ({ ...prev, bottomText: { ...prev.bottomText, [adminLang]: value } }))}
                     modules={quillModules}
                     formats={formats}
                     theme="snow"
@@ -1373,7 +1390,7 @@ const AdminProductManage: React.FC = () => {
                     border: '1px solid rgba(90, 55, 35, 0.1)',
                     position: 'relative'
                   }}
-                  dangerouslySetInnerHTML={{ __html: convertNewlinesToBr(pageData.bottomText) }}
+                  dangerouslySetInnerHTML={{ __html: convertNewlinesToBr(pageData.bottomText[adminLang]) }}
                   />
                   <button 
                     style={{

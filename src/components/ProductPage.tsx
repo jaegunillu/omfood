@@ -9,14 +9,14 @@ import styles from './ProductPage.module.css';
 
 interface Category {
   id: string;
-  name: string;
+  name: { en: string; ko: string };
   description: string;
   order: number;
 }
 
 interface Product {
   id: string;
-  name: string;
+  name: { en: string; ko: string };
   category: string;
   image: string;
   order: number;
@@ -99,6 +99,7 @@ const ProductPage: React.FC = () => {
   });
   const [modalProduct, setModalProduct] = useState<any>(null);
   const navigate = useNavigate();
+  const [language, setLanguage] = useState<'en' | 'ko'>(localStorage.getItem('siteLang') === 'en' ? 'en' : 'ko');
 
   useEffect(() => {
     const unsubscribeCategories = onSnapshot(collection(db, 'productCategories'), (snapshot) => {
@@ -190,15 +191,15 @@ const ProductPage: React.FC = () => {
         </section>
         {categories.map(category => (
           <section key={category.id} className={styles.categorySection}>
-            <div className={styles.categoryTitle}>{category.name}</div>
+            <div className={styles.categoryTitle}>{(category.name as any)?.en !== undefined && typeof language === 'string' ? (category.name as any)[language] : String(category.name)}</div>
             <div className={styles.categoryDescription} dangerouslySetInnerHTML={{ __html: category.description ? category.description.replace(/\n/g, '<br/>') : '' }} />
             <div className={styles.productsGrid}>
-              {products.filter(p => p.category === category.name).map(product => (
+              {products.filter(p => p.category === category.id || p.category === (typeof category.name === 'object' && category.name !== null && 'en' in category.name && 'ko' in category.name ? category.name[language] : String(category.name))).map(product => (
                 <ProductCard
                   key={product.id}
                   image={product.image}
-                  name={product.name}
-                  category={product.category}
+                  name={typeof product.name === 'object' && product.name !== null && 'en' in product.name && 'ko' in product.name ? product.name[language] : String(product.name)}
+                  category={typeof category.name === 'object' && category.name !== null && 'en' in category.name && 'ko' in category.name ? category.name[language] : String(category.name)}
                   onClick={() => setModalProduct(product)}
                 />
               ))}

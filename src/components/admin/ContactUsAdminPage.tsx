@@ -8,6 +8,7 @@ import Toast from '../common/Toast';
 import ToastContainer from '../common/ToastContainer';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import { useAdminLang } from '../../App';
 
 // 디자인 시스템 - 컬러 팔레트
 const colors = {
@@ -126,6 +127,7 @@ const AdminButton = styled.button<{ $primary?: boolean; $danger?: boolean; $load
 
 const ContactUsAdminPage: React.FC = () => {
   const navigate = useNavigate();
+  const { adminLang } = useAdminLang();
   // 문의 리스트 Firestore 연동
   const [inquiries, setInquiries] = useState<any[]>([]);
   useEffect(() => {
@@ -139,11 +141,23 @@ const ContactUsAdminPage: React.FC = () => {
   }, []);
 
   // 하단 정보 Firestore 연동
+  // Firestore에서 받아올 때 string이면 { en: '', ko: '' }로 변환
   useEffect(() => {
     const unsub = onSnapshot(doc(db, "contact_us_config", "main_info"), (docSnap) => {
       if (docSnap.exists()) {
-        setMainInfo(docSnap.data() as typeof mainInfo);
-        setEditInfo(docSnap.data() as typeof mainInfo);
+        const d = docSnap.data();
+        setMainInfo({
+          address: typeof d.address === 'string' ? { en: d.address, ko: '' } : (d.address || { en: '', ko: '' }),
+          phone: typeof d.phone === 'string' ? { en: d.phone, ko: '' } : (d.phone || { en: '', ko: '' }),
+          fax: typeof d.fax === 'string' ? { en: d.fax, ko: '' } : (d.fax || { en: '', ko: '' }),
+          email: typeof d.email === 'string' ? { en: d.email, ko: '' } : (d.email || { en: '', ko: '' })
+        });
+        setEditInfo({
+          address: typeof d.address === 'string' ? { en: d.address, ko: '' } : (d.address || { en: '', ko: '' }),
+          phone: typeof d.phone === 'string' ? { en: d.phone, ko: '' } : (d.phone || { en: '', ko: '' }),
+          fax: typeof d.fax === 'string' ? { en: d.fax, ko: '' } : (d.fax || { en: '', ko: '' }),
+          email: typeof d.email === 'string' ? { en: d.email, ko: '' } : (d.email || { en: '', ko: '' })
+        });
       }
     });
     return () => unsub();
@@ -151,12 +165,12 @@ const ContactUsAdminPage: React.FC = () => {
 
   const [selected, setSelected] = useState<any | null>(null);
 
-  // 하단 정보(임시)
+  // 하단 정보(다국어)
   const [mainInfo, setMainInfo] = useState({
-    address: "8, Dongseong-ro 17-gil, Songbuk-gu, Seoul, Republic of Korea",
-    phone: "+82-2-928-5669\n02.928.5669",
-    fax: "+82-2-927-5662\n02.927.5662",
-    email: "om@ovenmaru.com",
+    address: { en: '', ko: '' },
+    phone: { en: '', ko: '' },
+    fax: { en: '', ko: '' },
+    email: { en: '', ko: '' },
   });
   const [editInfo, setEditInfo] = useState(mainInfo);
   const [editMode, setEditMode] = useState(false);
@@ -171,12 +185,18 @@ const ContactUsAdminPage: React.FC = () => {
 
   // 하단 정보 저장 (Firestore 업데이트)
   const saveInfo = async () => {
+    // 안전하게 변환
+    const safeInfo = {
+      address: typeof editInfo.address === 'string' ? { en: editInfo.address, ko: '' } : (editInfo.address || { en: '', ko: '' }),
+      phone: typeof editInfo.phone === 'string' ? { en: editInfo.phone, ko: '' } : (editInfo.phone || { en: '', ko: '' }),
+      fax: typeof editInfo.fax === 'string' ? { en: editInfo.fax, ko: '' } : (editInfo.fax || { en: '', ko: '' }),
+      email: typeof editInfo.email === 'string' ? { en: editInfo.email, ko: '' } : (editInfo.email || { en: '', ko: '' })
+    };
     try {
-      await updateDoc(doc(db, "contact_us_config", "main_info"), editInfo);
+      await updateDoc(doc(db, "contact_us_config", "main_info"), safeInfo);
       success("저장되었습니다.");
     } catch (e) {
-      // 문서가 없어서 update 실패 시 setDoc으로 생성
-      await setDoc(doc(db, "contact_us_config", "main_info"), editInfo);
+      await setDoc(doc(db, "contact_us_config", "main_info"), safeInfo);
       success("새 문서로 저장되었습니다.");
     }
     setEditMode(false);
@@ -266,19 +286,19 @@ const ContactUsAdminPage: React.FC = () => {
             <>
               <div style={{ marginBottom: 16 }}>
                 <label style={{ display: 'block', fontSize: 14, fontWeight: 700, marginBottom: 6 }}>주소</label>
-                <input style={{ width: '100%', border: '1px solid #e0e0e0', borderRadius: 8, padding: '10px 14px', fontSize: 15 }} value={editInfo.address} onChange={e => setEditInfo({ ...editInfo, address: e.target.value })} />
+                <input style={{ width: '100%', border: '1px solid #e0e0e0', borderRadius: 8, padding: '10px 14px', fontSize: 15 }} value={editInfo.address[adminLang] || ''} onChange={e => setEditInfo({ ...editInfo, address: { ...editInfo.address, [adminLang]: e.target.value } })} />
               </div>
               <div style={{ marginBottom: 16 }}>
                 <label style={{ display: 'block', fontSize: 14, fontWeight: 700, marginBottom: 6 }}>전화번호</label>
-                <input style={{ width: '100%', border: '1px solid #e0e0e0', borderRadius: 8, padding: '10px 14px', fontSize: 15 }} value={editInfo.phone} onChange={e => setEditInfo({ ...editInfo, phone: e.target.value })} />
+                <input style={{ width: '100%', border: '1px solid #e0e0e0', borderRadius: 8, padding: '10px 14px', fontSize: 15 }} value={editInfo.phone[adminLang] || ''} onChange={e => setEditInfo({ ...editInfo, phone: { ...editInfo.phone, [adminLang]: e.target.value } })} />
               </div>
               <div style={{ marginBottom: 16 }}>
                 <label style={{ display: 'block', fontSize: 14, fontWeight: 700, marginBottom: 6 }}>팩스</label>
-                <input style={{ width: '100%', border: '1px solid #e0e0e0', borderRadius: 8, padding: '10px 14px', fontSize: 15 }} value={editInfo.fax} onChange={e => setEditInfo({ ...editInfo, fax: e.target.value })} />
+                <input style={{ width: '100%', border: '1px solid #e0e0e0', borderRadius: 8, padding: '10px 14px', fontSize: 15 }} value={editInfo.fax[adminLang] || ''} onChange={e => setEditInfo({ ...editInfo, fax: { ...editInfo.fax, [adminLang]: e.target.value } })} />
               </div>
               <div style={{ marginBottom: 16 }}>
                 <label style={{ display: 'block', fontSize: 14, fontWeight: 700, marginBottom: 6 }}>이메일</label>
-                <input style={{ width: '100%', border: '1px solid #e0e0e0', borderRadius: 8, padding: '10px 14px', fontSize: 15 }} value={editInfo.email} onChange={e => setEditInfo({ ...editInfo, email: e.target.value })} />
+                <input style={{ width: '100%', border: '1px solid #e0e0e0', borderRadius: 8, padding: '10px 14px', fontSize: 15 }} value={editInfo.email[adminLang] || ''} onChange={e => setEditInfo({ ...editInfo, email: { ...editInfo.email, [adminLang]: e.target.value } })} />
               </div>
               <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
                 <AdminButton $primary onClick={saveInfo}>저장</AdminButton>
@@ -287,10 +307,10 @@ const ContactUsAdminPage: React.FC = () => {
             </>
           ) : (
             <>
-              <div style={{ marginBottom: 12, fontSize: 16 }}><b>주소:</b> {mainInfo.address}</div>
-              <div style={{ marginBottom: 12, fontSize: 16 }}><b>전화번호:</b> {mainInfo.phone}</div>
-              <div style={{ marginBottom: 12, fontSize: 16 }}><b>팩스:</b> {mainInfo.fax}</div>
-              <div style={{ marginBottom: 12, fontSize: 16 }}><b>이메일:</b> {mainInfo.email}</div>
+              <div style={{ marginBottom: 12, fontSize: 16 }}><b>주소:</b> {mainInfo.address[adminLang]}</div>
+              <div style={{ marginBottom: 12, fontSize: 16 }}><b>전화번호:</b> {mainInfo.phone[adminLang]}</div>
+              <div style={{ marginBottom: 12, fontSize: 16 }}><b>팩스:</b> {mainInfo.fax[adminLang]}</div>
+              <div style={{ marginBottom: 12, fontSize: 16 }}><b>이메일:</b> {mainInfo.email[adminLang]}</div>
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
                 <AdminButton $primary onClick={() => setEditMode(true)}>수정</AdminButton>
               </div>

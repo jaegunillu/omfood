@@ -61,7 +61,13 @@ const LogoWrapper = styled.div`
   }
 `;
 
-const LogoImg = styled.img<{ $visible?: boolean }>`
+const LogoImg = styled.img<{
+  $visible?: boolean;
+  $isMainPage: boolean;
+  $isHeaderHover: boolean;
+  $navHover: boolean;
+  $logoHover: boolean;
+}>`
   position: absolute;
   top: 0;
   left: 0;
@@ -72,6 +78,7 @@ const LogoImg = styled.img<{ $visible?: boolean }>`
   transform: scale(${props => (props.$visible ? 1 : 0.95)});
   transition: opacity 0.4s cubic-bezier(0.4,0,0.2,1), transform 0.4s cubic-bezier(0.4,0,0.2,1);
   pointer-events: none;
+  filter: none;
 `;
 
 const NavWrapper = styled.div`
@@ -93,8 +100,16 @@ const Nav = styled.nav`
   gap: 40px;
 `;
 
-const MenuItem = styled.a<{ $isHovered: boolean; $hover: boolean }>`
-  color: ${props => (props.$hover ? '#222' : '#fff')};
+const MenuItem = styled.a<{
+  $isHovered: boolean;
+  $hover: boolean;
+  $isMainPage: boolean;
+  $isHeaderHover: boolean;
+  $navHover: boolean;
+  $logoHover: boolean;
+}>`
+  color: ${({ $isMainPage, $isHeaderHover, $navHover, $logoHover }) =>
+    $isMainPage && !($isHeaderHover || $navHover || $logoHover) ? '#fff' : '#222'};
   text-decoration: none;
   font-size: 16px;
   font-weight: 300;
@@ -131,7 +146,12 @@ const MenuChar = styled.span<{ $isActive: boolean; $delay: number }>`
   transition-delay: ${props => props.$delay}ms;
 `;
 
-const MobileMenuButton = styled.button<{ $isMainPage: boolean }>`
+const MobileMenuButton = styled.button<{
+  $isMainPage: boolean;
+  $isHeaderHover: boolean;
+  $navHover: boolean;
+  $logoHover: boolean;
+}>`
   display: none;
   @media (max-width: 1162px) {
     display: flex;
@@ -142,7 +162,8 @@ const MobileMenuButton = styled.button<{ $isMainPage: boolean }>`
     border: none;
     z-index: 10;
     font-size: 2rem;
-    color: ${({ $isMainPage }) => $isMainPage ? '#fff' : '#111'};
+    color: ${({ $isMainPage, $isHeaderHover, $navHover, $logoHover }) =>
+      $isMainPage && !($isHeaderHover || $navHover || $logoHover) ? '#fff' : '#222'};
     align-items: center;
     justify-content: center;
     cursor: pointer;
@@ -289,56 +310,116 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false }) => {
-  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
-  const [navHover, setNavHover] = useState(false);
-  const [logoHover, setLogoHover] = useState(false);
+  const [isHeaderHover, setIsHeaderHover] = useState(false);
+  const [isAnimated, setIsAnimated] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 1162);
-  const [menuItems, setMenuItems] = useState<string[]>([
-    "ABOUT OMFOOD", "FOOD SERVICE", "BRAND", "PRODUCT", "CONTACT"
-  ]);
-  const [language, setLanguage] = useState<'en' | 'ko'>('en');
-  const [logoWhite, setLogoWhite] = useState<string>('/logo_white.png');
-  const [logoBlack, setLogoBlack] = useState<string>('/logo_black.png');
+  const [logoHover, setLogoHover] = useState(false);
+  const [navHover, setNavHover] = useState(false);
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const [language, setLanguage] = useState<'en' | 'ko'>(localStorage.getItem('siteLang') === 'en' ? 'en' : 'ko');
+  const [logoWhite, setLogoWhite] = useState<string | null>(null);
+  const [logoBlack, setLogoBlack] = useState<string | null>(null);
+  const [menuItems, setMenuItems] = useState<{ en: string[]; ko: string[] } | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      setIsAnimated(scrollY > 50);
+      setIsHeaderHover(scrollY > 50);
+    };
+
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 1162);
     };
 
+    window.addEventListener('scroll', handleScroll);
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    handleResize();
+    handleScroll();
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
+  // Firestore에서 로고 경로 실시간 구독
   useEffect(() => {
-    const docRef = doc(db, 'menu', 'names');
-    const unsubscribe = onSnapshot(docRef, (docSnap) => {
-      if (docSnap.exists()) {
-        setMenuItems(docSnap.data().items);
-      }
-    });
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    // Firestore에서 로고 경로 실시간 구독
+    console.log('[Header] 로고 데이터 구독 시작');
     const docRef = doc(db, 'header', 'logo');
     const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      console.log('[Header] 로고 데이터 변경 감지:', docSnap.exists());
       if (docSnap.exists()) {
-        setLogoWhite(docSnap.data().white || '/logo_white.png');
-        setLogoBlack(docSnap.data().black || '/logo_black.png');
+        const data = docSnap.data();
+        console.log('[Header] 로고 데이터:', data);
+        // Firestore에서 받은 경로를 그대로 사용 (이미 완전한 URL)
+        setLogoWhite(data.white || null);
+        setLogoBlack(data.black || null);
+        console.log('[Header] 로고 경로 설정:', { white: data.white, black: data.black });
+        console.log('[Header] 로고 상태 업데이트 완료');
       } else {
-        setLogoWhite('/logo_white.png');
-        setLogoBlack('/logo_black.png');
+        console.log('[Header] 로고 데이터 문서가 존재하지 않음');
+        setLogoWhite(null);
+        setLogoBlack(null);
       }
+    }, (error) => {
+      console.error('[Header] 로고 데이터 구독 오류:', error);
     });
-    return () => unsubscribe();
+    return () => {
+      console.log('[Header] 로고 데이터 구독 해제');
+      unsubscribe();
+    };
   }, []);
 
-  const isAnimated = isMainPage; // 오직 메인페이지만 애니메이션
-  const isHeaderHover = isAnimated ? (navHover || logoHover) : true;
+  // Firestore에서 메뉴 데이터 실시간 구독
+  useEffect(() => {
+    console.log('[Header] 메뉴 데이터 구독 시작');
+    const ref = doc(db, 'header_menu', 'main');
+    const unsub = onSnapshot(ref, (snap) => {
+      console.log('[Header] Firestore 메뉴 데이터 변경 감지:', snap.exists());
+      if (snap.exists()) {
+        const data = snap.data();
+        console.log('[Header] 메뉴 데이터:', data);
+        setMenuItems({
+          en: Array.isArray(data.en) ? data.en : Object.values(data.en),
+          ko: Array.isArray(data.ko) ? data.ko : Object.values(data.ko),
+        });
+        console.log('[Header] 상태 업데이트 완료');
+      } else {
+        console.log('[Header] 메뉴 데이터 문서가 존재하지 않음');
+        // 기본값 유지
+      }
+    }, (error) => {
+      console.error('[Header] 메뉴 데이터 구독 오류:', error);
+      // 기본값 유지
+    });
+    return () => {
+      console.log('[Header] 메뉴 데이터 구독 해제');
+      unsub();
+    };
+  }, []);
+
+  // 메뉴 데이터 변경 시 로그 출력 (상태 업데이트 후 실행됨)
+  useEffect(() => {
+    console.log('[Header] 현재 메뉴 데이터:', menuItems);
+    console.log('[Header] 현재 언어:', language);
+    console.log('[Header] 현재 언어의 메뉴:', menuItems?.[language]);
+    console.log('[Header] 메뉴 렌더링 조건 확인:', {
+      menuItemsExists: !!menuItems,
+      languageExists: !!menuItems?.[language],
+      isArray: Array.isArray(menuItems?.[language]),
+      length: menuItems?.[language]?.length
+    });
+  }, [menuItems, language]);
+
+  // 렌더링 디버깅을 위한 useEffect
+  useEffect(() => {
+    console.log('[Header] 렌더링 디버깅 - menuItems:', menuItems, 'language:', language, 'logoWhite:', logoWhite, 'logoBlack:', logoBlack);
+    console.log('[Header] 메뉴 렌더링 - menuItems[language]:', menuItems?.[language]);
+  }, [menuItems, language, logoWhite, logoBlack]);
 
   const handleMobileMenuToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -352,28 +433,54 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
 
   const handleLanguageChange = (lang: 'en' | 'ko') => {
     setLanguage(lang);
-    // TODO: 국문 페이지 전환 로직 (추후 구현)
+    localStorage.setItem('siteLang', lang);
+    // 페이지 새로고침으로 언어 변경 적용
+    window.location.reload();
   };
 
-  // 메뉴 클릭 핸들러
+  // 메뉴 클릭 핸들러 - Firestore 데이터 기반으로 동작
   const handleMenuClick = (item: string) => {
+    console.log('[Header] 메뉴 클릭:', item);
     const key = item.toLowerCase().replace(/\s/g, '');
-    if (key.includes('brand')) {
+    
+    // Firestore에서 관리되는 메뉴명에 따라 동적으로 라우팅
+    if (key.includes('brand') || key.includes('브랜드')) {
       navigate('/brand');
-    } else if (key.includes('product')) {
+    } else if (key.includes('product') || key.includes('제품')) {
       navigate('/product');
-    } else if (key === 'contact' || key === 'contactus') {
+    } else if (key === 'contact' || key === 'contactus' || key.includes('연락처')) {
       navigate('/contact');
-    } else if (key.includes('about')) {
+    } else if (key.includes('about') || key.includes('소개')) {
       navigate('/about');
-    } else if (key.includes('foodservice')) {
+    } else if (key.includes('foodservice') || key.includes('푸드서비스') || key.includes('food')) {
       navigate('/foodservice');
+    } else {
+      console.log('[Header] 알 수 없는 메뉴:', item);
     }
   };
 
+  console.log('[Header] menuItems[language] 실제 값:', menuItems?.[language]);
+  const menuArray = (() => {
+    if (!menuItems || !menuItems[language]) return [];
+    const raw = menuItems[language];
+    const arr = Array.isArray(raw) ? raw : Object.values(raw);
+    return arr.filter(v => typeof v === 'string' && !Array.isArray(v) && v !== null && v !== undefined);
+  })() as string[];
+
   return (
-    <HeaderContainer $hover={isAnimated ? isHeaderHover : true} $isMobile={isMobile} $brand={false} style={isAnimated ? {} : {background: '#fff', boxShadow: '0 2px 20px rgba(0,0,0,0.08)'}}>
-      <MobileMenuButton $isMainPage={isMainPage} onClick={handleMobileMenuToggle}>
+    <HeaderContainer
+      $hover={isMainPage ? (isHeaderHover || navHover || logoHover) : true}
+      $isMobile={isMobile}
+      $brand={false}
+      style={isMainPage ? {} : {background: '#fff', boxShadow: '0 2px 20px rgba(0,0,0,0.08)'}}
+    >
+      <MobileMenuButton
+        $isMainPage={isMainPage}
+        $isHeaderHover={isHeaderHover}
+        $navHover={navHover}
+        $logoHover={logoHover}
+        onClick={handleMobileMenuToggle}
+      >
         {mobileMenuOpen ? '×' : '≡'}
       </MobileMenuButton>
       <LogoWrapper
@@ -381,7 +488,21 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
         onMouseLeave={() => setLogoHover(false)}
       >
         <a href="/" style={{ width: '100%', height: '100%', display: 'block', position: 'relative' }}>
-          <LogoImg src={isAnimated ? (isHeaderHover ? logoBlack : logoWhite) : logoBlack} alt="logo" $visible={true} />
+          <LogoImg
+            src={
+              isMainPage
+                ? (isHeaderHover || navHover || logoHover
+                    ? logoBlack || undefined
+                    : logoWhite || undefined)
+                : logoBlack || undefined
+            }
+            alt="logo"
+            $visible={true}
+            $isMainPage={isMainPage}
+            $isHeaderHover={isHeaderHover}
+            $navHover={navHover}
+            $logoHover={logoHover}
+          />
         </a>
       </LogoWrapper>
       <NavWrapper>
@@ -392,40 +513,40 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
             setHoveredItem(null);
           }}
         >
-          {menuItems.map((item) => (
-            <MenuItem
-              key={item}
-              href="#"
-              $isHovered={hoveredItem === item}
-              $hover={isAnimated ? isHeaderHover : true}
-              onMouseEnter={() => setHoveredItem(item)}
-              onMouseLeave={() => setHoveredItem(null)}
-              onClick={e => {
-                e.preventDefault();
-                handleMenuClick(item);
-              }}
-            >
-              {item.split('').map((char, idx) => (
-                <MenuChar
+          {menuArray.length > 0 ? (
+            menuArray.map((item: string, idx: number) =>
+              typeof item === 'string' ? (
+                <MenuItem
                   key={idx}
-                  $isActive={hoveredItem === item}
-                  $delay={hoveredItem === item ? idx * 30 : 0}
+                  href="#"
+                  $isHovered={hoveredItem === item}
+                  $hover={isAnimated ? isHeaderHover : true}
+                  $isMainPage={isMainPage}
+                  $isHeaderHover={isHeaderHover}
+                  $navHover={navHover}
+                  $logoHover={logoHover}
+                  onMouseEnter={() => setHoveredItem(item)}
+                  onMouseLeave={() => setHoveredItem(null)}
+                  onClick={e => {
+                    e.preventDefault();
+                    handleMenuClick(item);
+                  }}
                 >
-                  {char}
-                </MenuChar>
-              ))}
-            </MenuItem>
-          ))}
+                  {item}
+                </MenuItem>
+              ) : null
+            )
+          ) : null}
         </Nav>
       </NavWrapper>
       <LanguageSelector>
         <FlagWrapper onClick={() => handleLanguageChange('en')} title="English">
           {language === 'en' && <RedDot />}
-          <FlagIcon src="/america.png" alt="English" />
+          <FlagIcon src={`${process.env.PUBLIC_URL}/america.png`} alt="English" />
         </FlagWrapper>
         <FlagWrapper onClick={() => handleLanguageChange('ko')} title="한국어">
           {language === 'ko' && <RedDot />}
-          <FlagIcon src="/korea.png" alt="한국어" />
+          <FlagIcon src={`${process.env.PUBLIC_URL}/korea.png`} alt="한국어" />
         </FlagWrapper>
       </LanguageSelector>
       <MobileNav $open={mobileMenuOpen}>
@@ -434,30 +555,36 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
             ×
           </MobileCloseButton>
         )}
-        {menuItems.map((item) => (
-          <MenuItem
-            key={item}
-            href="#"
-            $isHovered={false}
-            $hover={isAnimated ? true : true}
-            style={{ fontSize: '1.5rem', margin: '24px 0', color: '#fff', fontWeight: 700, textShadow: '0 1px 8px rgba(0,0,0,0.18)' }}
-            onClick={e => {
-              e.preventDefault();
-              setMobileMenuOpen(false);
-              handleMenuClick(item);
-            }}
-          >
-            {item}
-          </MenuItem>
-        ))}
+        {menuArray.length > 0 ? (
+          menuArray.map((item, idx) => (
+            <MenuItem
+              key={idx}
+              href="#"
+              $isHovered={false}
+              $hover={isAnimated ? true : true}
+              $isMainPage={isMainPage}
+              $isHeaderHover={isHeaderHover}
+              $navHover={navHover}
+              $logoHover={logoHover}
+              style={{ fontSize: '1.5rem', margin: '24px 0', color: '#fff', fontWeight: 700, textShadow: '0 1px 8px rgba(0,0,0,0.18)' }}
+              onClick={e => {
+                e.preventDefault();
+                setMobileMenuOpen(false);
+                handleMenuClick(item);
+              }}
+            >
+              {item}
+            </MenuItem>
+          ))
+        ) : null}
         <MobileLanguageSelector>
           <FlagWrapper onClick={() => handleLanguageChange('en')} title="English">
             {language === 'en' && <RedDot />}
-            <FlagIcon src="/america.png" alt="English" style={{background:'#fff', border:'2px solid #fff'}} />
+            <FlagIcon src={`${process.env.PUBLIC_URL}/america.png`} alt="English" style={{background:'#fff', border:'2px solid #fff'}} />
           </FlagWrapper>
           <FlagWrapper onClick={() => handleLanguageChange('ko')} title="한국어">
             {language === 'ko' && <RedDot />}
-            <FlagIcon src="/korea.png" alt="한국어" style={{background:'#fff', border:'2px solid #fff'}} />
+            <FlagIcon src={`${process.env.PUBLIC_URL}/korea.png`} alt="한국어" style={{background:'#fff', border:'2px solid #fff'}} />
           </FlagWrapper>
         </MobileLanguageSelector>
       </MobileNav>

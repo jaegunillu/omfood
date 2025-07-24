@@ -7,11 +7,12 @@ import DragDropList from '../common/DragDropList';
 import ImageUploader from '../common/ImageUploader';
 import Button from '../common/Button';
 import { useToast } from '../common/ToastContext';
+import { useAdminLang } from '../../App';
 
 interface BrandPageData {
   id: string;
-  name: string;
-  description: string;
+  name: { en: string; ko: string };
+  description: { en: string; ko: string };
   image: string;
   video?: string;
   order: number;
@@ -20,15 +21,18 @@ interface BrandPageData {
 }
 
 const BrandPageManage: React.FC = () => {
+  const { adminLang } = useAdminLang();
   const [loading, setLoading] = useState(false);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [brandPages, setBrandPages] = useState<BrandPageData[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [newBrand, setNewBrand] = useState({
-    name: '',
-    description: '',
+  const [newBrand, setNewBrand] = useState<BrandPageData>({
+    id: '',
+    name: { en: '', ko: '' },
+    description: { en: '', ko: '' },
     image: '',
     video: '',
+    order: 0,
     mainImage: '',
     mainVideo: ''
   });
@@ -44,7 +48,20 @@ const BrandPageManage: React.FC = () => {
     try {
       const brandQuery = query(collection(db, 'brandPages'), orderBy('order'));
       const brandSnapshot = await getDocs(brandQuery);
-      const brandData = brandSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as BrandPageData));
+      // Firestore에서 받아올 때 string이면 { en: '', ko: '' }로 변환
+      const brandData = brandSnapshot.docs.map(doc => {
+        const d = doc.data();
+        return {
+          id: doc.id,
+          name: typeof d.name === 'string' ? { en: d.name, ko: '' } : (d.name || { en: '', ko: '' }),
+          description: typeof d.description === 'string' ? { en: d.description, ko: '' } : (d.description || { en: '', ko: '' }),
+          image: d.image || '',
+          video: d.video || '',
+          order: typeof d.order === 'number' ? d.order : 0,
+          mainImage: d.mainImage || '',
+          mainVideo: d.mainVideo || ''
+        };
+      });
       setBrandPages(brandData);
     } catch (error: any) {
       console.error('브랜드 페이지 로드 실패:', error);
@@ -129,7 +146,7 @@ const BrandPageManage: React.FC = () => {
   };
 
   const handleAddBrand = async () => {
-    if (!newBrand.name.trim()) {
+    if (!newBrand.name[adminLang].trim()) {
       error('브랜드명을 입력해주세요.');
       return;
     }
@@ -144,10 +161,12 @@ const BrandPageManage: React.FC = () => {
       await addDoc(collection(db, 'brandPages'), brandData);
       
       setNewBrand({
-        name: '',
-        description: '',
+        id: '',
+        name: { en: '', ko: '' },
+        description: { en: '', ko: '' },
         image: '',
         video: '',
+        order: 0,
         mainImage: '',
         mainVideo: ''
       });
@@ -171,10 +190,10 @@ const BrandPageManage: React.FC = () => {
   };
 
   const renderBrandItem = (item: any, index: number) => {
-    const brand = item as BrandPageData;
+    const brand = item;
     return (
     <Accordion
-      title={`${brand.name} (순서: ${index + 1})`}
+      title={`${brand.name[adminLang]} (순서: ${index + 1})`}
       defaultExpanded={expandedItems.has(brand.id)}
       onToggle={(expanded) => {
         if (expanded) {
@@ -195,10 +214,10 @@ const BrandPageManage: React.FC = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2 font-pretendard">브랜드명</label>
             <input
               type="text"
-              value={brand.name}
+              value={brand.name[adminLang] || ''}
               onChange={(e) => {
                 const updated = brandPages.map(b => 
-                  b.id === brand.id ? { ...b, name: e.target.value } : b
+                  b.id === brand.id ? { ...b, name: { ...b.name, [adminLang]: e.target.value } } : b
                 );
                 setBrandPages(updated);
               }}
@@ -208,10 +227,10 @@ const BrandPageManage: React.FC = () => {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2 font-pretendard">설명</label>
             <textarea
-              value={brand.description}
+              value={brand.description[adminLang] || ''}
               onChange={(e) => {
                 const updated = brandPages.map(b => 
-                  b.id === brand.id ? { ...b, description: e.target.value } : b
+                  b.id === brand.id ? { ...b, description: { ...b.description, [adminLang]: e.target.value } } : b
                 );
                 setBrandPages(updated);
               }}
@@ -347,8 +366,8 @@ const BrandPageManage: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2 font-pretendard">브랜드명</label>
                   <input
                     type="text"
-                    value={newBrand.name}
-                    onChange={(e) => setNewBrand({ ...newBrand, name: e.target.value })}
+                    value={newBrand.name[adminLang] || ''}
+                    onChange={(e) => setNewBrand({ ...newBrand, name: { ...newBrand.name, [adminLang]: e.target.value } })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     placeholder="브랜드명을 입력하세요"
                   />
@@ -356,8 +375,8 @@ const BrandPageManage: React.FC = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2 font-pretendard">설명</label>
                   <textarea
-                    value={newBrand.description}
-                    onChange={(e) => setNewBrand({ ...newBrand, description: e.target.value })}
+                    value={newBrand.description[adminLang] || ''}
+                    onChange={(e) => setNewBrand({ ...newBrand, description: { ...newBrand.description, [adminLang]: e.target.value } })}
                     rows={3}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     placeholder="브랜드 설명을 입력하세요"
