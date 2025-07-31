@@ -10,7 +10,6 @@ const DashboardPage: React.FC = () => {
   const { adminLang } = useAdminLang();
   const [menuNames, setMenuNames] = useState<{ en: string[]; ko: string[] } | null>(null);
   const [loading, setLoading] = useState(true);
-  // localStorage 관련 useEffect, useState 모두 제거
 
   useEffect(() => {
     const ref = doc(db, 'header_menu', 'main');
@@ -57,6 +56,9 @@ const DashboardPage: React.FC = () => {
     'bg-gradient-to-br from-gray-500 to-gray-600'
   ];
 
+  // 현재 언어의 메뉴명 배열 가져오기
+  const currentMenuNames = menuNames?.[adminLang] || [];
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -75,7 +77,7 @@ const DashboardPage: React.FC = () => {
           {loading || !menuNames ? (
             <div>로딩 중...</div>
           ) : (
-            (menuNames[adminLang] || []).map((title, index) => (
+            currentMenuNames.map((title, index) => (
               <div
                 key={index}
                 className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group cursor-pointer"

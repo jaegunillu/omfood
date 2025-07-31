@@ -456,6 +456,24 @@ function setMenuNames(names: string[]) {
   localStorage.setItem(MENU_KEY, JSON.stringify(names));
 }
 
+// Firestore에서 메뉴명 가져오기 (실시간 구독용)
+async function getMenuNamesFromFirestore() {
+  try {
+    const docRef = doc(db, 'header_menu', 'main');
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      return {
+        en: Array.isArray(data.en) ? data.en : [],
+        ko: Array.isArray(data.ko) ? data.ko : []
+      };
+    }
+  } catch (error) {
+    console.error('Error fetching menu names from Firestore:', error);
+  }
+  return { en: [], ko: [] };
+}
+
 // 메인 섹션 관리용 키
 const MAIN_KEY = 'omfood_main_section';
 function getMainSection() {
@@ -563,6 +581,8 @@ function AdminLayoutComponent({ children, showBackButton = true, backTo, backLab
   const handleLangChange = (lang: 'ko'|'en') => {
     setAdminLang(lang);
     localStorage.setItem('adminLang', lang);
+    // 커스텀 이벤트 발행
+    window.dispatchEvent(new CustomEvent('adminLangChange', { detail: { language: lang }}));
   };
   return (
     <AdminLangContext.Provider value={{adminLang, setAdminLang: handleLangChange}}>
@@ -790,6 +810,7 @@ const SloganSubTextLine = styled.span<{ $show: boolean; $delay: number }>`
 `;
 
 function SloganSection() {
+  const { adminLang } = useAdminLang();
   const [mainText, setMainText] = useState<{ en: string; ko: string }>({ en: '', ko: '' });
   const [subText, setSubText] = useState<{ en: string; ko: string }>({ en: '', ko: '' });
   const [loading, setLoading] = useState(true);
@@ -805,12 +826,12 @@ function SloganSection() {
         const data = docSnap.data();
         // 마이그레이션: 기존 string이면 en으로 간주
         setMainText(typeof data.mainText === 'string' ? { en: data.mainText, ko: '' } : { en: data.mainText?.en || '', ko: data.mainText?.ko || '' });
-        setSubText(typeof data.subText === 'string' ? { en: data.subText, ko: '' } : { en: data.subText?.en || '', ko: data.subText?.ko || '' });
+        setSubText(typeof data.subText === 'string' ? { en: data.subText, ko: '' } : { en: data.subText?.en || '', ko: data.subText?.ko || ''         });
       }
       setLoading(false);
     });
     return () => unsubscribe();
-  }, []);
+  }, [adminLang]);
 
   useEffect(() => {
     const onScroll = () => {
@@ -879,21 +900,29 @@ function AdminLogin() {
 }
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
-  if (localStorage.getItem('admin_login') === '1') return <>{children}</>;
+  if (localStorage.getItem('admin_login') === '1') {
+    return <AdminLayoutComponent>{children}</AdminLayoutComponent>;
+  }
   return <Navigate to="/admin/login" replace />;
 }
 
 function AdminDashboard() {
   const navigate = useNavigate();
+  const { adminLang } = useAdminLang();
   const iconSize = 38;
-  const [menuNames, setMenuNames] = useState([
-    "ABOUT OMFOOD", "FOOD SERVICE", "BRAND", "PRODUCT", "CONTACT"
-  ]);
+  const [menuNames, setMenuNames] = useState<{ en: string[]; ko: string[] }>({
+    en: ["ABOUT OMFOOD", "FOOD SERVICE", "BRAND", "PRODUCT", "CONTACT"],
+    ko: ["ABOUT OMFOOD", "FOOD SERVICE", "BRAND", "PRODUCT", "CONTACT"]
+  });
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(doc(db, 'menu', 'names'), (docSnap) => {
+    const unsubscribe = onSnapshot(doc(db, 'header_menu', 'main'), (docSnap) => {
       if (docSnap.exists()) {
-        setMenuNames(docSnap.data().items);
+        const data = docSnap.data();
+        setMenuNames({
+          en: Array.isArray(data.en) ? data.en : [],
+          ko: Array.isArray(data.ko) ? data.ko : []
+        });
       }
     });
     return () => unsubscribe();
@@ -962,8 +991,8 @@ function AdminDashboard() {
           </div>
         </div>
         {/* 동적 메뉴 관리 버튼 */}
-        {menuNames.map((name) => (
-          <div key={name} style={{ 
+        {(menuNames[adminLang] || []).map((name, index) => (
+          <div key={index} style={{ 
             width: '100%', 
             background: colors.white, 
             borderRadius: '8px', 
@@ -1311,7 +1340,7 @@ function AdminAboutManage() {
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const adminLang = localStorage.getItem('adminLang') === 'ko' ? 'ko' : 'en';
+  const { adminLang } = useAdminLang();
 
   useEffect(() => {
     const docRef = doc(db, 'about_page', 'main');
@@ -1320,18 +1349,18 @@ function AdminAboutManage() {
         const data = docSnap.data();
         // 마이그레이션: 기존 string이면 en으로 간주
         setAboutData({
-          title: typeof data.title === 'string' ? { en: data.title, ko: '' } : { en: data.title?.en || '', ko: data.title?.ko || '' },
-          subtitle: typeof data.subtitle === 'string' ? { en: data.subtitle, ko: '' } : { en: data.subtitle?.en || '', ko: data.subtitle?.ko || '' },
-          description: typeof data.description === 'string' ? { en: data.description, ko: '' } : { en: data.description?.en || '', ko: data.description?.ko || '' },
-          content: typeof data.content === 'string' ? { en: data.content, ko: '' } : { en: data.content?.en || '', ko: data.content?.ko || '' },
-          mission: typeof data.mission === 'string' ? { en: data.mission, ko: '' } : { en: data.mission?.en || '', ko: data.mission?.ko || '' },
-          vision: typeof data.vision === 'string' ? { en: data.vision, ko: '' } : { en: data.vision?.en || '', ko: data.vision?.ko || '' }
+          title: typeof data.title === 'string' ? { en: data.title, ko: data.title } : { en: data.title?.en ?? '', ko: data.title?.ko ?? '' },
+          subtitle: typeof data.subtitle === 'string' ? { en: data.subtitle, ko: data.subtitle } : { en: data.subtitle?.en ?? '', ko: data.subtitle?.ko ?? '' },
+          description: typeof data.description === 'string' ? { en: data.description, ko: data.description } : { en: data.description?.en ?? '', ko: data.description?.ko ?? '' },
+          content: typeof data.content === 'string' ? { en: data.content, ko: data.content } : { en: data.content?.en ?? '', ko: data.content?.ko ?? '' },
+          mission: typeof data.mission === 'string' ? { en: data.mission, ko: data.mission } : { en: data.mission?.en ?? '', ko: data.mission?.ko ?? '' },
+          vision: typeof data.vision === 'string' ? { en: data.vision, ko: data.vision } : { en: data.vision?.en ?? '', ko: data.vision?.ko ?? '' }
         });
       }
       setLoading(false);
     });
     return () => unsubscribe();
-  }, []);
+  }, [adminLang]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -1359,15 +1388,10 @@ function AdminAboutManage() {
   }
 
   return (
-    <AdminLayoutComponent>
+    <AdminLayoutComponent key={`about-manage-${adminLang}`} backTo="/admin/dashboard" backLabel="대시보드로">
       <AdminHeader>About OMFOOD 관리</AdminHeader>
       
       <AdminCard>
-        <div style={{ display: 'flex', gap: 12, marginBottom: 18 }}>
-          <AdminButton $primary={adminLang === 'ko'} disabled style={{ padding: '8px 18px', margin: 0 }}>한국어 관리</AdminButton>
-          <AdminButton $primary={adminLang === 'en'} disabled style={{ padding: '8px 18px', margin: 0 }}>English 관리</AdminButton>
-        </div>
-        
         <AdminLabel>페이지 제목</AdminLabel>
         <AdminInput
           value={aboutData.title[adminLang]}
@@ -1443,6 +1467,7 @@ function AdminAboutManage() {
 // Food Service 관리 페이지
 function AdminFoodServiceManage() {
   const { success } = useToast();
+  const { adminLang } = useAdminLang();
   const [foodServiceData, setFoodServiceData] = useState<{
     title: { en: string; ko: string };
     subtitle: { en: string; ko: string };
@@ -1473,7 +1498,6 @@ function AdminFoodServiceManage() {
     description: { en: '', ko: '' },
     image: ''
   });
-  const adminLang = localStorage.getItem('adminLang') === 'ko' ? 'ko' : 'en';
 
   useEffect(() => {
     const docRef = doc(db, 'foodservice_page', 'main');
@@ -1482,14 +1506,14 @@ function AdminFoodServiceManage() {
         const data = docSnap.data();
         // 마이그레이션: 기존 string이면 en으로 간주
         setFoodServiceData({
-          title: typeof data.title === 'string' ? { en: data.title, ko: '' } : { en: data.title?.en || '', ko: data.title?.ko || '' },
-          subtitle: typeof data.subtitle === 'string' ? { en: data.subtitle, ko: '' } : { en: data.subtitle?.en || '', ko: data.subtitle?.ko || '' },
-          description: typeof data.description === 'string' ? { en: data.description, ko: '' } : { en: data.description?.en || '', ko: data.description?.ko || '' },
-          content: typeof data.content === 'string' ? { en: data.content, ko: '' } : { en: data.content?.en || '', ko: data.content?.ko || '' },
+          title: typeof data.title === 'string' ? { en: data.title, ko: data.title } : { en: data.title?.en ?? '', ko: data.title?.ko ?? '' },
+          subtitle: typeof data.subtitle === 'string' ? { en: data.subtitle, ko: data.subtitle } : { en: data.subtitle?.en ?? '', ko: data.subtitle?.ko ?? '' },
+          description: typeof data.description === 'string' ? { en: data.description, ko: data.description } : { en: data.description?.en ?? '', ko: data.description?.ko ?? '' },
+          content: typeof data.content === 'string' ? { en: data.content, ko: data.content } : { en: data.content?.en ?? '', ko: data.content?.ko ?? '' },
           services: data.services?.map((service: any) => ({
             id: service.id || Math.random().toString(),
-            name: typeof service.name === 'string' ? { en: service.name, ko: '' } : { en: service.name?.en || '', ko: service.name?.ko || '' },
-            description: typeof service.description === 'string' ? { en: service.description, ko: '' } : { en: service.description?.en || '', ko: service.description?.ko || '' },
+            name: typeof service.name === 'string' ? { en: service.name, ko: service.name } : { en: service.name?.en ?? '', ko: service.name?.ko ?? '' },
+            description: typeof service.description === 'string' ? { en: service.description, ko: service.description } : { en: service.description?.en ?? '', ko: service.description?.ko ?? '' },
             image: service.image || '',
             order: service.order || 0
           })) || []
@@ -1498,7 +1522,7 @@ function AdminFoodServiceManage() {
       setLoading(false);
     });
     return () => unsubscribe();
-  }, []);
+  }, [adminLang]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -1561,15 +1585,10 @@ function AdminFoodServiceManage() {
   }
 
   return (
-    <AdminLayoutComponent>
+    <AdminLayoutComponent key={`foodservice-manage-${adminLang}`} backTo="/admin/dashboard" backLabel="대시보드로">
       <AdminHeader>Food Service 관리</AdminHeader>
       
       <AdminCard>
-        <div style={{ display: 'flex', gap: 12, marginBottom: 18 }}>
-          <AdminButton $primary={adminLang === 'ko'} disabled style={{ padding: '8px 18px', margin: 0 }}>한국어 관리</AdminButton>
-          <AdminButton $primary={adminLang === 'en'} disabled style={{ padding: '8px 18px', margin: 0 }}>English 관리</AdminButton>
-        </div>
-        
         <AdminLabel>페이지 제목</AdminLabel>
         <AdminInput
           value={foodServiceData.title[adminLang]}
@@ -1714,6 +1733,7 @@ function AdminProductManage() {
 // Contact 관리 페이지
 function AdminContactManage() {
   const { success } = useToast();
+  const { adminLang } = useAdminLang();
   const [contactData, setContactData] = useState<{
     title: { en: string; ko: string };
     subtitle: { en: string; ko: string };
@@ -1737,7 +1757,6 @@ function AdminContactManage() {
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const adminLang = localStorage.getItem('adminLang') === 'ko' ? 'ko' : 'en';
 
   useEffect(() => {
     const docRef = doc(db, 'contact_page', 'main');
@@ -1746,21 +1765,21 @@ function AdminContactManage() {
         const data = docSnap.data();
         // 마이그레이션: 기존 string이면 en으로 간주
         setContactData({
-          title: typeof data.title === 'string' ? { en: data.title, ko: '' } : { en: data.title?.en || '', ko: data.title?.ko || '' },
-          subtitle: typeof data.subtitle === 'string' ? { en: data.subtitle, ko: '' } : { en: data.subtitle?.en || '', ko: data.subtitle?.ko || '' },
-          description: typeof data.description === 'string' ? { en: data.description, ko: '' } : { en: data.description?.en || '', ko: data.description?.ko || '' },
-          content: typeof data.content === 'string' ? { en: data.content, ko: '' } : { en: data.content?.en || '', ko: data.content?.ko || '' },
-          address: typeof data.address === 'string' ? { en: data.address, ko: '' } : { en: data.address?.en || '', ko: data.address?.ko || '' },
-          phone: typeof data.phone === 'string' ? { en: data.phone, ko: '' } : { en: data.phone?.en || '', ko: data.phone?.ko || '' },
-          email: typeof data.email === 'string' ? { en: data.email, ko: '' } : { en: data.email?.en || '', ko: data.email?.ko || '' },
-          businessHours: typeof data.businessHours === 'string' ? { en: data.businessHours, ko: '' } : { en: data.businessHours?.en || '', ko: data.businessHours?.ko || '' },
+          title: typeof data.title === 'string' ? { en: data.title, ko: data.title } : { en: data.title?.en ?? '', ko: data.title?.ko ?? '' },
+          subtitle: typeof data.subtitle === 'string' ? { en: data.subtitle, ko: data.subtitle } : { en: data.subtitle?.en ?? '', ko: data.subtitle?.ko ?? '' },
+          description: typeof data.description === 'string' ? { en: data.description, ko: data.description } : { en: data.description?.en ?? '', ko: data.description?.ko ?? '' },
+          content: typeof data.content === 'string' ? { en: data.content, ko: data.content } : { en: data.content?.en ?? '', ko: data.content?.ko ?? '' },
+          address: typeof data.address === 'string' ? { en: data.address, ko: data.address } : { en: data.address?.en ?? '', ko: data.address?.ko ?? '' },
+          phone: typeof data.phone === 'string' ? { en: data.phone, ko: data.phone } : { en: data.phone?.en ?? '', ko: data.phone?.ko ?? '' },
+          email: typeof data.email === 'string' ? { en: data.email, ko: data.email } : { en: data.email?.en ?? '', ko: data.email?.ko ?? '' },
+          businessHours: typeof data.businessHours === 'string' ? { en: data.businessHours, ko: data.businessHours } : { en: data.businessHours?.en ?? '', ko: data.businessHours?.ko ?? '' },
           mapUrl: data.mapUrl || ''
         });
       }
       setLoading(false);
     });
     return () => unsubscribe();
-  }, []);
+  }, [adminLang]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -1775,9 +1794,9 @@ function AdminContactManage() {
   };
 
   if (loading) {
-    return (
-      <AdminLayoutComponent>
-        <AdminHeader>Contact 관리</AdminHeader>
+      return (
+    <AdminLayoutComponent key={`contact-manage-${adminLang}`} backTo="/admin/dashboard" backLabel="대시보드로">
+      <AdminHeader>Contact 관리</AdminHeader>
         <AdminCard>
           <div style={{ textAlign: 'center', color: '#888', fontSize: 16 }}>
             로딩 중...
@@ -1788,15 +1807,10 @@ function AdminContactManage() {
   }
 
   return (
-    <AdminLayoutComponent>
+    <AdminLayoutComponent key={`contact-manage-${adminLang}`} backTo="/admin/dashboard" backLabel="대시보드로">
       <AdminHeader>Contact 관리</AdminHeader>
       
       <AdminCard>
-        <div style={{ display: 'flex', gap: 12, marginBottom: 18 }}>
-          <AdminButton $primary={adminLang === 'ko'} disabled style={{ padding: '8px 18px', margin: 0 }}>한국어 관리</AdminButton>
-          <AdminButton $primary={adminLang === 'en'} disabled style={{ padding: '8px 18px', margin: 0 }}>English 관리</AdminButton>
-        </div>
-        
         <AdminLabel>페이지 제목</AdminLabel>
         <AdminInput
           value={contactData.title[adminLang]}
@@ -2108,34 +2122,36 @@ const AdminErrorMessage = styled.div`
 function AdminMenuManage() {
   const { adminLang } = useAdminLang();
   const { success } = useToast();
-  const [menuData, setMenuData] = useState<{ en: string[]; ko: string[] }>({
-    en: ["BRAND", "PRODUCT", "ABOUT", "FOOD SERVICE", "CONTACT"],
-    ko: ["브랜드", "제품", "소개", "푸드서비스", "연락처"]
-  });
-  const [msg, setMsg] = useState('');
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  
+  // 도큐먼트 로드
+  const [menuData, setMenuData] = useState<{ en: string[]; ko: string[] }>({ en: [], ko: [] });
+  
+  // 언어 전환 시 편집 배열 스위치
+  const [menuForm, setMenuForm] = useState<string[]>([]);
+  
   const [logoWhite, setLogoWhite] = useState('');
   const [logoBlack, setLogoBlack] = useState('');
   const [logoWhiteFile, setLogoWhiteFile] = useState<File | null>(null);
   const [logoBlackFile, setLogoBlackFile] = useState<File | null>(null);
   const [logoMsg, setLogoMsg] = useState('');
 
+  // 도큐먼트 로드
   useEffect(() => {
-    async function fetchMenuData() {
-      setLoading(true);
-      const docRef = doc(db, 'header_menu', 'main');
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        if (data && Array.isArray(data.en) && Array.isArray(data.ko)) {
-          setMenuData({ en: data.en, ko: data.ko });
-        }
-      }
-      setLoading(false);
-    }
-    fetchMenuData();
+    const unsubscribe = onSnapshot(doc(db, 'header_menu', 'main'), snap => {
+      if (!snap.exists()) return;
+      const d = snap.data();
+      setMenuData({
+        en: Array.isArray(d.en) ? d.en : [],
+        ko: Array.isArray(d.ko) ? d.ko : [],
+      });
+    });
+    return () => unsubscribe();
   }, []);
+
+  // 언어 전환 시 편집 배열 스위치
+  useEffect(() => {
+    setMenuForm([...(menuData[adminLang] || [])]);
+  }, [adminLang, menuData]); // 🔴
 
   useEffect(() => {
     // Firestore에서 로고 경로 불러오기
@@ -2151,24 +2167,25 @@ function AdminMenuManage() {
     });
   }, []);
 
-  const handleChange = (lang: 'en' | 'ko', idx: number, value: string) => {
-    const next = { ...menuData };
-    next[lang] = [...next[lang]];
-    next[lang][idx] = value;
-    setMenuData(next);
+  const handleChange = (idx: number, value: string) => {
+    const next = [...menuForm];
+    next[idx] = value;
+    setMenuForm(next);
   };
 
-  const moveMenu = (lang: 'en' | 'ko', fromIdx: number, toIdx: number) => {
-    if (toIdx < 0 || toIdx >= menuData[lang].length) return;
-    const next = { ...menuData };
-    next[lang] = [...next[lang]];
-    const [moved] = next[lang].splice(fromIdx, 1);
-    next[lang].splice(toIdx, 0, moved);
-    setMenuData(next);
+  const moveMenu = (fromIdx: number, toIdx: number) => {
+    if (toIdx < 0 || toIdx >= menuForm.length) return;
+    const next = [...menuForm];
+    const [moved] = next.splice(fromIdx, 1);
+    next.splice(toIdx, 0, moved);
+    setMenuForm(next);
   };
 
   const handleSave = async () => {
-    await setDoc(doc(db, 'header_menu', 'main'), menuData);
+    // 저장: 선택 언어만 partial-merge
+    const payload = { [adminLang]: menuForm };
+    console.log('[SAVE header_menu]', adminLang, payload);
+    await setDoc(doc(db, 'header_menu', 'main'), payload, { merge: true });
     success('헤더 영역이 저장되었습니다!');
   };
 
@@ -2194,82 +2211,56 @@ function AdminMenuManage() {
   };
 
   return (
-    <AdminLayoutComponent backTo="/admin/mainpage" backLabel="메인페이지">
-      {loading ? (
-        <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>로딩 중...</div>
-      ) : (
-        <>
-          <AdminHeader>헤더영역 관리</AdminHeader>
-          <AdminCard style={{ maxWidth: 780, margin: '0 auto', padding: '48px 40px' }}>
-            {/* 로고 업로드 UI 추가 */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 18, marginBottom: 32 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-                <span style={{ minWidth: 90, fontWeight: 700, fontSize: 18 }}>로고(흰색)</span>
-                <input type="file" accept="image/*" onChange={e => setLogoWhiteFile(e.target.files?.[0] || null)} />
-                {logoWhite && <img src={logoWhite} alt="logo_white" style={{ width: 60, height: 40, objectFit: 'contain', background: '#eee', borderRadius: 6 }} />}
-                <button onClick={() => handleLogoUpload('white')} disabled={!logoWhiteFile} style={{ marginLeft: 8, padding: '6px 16px', borderRadius: 6, border: '1px solid #bbb', background: '#fff', cursor: logoWhiteFile ? 'pointer' : 'not-allowed' }}>저장</button>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-                <span style={{ minWidth: 90, fontWeight: 700, fontSize: 18 }}>로고(검정)</span>
-                <input type="file" accept="image/*" onChange={e => setLogoBlackFile(e.target.files?.[0] || null)} />
-                {logoBlack && <img src={logoBlack} alt="logo_black" style={{ width: 60, height: 40, objectFit: 'contain', background: '#eee', borderRadius: 6 }} />}
-                <button onClick={() => handleLogoUpload('black')} disabled={!logoBlackFile} style={{ marginLeft: 8, padding: '6px 16px', borderRadius: 6, border: '1px solid #bbb', background: '#fff', cursor: logoBlackFile ? 'pointer' : 'not-allowed' }}>저장</button>
-              </div>
-              {logoMsg && <div style={{ color: '#1976d2', marginTop: 8 }}>{logoMsg}</div>}
-            </div>
-            {/* 언어별 메뉴 관리 */}
-            {adminLang === 'en' ? (
-              /* 영문 메뉴 관리 */
-              <div style={{ marginBottom: 32 }}>
-                <h3 style={{ fontSize: 24, fontWeight: 700, marginBottom: 16, color: '#333' }}>영문 메뉴 관리</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
-                  {menuData.en.map((name, idx) => (
-                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
-                      <span style={{ minWidth: 78, fontWeight: 700, fontSize: 23 }}>{`메뉴${idx + 1}`}</span>
-                      <input
-                        value={name}
-                        onChange={e => handleChange('en', idx, e.target.value)}
-                        placeholder={`메뉴 ${idx + 1} 이름을 입력하세요`}
-                        style={{ flex: 1, padding: '12px 18px', fontSize: 21, border: '1px solid #ccc', borderRadius: 8 }}
-                      />
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                        <button onClick={() => moveMenu('en', idx, idx - 1)} disabled={idx === 0} style={{ padding: '4px 12px', fontSize: 18, borderRadius: 6, border: '1px solid #bbb', background: '#fff', cursor: idx === 0 ? 'not-allowed' : 'pointer' }}>▲</button>
-                        <button onClick={() => moveMenu('en', idx, idx + 1)} disabled={idx === menuData.en.length - 1} style={{ padding: '4px 12px', fontSize: 18, borderRadius: 6, border: '1px solid #bbb', background: '#fff', cursor: idx === menuData.en.length - 1 ? 'not-allowed' : 'pointer' }}>▼</button>
-                      </div>
-                    </div>
-                  ))}
+    <div key={`menu-manage-${adminLang}`}>
+      <AdminHeader>헤더영역 관리</AdminHeader>
+      
+      <AdminCard style={{ maxWidth: 780, margin: '0 auto', padding: '48px 40px' }}>
+        {/* 로고 업로드 UI 추가 */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 18, marginBottom: 32 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+            <span style={{ minWidth: 90, fontWeight: 700, fontSize: 18 }}>로고(흰색)</span>
+            <input type="file" accept="image/*" onChange={e => setLogoWhiteFile(e.target.files?.[0] || null)} />
+            {logoWhite && <img src={logoWhite} alt="logo_white" style={{ width: 60, height: 40, objectFit: 'contain', background: '#eee', borderRadius: 6 }} />}
+            <button onClick={() => handleLogoUpload('white')} disabled={!logoWhiteFile} style={{ marginLeft: 8, padding: '6px 16px', borderRadius: 6, border: '1px solid #bbb', background: '#fff', cursor: logoWhiteFile ? 'pointer' : 'not-allowed' }}>저장</button>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+            <span style={{ minWidth: 90, fontWeight: 700, fontSize: 18 }}>로고(검정)</span>
+            <input type="file" accept="image/*" onChange={e => setLogoBlackFile(e.target.files?.[0] || null)} />
+            {logoBlack && <img src={logoBlack} alt="logo_black" style={{ width: 60, height: 40, objectFit: 'contain', background: '#eee', borderRadius: 6 }} />}
+            <button onClick={() => handleLogoUpload('black')} disabled={!logoBlackFile} style={{ marginLeft: 8, padding: '6px 16px', borderRadius: 6, border: '1px solid #bbb', background: '#fff', cursor: logoBlackFile ? 'pointer' : 'not-allowed' }}>저장</button>
+          </div>
+          {logoMsg && <div style={{ color: '#1976d2', marginTop: 8 }}>{logoMsg}</div>}
+        </div>
+        
+        {/* 메뉴 관리 */}
+        <div style={{ marginBottom: 32 }}>
+          <h3 style={{ fontSize: 24, fontWeight: 700, marginBottom: 16, color: '#333' }}>
+            {adminLang === 'en' ? '영문 메뉴 관리' : '국문 메뉴 관리'}
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+            {menuForm.map((name, idx) => (
+              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
+                <span style={{ minWidth: 78, fontWeight: 700, fontSize: 23 }}>{`메뉴${idx + 1}`}</span>
+                <input
+                  value={name}
+                  onChange={e => handleChange(idx, e.target.value)}
+                  placeholder={`메뉴 ${idx + 1} 이름을 입력하세요`}
+                  style={{ flex: 1, padding: '12px 18px', fontSize: 21, border: '1px solid #ccc', borderRadius: 8 }}
+                />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <button onClick={() => moveMenu(idx, idx - 1)} disabled={idx === 0} style={{ padding: '4px 12px', fontSize: 18, borderRadius: 6, border: '1px solid #bbb', background: '#fff', cursor: idx === 0 ? 'not-allowed' : 'pointer' }}>▲</button>
+                  <button onClick={() => moveMenu(idx, idx + 1)} disabled={idx === menuForm.length - 1} style={{ padding: '4px 12px', fontSize: 18, borderRadius: 6, border: '1px solid #bbb', background: '#fff', cursor: idx === menuForm.length - 1 ? 'not-allowed' : 'pointer' }}>▼</button>
                 </div>
               </div>
-            ) : (
-              /* 국문 메뉴 관리 */
-              <div style={{ marginBottom: 32 }}>
-                <h3 style={{ fontSize: 24, fontWeight: 700, marginBottom: 16, color: '#333' }}>국문 메뉴 관리</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
-                  {menuData.ko.map((name, idx) => (
-                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
-                      <span style={{ minWidth: 78, fontWeight: 700, fontSize: 23 }}>{`메뉴${idx + 1}`}</span>
-                      <input
-                        value={name}
-                        onChange={e => handleChange('ko', idx, e.target.value)}
-                        placeholder={`메뉴 ${idx + 1} 이름을 입력하세요`}
-                        style={{ flex: 1, padding: '12px 18px', fontSize: 21, border: '1px solid #ccc', borderRadius: 8 }}
-                      />
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                        <button onClick={() => moveMenu('ko', idx, idx - 1)} disabled={idx === 0} style={{ padding: '4px 12px', fontSize: 18, borderRadius: 6, border: '1px solid #bbb', background: '#fff', cursor: idx === 0 ? 'not-allowed' : 'pointer' }}>▲</button>
-                        <button onClick={() => moveMenu('ko', idx, idx + 1)} disabled={idx === menuData.ko.length - 1} style={{ padding: '4px 12px', fontSize: 18, borderRadius: 6, border: '1px solid #bbb', background: '#fff', cursor: idx === menuData.ko.length - 1 ? 'not-allowed' : 'pointer' }}>▼</button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 42 }}>
-              <AdminButton onClick={handleSave} $primary style={{ fontSize: 20, padding: '16px 0', minWidth: 180 }}>저장하기</AdminButton>
-            </div>
-          </AdminCard>
-        </>
-      )}
-    </AdminLayoutComponent>
+            ))}
+          </div>
+        </div>
+        
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 42 }}>
+          <AdminButton onClick={handleSave} $primary style={{ fontSize: 20, padding: '16px 0', minWidth: 180 }}>저장하기</AdminButton>
+        </div>
+      </AdminCard>
+    </div>
   );
 }
 
@@ -2277,59 +2268,124 @@ function AdminMenuManage() {
 function AdminMainManage() {
   const navigate = useNavigate();
   const { success } = useToast();
-  const [data, setData] = useState({
+  const { adminLang } = useAdminLang();
+  
+  // 도큐먼트 로드 → 양언어 상태 정규화
+  const [docData, setDocData] = useState({
     mediaType: 'video',
     mediaUrl: '',
-    mainText: '',
-    subText: '',
-    file: null as File | null
+    mainText: { en: '', ko: '' },
+    subText: { en: '', ko: '' }
   });
+  
+  // 언어 전환 시 폼 값 즉시 스위치
+  const [form, setForm] = useState({ main: '', sub: '' });
+  
   const [preview, setPreview] = useState('');
-  const [msg, setMsg] = useState('');
+  const [file, setFile] = useState<File | null>(null);
 
+  const quillModules = {
+    toolbar: [
+      [{ 'header': [1, 2, 3, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'color': [] }, { 'background': [] }],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      ['link'],
+      ['clean']
+    ]
+  };
+
+  const formats = ['header', 'bold', 'italic', 'underline', 'strike', 'color', 'background', 'list', 'bullet', 'link'];
+
+  // 도큐먼트 로드 → 양언어 상태 정규화
   useEffect(() => {
-    const loadData = async () => {
-      const docRef = doc(db, 'mainSection', 'content');
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        setData((prev: any) => ({ ...prev, ...docSnap.data(), file: null }));
-        setPreview(docSnap.data().mediaUrl);
+    const unsubscribe = onSnapshot(doc(db, 'mainSection', 'content'), snap => {
+      if (!snap.exists()) return;
+      const d = snap.data();
+      setDocData({
+        mediaType: d.mediaType || 'video',
+        mediaUrl: d.mediaUrl || '',
+        mainText: typeof d.mainText === 'string' ? { en: d.mainText, ko: d.mainText } : { en: d?.mainText?.en || '', ko: d?.mainText?.ko || '' },
+        subText: typeof d.subText === 'string' ? { en: d.subText, ko: d.subText } : { en: d?.subText?.en || '', ko: d?.subText?.ko || '' },
+      });
+      setPreview(d.mediaUrl || '');
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // 언어 전환 시 폼 값 즉시 스위치
+  useEffect(() => {
+    setForm({
+      main: docData.mainText[adminLang] || '',
+      sub: docData.subText[adminLang] || '',
+    });
+  }, [adminLang, docData]); // 🔴 adminLang 의존성 필수
+
+  // 언어 변경 이벤트 구독
+  useEffect(() => {
+    const handleAdminLangChange = (event: any) => {
+      const lang = event.detail?.language as 'en' | 'ko';
+      if (lang) {
+        setForm({
+          main: docData.mainText[lang] || '',
+          sub: docData.subText[lang] || '',
+        });
       }
     };
-    loadData();
-  }, []);
+
+    window.addEventListener('adminLangChange', handleAdminLangChange);
+    return () => {
+      window.removeEventListener('adminLangChange', handleAdminLangChange);
+    };
+  }, [docData]);
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const url = URL.createObjectURL(file);
     setPreview(url);
-    setData((d: any) => ({ ...d, mediaType: file.type.startsWith('video') ? 'video' : 'image', mediaUrl: url, file }));
+    setFile(file);
   };
 
-  const handleChange = (k: string, v: string) => setData((d: any) => ({ ...d, [k]: v }));
+  const handleFormChange = (field: 'main' | 'sub', value: string) => {
+    setForm(prev => ({ ...prev, [field]: value }));
+  };
 
   const handleSave = async () => {
     try {
-      let mediaUrl = data.mediaUrl;
+      let mediaUrl = docData.mediaUrl;
+      let mediaChanged = false;
       
-      if (data.file) {
-        const ext = data.file.name.split('.').pop();
+      if (file) {
+        const ext = file.name.split('.').pop();
         const uniqueName = `mainSection/${Date.now()}.${ext}`;
         const fileStorageRef = storageRef(storage, uniqueName);
-        await uploadBytes(fileStorageRef, data.file);
+        await uploadBytes(fileStorageRef, file);
         mediaUrl = await getDownloadURL(fileStorageRef);
+        mediaChanged = true;
       }
 
-      const mainData = {
-        mediaType: data.mediaType,
-        mediaUrl,
-        mainText: data.mainText,
-        subText: data.subText
-      };
+      // 필드 경로로 부분 업데이트
+      const ref = doc(db, 'mainSection', 'content');
+      
+      // 메인 텍스트만 수정
+      await setDoc(ref, { [`mainText.${adminLang}`]: form.main ?? '' }, { merge: true });
+      
+      // 서브 텍스트만 수정
+      await setDoc(ref, { [`subText.${adminLang}`]: form.sub ?? '' }, { merge: true });
+      
+      // 미디어 변경 시에만 포함
+      if (mediaChanged) {
+        await setDoc(ref, { 
+          mediaType: file?.type.startsWith('video') ? 'video' : 'image',
+          mediaUrl: mediaUrl 
+        }, { merge: true });
+      }
 
-      await setDoc(doc(db, 'mainSection', 'content'), mainData);
-      localStorage.setItem(MAIN_KEY, JSON.stringify(mainData));
+      console.log('[SAVE mainSection]', adminLang, { 
+        [`mainText.${adminLang}`]: form.main,
+        [`subText.${adminLang}`]: form.sub 
+      });
       success('메인 섹션이 저장되었습니다!');
     } catch (error) {
       console.error('Error saving data:', error);
@@ -2338,8 +2394,9 @@ function AdminMainManage() {
   };
 
   return (
-    <AdminLayoutComponent backTo="/admin/mainpage" backLabel="메인페이지">
+    <div key={`main-manage-${adminLang}`}>
       <AdminHeader>메인 섹션 관리</AdminHeader>
+      
       <AdminCard>
         <AdminLabel>메인 이미지/영상 업로드</AdminLabel>
         <div style={{ display: 'flex', alignItems: 'center', gap: 32, marginBottom: 32 }}>
@@ -2355,37 +2412,47 @@ function AdminMainManage() {
             </AdminPreview>
           )}
         </div>
-        <AdminLabel>메인 텍스트</AdminLabel>
-        <AdminQuill
-          value={data.mainText}
-          onChange={v => handleChange('mainText', v)}
-          modules={quillModules}
-          formats={formats}
-          theme="snow"
-          placeholder="메인 텍스트를 입력하세요"
-        />
-        <AdminLabel>서브 텍스트</AdminLabel>
-        <AdminQuill
-          value={data.subText}
-          onChange={v => handleChange('subText', v)}
-          modules={quillModules}
-          formats={formats}
-          theme="snow"
-          placeholder="서브 텍스트를 입력하세요"
-        />
+        
+        {/* 메인 텍스트 입력 */}
+        <div style={{ marginBottom: 24 }}>
+          <AdminLabel>메인 텍스트 ({adminLang.toUpperCase()})</AdminLabel>
+          <AdminQuill
+            key={`main-quill-${adminLang}`}
+            value={form.main}
+            onChange={v => handleFormChange('main', v)}
+            modules={quillModules}
+            formats={formats}
+            theme="snow"
+            placeholder={`${adminLang === 'en' ? '영어' : '한국어'} 메인 텍스트를 입력하세요`}
+          />
+        </div>
+        
+        {/* 서브 텍스트 입력 */}
+        <div style={{ marginBottom: 24 }}>
+          <AdminLabel>서브 텍스트 ({adminLang.toUpperCase()})</AdminLabel>
+          <AdminQuill
+            key={`sub-quill-${adminLang}`}
+            value={form.sub}
+            onChange={v => handleFormChange('sub', v)}
+            modules={quillModules}
+            formats={formats}
+            theme="snow"
+            placeholder={`${adminLang === 'en' ? '영어' : '한국어'} 서브 텍스트를 입력하세요`}
+          />
+        </div>
         
         {/* 실시간 프리뷰 */}
         <div style={{ marginTop: 32, padding: 24, background: '#f8f9fa', borderRadius: 8, border: '1px solid #e0e0e0' }}>
-          <h5 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 16, color: '#333' }}>실시간 Preview</h5>
+          <h5 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 16, color: '#333' }}>실시간 Preview ({adminLang.toUpperCase()})</h5>
           <div style={{ background: '#ffffff', padding: 24, borderRadius: 8, border: '1px solid #e0e0e0' }}>
             <div style={{ maxWidth: '800px', margin: '0 auto', paddingTop: 16 }}>
               <div 
                 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: 16, color: '#222', textAlign: 'center' }}
-                dangerouslySetInnerHTML={{ __html: data.mainText || '<em>메인 텍스트를 입력하세요...</em>' }}
+                dangerouslySetInnerHTML={{ __html: form.main || '<em>메인 텍스트를 입력하세요...</em>' }}
               />
               <div 
                 style={{ fontSize: '1.1rem', lineHeight: 1.6, color: '#666', textAlign: 'center' }}
-                dangerouslySetInnerHTML={{ __html: data.subText || '<em>서브 텍스트를 입력하세요...</em>' }}
+                dangerouslySetInnerHTML={{ __html: form.sub || '<em>서브 텍스트를 입력하세요...</em>' }}
               />
             </div>
           </div>
@@ -2393,105 +2460,145 @@ function AdminMainManage() {
         
         <AdminButton $primary onClick={handleSave}>저장하기</AdminButton>
       </AdminCard>
-    </AdminLayoutComponent>
+    </div>
   );
 }
 
 // 슬로건 관리 페이지
 function AdminSloganManage() {
   const { success } = useToast();
-  const [mainText, setMainText] = useState<{ en: string; ko: string }>({ en: 'Global Taste, Local Touch', ko: '' });
-  const [subText, setSubText] = useState<{ en: string; ko: string }>({ en: 'From sauces to stores, we blend Korean flavor with local culture for every market we serve.', ko: '' });
-  const [msg, setMsg] = useState('');
+  const { adminLang } = useAdminLang();
+  
+  // 도큐먼트 로드 → 양언어 상태 정규화
+  const [docData, setDocData] = useState<{ mainText: { en: string; ko: string }; subText: { en: string; ko: string } }>({
+    mainText: { en: 'Global Taste, Local Touch', ko: '' },
+    subText: { en: 'From sauces to stores, we blend Korean flavor with local culture for every market we serve.', ko: '' }
+  });
+  
+  // 언어 전환 시 폼 값 즉시 스위치
+  const [form, setForm] = useState({ main: '', sub: '' });
+  
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
-  const adminLang = localStorage.getItem('adminLang') === 'ko' ? 'ko' : 'en';
 
+  // 실시간 데이터 구독
   useEffect(() => {
-    async function fetchSlogan() {
-      setLoading(true);
-      const docRef = doc(db, 'slogan', 'main');
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        // 마이그레이션: 기존 string이면 en으로 간주
-        setMainText(typeof data.mainText === 'string' ? { en: data.mainText, ko: '' } : { en: data.mainText?.en || '', ko: data.mainText?.ko || '' });
-        setSubText(typeof data.subText === 'string' ? { en: data.subText, ko: '' } : { en: data.subText?.en || '', ko: data.subText?.ko || '' });
-      }
+    const unsubscribe = onSnapshot(doc(db, 'slogan', 'main'), snap => {
+      if (!snap.exists()) return;
+      const d = snap.data();
+      setDocData({
+        mainText: typeof d.mainText === 'string' ? { en: d.mainText, ko: d.mainText } : { en: d?.mainText?.en || '', ko: d?.mainText?.ko || '' },
+        subText: typeof d.subText === 'string' ? { en: d.subText, ko: d.subText } : { en: d?.subText?.en || '', ko: d?.subText?.ko || '' },
+      });
       setLoading(false);
-    }
-    fetchSlogan();
+    });
+    return () => unsubscribe();
   }, []);
 
+  // 언어 전환 시 폼 값 즉시 스위치
+  useEffect(() => {
+    setForm({
+      main: docData.mainText[adminLang] || '',
+      sub: docData.subText[adminLang] || '',
+    });
+  }, [adminLang, docData]);
+
+  // 언어 변경 이벤트 구독
+  useEffect(() => {
+    const handleAdminLangChange = (event: any) => {
+      const lang = event.detail?.language as 'en' | 'ko';
+      if (lang) {
+        setForm({
+          main: docData.mainText[lang] || '',
+          sub: docData.subText[lang] || '',
+        });
+      }
+    };
+
+    window.addEventListener('adminLangChange', handleAdminLangChange);
+    return () => {
+      window.removeEventListener('adminLangChange', handleAdminLangChange);
+    };
+  }, [docData]);
+
   const handleSave = async () => {
-    await setDoc(doc(db, 'slogan', 'main'), {
-      mainText,
-      subText,
+    // 필드 경로로 부분 업데이트
+    const ref = doc(db, 'slogan', 'main');
+    
+    // 메인 텍스트만 수정
+    await setDoc(ref, { [`mainText.${adminLang}`]: form.main ?? '' }, { merge: true });
+    
+    // 서브 텍스트만 수정
+    await setDoc(ref, { [`subText.${adminLang}`]: form.sub ?? '' }, { merge: true });
+
+    console.log('[SAVE slogan]', adminLang, { 
+      [`mainText.${adminLang}`]: form.main,
+      [`subText.${adminLang}`]: form.sub 
     });
     success('슬로건이 저장되었습니다!');
   };
 
   return (
-    <AdminLayoutComponent backTo="/admin/mainpage" backLabel="메인페이지">
+    <div key={`slogan-manage-${adminLang}`}>
+      <AdminHeader>슬로건 관리</AdminHeader>
       {loading ? (
         <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>로딩 중...</div>
       ) : (
-        <>
-          <AdminHeader>슬로건 관리</AdminHeader>
-          <AdminCard>
-            <AdminLabel>메인 슬로건</AdminLabel>
-            <div style={{ marginBottom: 24 }}>
-              <ReactQuill
-                value={mainText[adminLang]}
-                onChange={val => setMainText(prev => ({ ...prev, [adminLang]: val }))}
-                modules={quillModules}
-                formats={formats}
-                theme="snow"
-                placeholder="메인 슬로건을 입력하세요"
-                style={{ height: 120, marginBottom: 12, background: '#fff' }}
-              />
-            </div>
-            <AdminLabel style={{ marginTop: 24 }}>서브 슬로건</AdminLabel>
-            <div style={{ marginBottom: 24 }}>
-              <ReactQuill
-                value={subText[adminLang]}
-                onChange={val => setSubText(prev => ({ ...prev, [adminLang]: val }))}
-                modules={quillModules}
-                formats={formats}
-                theme="snow"
-                placeholder="서브 슬로건을 입력하세요"
-                style={{ height: 120, marginBottom: 12, background: '#fff' }}
-              />
-            </div>
-            {/* 실시간 프리뷰 */}
-            <div style={{ marginTop: 32, padding: 24, background: '#f8f9fa', borderRadius: 8, border: '1px solid #e0e0e0' }}>
-              <h5 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 16, color: '#333' }}>실시간 Preview</h5>
-              <div style={{ background: '#fff', padding: 24, borderRadius: 8, border: '1px solid #e0e0e0' }}>
-                <div style={{ maxWidth: '1440px', margin: '0 auto', textAlign: 'center' }}>
-                  <div 
-                    style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: 16, color: '#222' }}
-                    dangerouslySetInnerHTML={{ __html: mainText[adminLang] || '<em>메인 슬로건을 입력하세요...</em>' }}
-                  />
-                  <div 
-                    style={{ fontSize: '1rem', lineHeight: 1.6, color: '#666' }}
-                    dangerouslySetInnerHTML={{ __html: subText[adminLang] || '<em>서브 슬로건을 입력하세요...</em>' }}
-                  />
-                </div>
+        <AdminCard>
+          <AdminLabel>메인 슬로건 ({adminLang.toUpperCase()})</AdminLabel>
+          <div style={{ marginBottom: 24 }}>
+            <ReactQuill
+              key={`slogan-main-quill-${adminLang}`}
+              value={form.main}
+              onChange={val => setForm(prev => ({ ...prev, main: val }))}
+              modules={quillModules}
+              formats={formats}
+              theme="snow"
+              placeholder={`${adminLang === 'en' ? '영어' : '한국어'} 메인 슬로건을 입력하세요`}
+              style={{ height: 120, marginBottom: 12, background: '#fff' }}
+            />
+          </div>
+          <AdminLabel style={{ marginTop: 24 }}>서브 슬로건 ({adminLang.toUpperCase()})</AdminLabel>
+          <div style={{ marginBottom: 24 }}>
+            <ReactQuill
+              key={`slogan-sub-quill-${adminLang}`}
+              value={form.sub}
+              onChange={val => setForm(prev => ({ ...prev, sub: val }))}
+              modules={quillModules}
+              formats={formats}
+              theme="snow"
+              placeholder={`${adminLang === 'en' ? '영어' : '한국어'} 서브 슬로건을 입력하세요`}
+              style={{ height: 120, marginBottom: 12, background: '#fff' }}
+            />
+          </div>
+          {/* 실시간 프리뷰 */}
+          <div style={{ marginTop: 32, padding: 24, background: '#f8f9fa', borderRadius: 8, border: '1px solid #e0e0e0' }}>
+            <h5 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 16, color: '#333' }}>실시간 Preview ({adminLang.toUpperCase()})</h5>
+            <div style={{ background: '#fff', padding: 24, borderRadius: 8, border: '1px solid #e0e0e0' }}>
+              <div style={{ maxWidth: '1440px', margin: '0 auto', textAlign: 'center' }}>
+                <div 
+                  style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: 16, color: '#222' }}
+                  dangerouslySetInnerHTML={{ __html: form.main || '<em>메인 슬로건을 입력하세요...</em>' }}
+                />
+                <div 
+                  style={{ fontSize: '1rem', lineHeight: 1.6, color: '#666' }}
+                  dangerouslySetInnerHTML={{ __html: form.sub || '<em>서브 슬로건을 입력하세요...</em>' }}
+                />
               </div>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 32 }}>
-              <AdminButton onClick={handleSave} $primary>저장하기</AdminButton>
-            </div>
-          </AdminCard>
-        </>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 32 }}>
+            <AdminButton onClick={handleSave} $primary>저장하기</AdminButton>
+          </div>
+        </AdminCard>
       )}
-    </AdminLayoutComponent>
+    </div>
   );
 }
 
 // 스토어 관리 페이지
 function AdminStoreManage() {
   const { success } = useToast();
+  const { adminLang } = useAdminLang();
   const [stores, setStores] = useState<Array<{ id: string; name: string; image: string; address: string; mapUrl: string; order?: number }>>([]);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState('');
@@ -2738,7 +2845,7 @@ function AdminStoreManage() {
   };
 
   return (
-    <AdminLayoutComponent backTo="/admin/mainpage" backLabel="메인페이지">
+    <div key={`store-manage-${adminLang}`}>
       <AdminHeader>스토어 관리</AdminHeader>
       
       {/* 스토어 추가 섹션 */}
@@ -2845,7 +2952,7 @@ function AdminStoreManage() {
       </AdminCard>
       
       {msg && <AdminSuccessMessage>{msg}</AdminSuccessMessage>}
-    </AdminLayoutComponent>
+    </div>
   );
 }
 
@@ -2958,7 +3065,7 @@ function AdminBrandManage() {
   const [uploading, setUploading] = useState(false);
   const [newBrand, setNewBrand] = useState<{ name: { en: string; ko: string }; desc: { en: string; ko: string }; subText?: { en: string; ko: string }; image: string }>({ name: { en: '', ko: '' }, desc: { en: '', ko: '' }, subText: { en: '', ko: '' }, image: '' });
   const [expandedBrands, setExpandedBrands] = useState<Set<string>>(new Set());
-  const adminLang = localStorage.getItem('adminLang') === 'ko' ? 'ko' : 'en';
+  const { adminLang } = useAdminLang();
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'brands'), (snapshot: QuerySnapshot<DocumentData>) => {
@@ -2967,9 +3074,9 @@ function AdminBrandManage() {
         // 마이그레이션: 기존 string이면 en으로 간주
         return {
           id: docSnap.id,
-          name: typeof data.name === 'string' ? { en: data.name, ko: '' } : { en: data.name?.en || '', ko: data.name?.ko || '' },
-          desc: typeof data.desc === 'string' ? { en: data.desc, ko: '' } : { en: data.desc?.en || '', ko: data.desc?.ko || '' },
-          subText: typeof data.subText === 'string' ? { en: data.subText, ko: '' } : { en: data.subText?.en || '', ko: data.subText?.ko || '' },
+          name: typeof data.name === 'string' ? { en: data.name, ko: data.name } : { en: data.name?.en ?? '', ko: data.name?.ko ?? '' },
+          desc: typeof data.desc === 'string' ? { en: data.desc, ko: data.desc } : { en: data.desc?.en ?? '', ko: data.desc?.ko ?? '' },
+          subText: typeof data.subText === 'string' ? { en: data.subText, ko: data.subText } : { en: data.subText?.en ?? '', ko: data.subText?.ko ?? '' },
           image: data.image || '',
           order: data.order ?? 0
         };
@@ -2979,7 +3086,7 @@ function AdminBrandManage() {
       setLoading(false);
     });
     return () => unsubscribe();
-  }, []);
+  }, [adminLang]);
 
   const handleSave = async (brand: any) => {
     try {
@@ -3214,7 +3321,7 @@ function AdminBrandManage() {
   };
 
   return (
-    <AdminLayoutComponent backTo="/admin/mainpage" backLabel="메인페이지">
+    <div key={`brand-manage-${adminLang}`}>
       <AdminHeader>브랜드 관리</AdminHeader>
       
       {/* 브랜드 추가 섹션 */}
@@ -3334,7 +3441,7 @@ function AdminBrandManage() {
       </AdminCard>
       
       {msg && <AdminSuccessMessage>{msg}</AdminSuccessMessage>}
-    </AdminLayoutComponent>
+    </div>
   );
 }
 

@@ -626,12 +626,6 @@ const FooterManagePage: React.FC = () => {
             <span style={{ fontSize: 20 }}>←</span> 대시보드로
           </BackButton>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <button onClick={() => handleAdminLangChange('en')} style={{ background: 'none', border: 'none', padding: 0, margin: 0, cursor: 'pointer', outline: 'none', opacity: adminLang === 'en' ? 1 : 0.5 }}>
-              <img src={process.env.PUBLIC_URL + '/america.png'} alt="EN" style={{ width: 32, height: 32, objectFit: 'contain' }} />
-            </button>
-            <button onClick={() => handleAdminLangChange('ko')} style={{ background: 'none', border: 'none', padding: 0, margin: 0, cursor: 'pointer', outline: 'none', opacity: adminLang === 'ko' ? 1 : 0.5 }}>
-              <img src={process.env.PUBLIC_URL + '/korea.png'} alt="KO" style={{ width: 32, height: 32, objectFit: 'contain' }} />
-            </button>
             <AdminLogoutBtn onClick={() => {
               localStorage.removeItem('admin_login');
               window.location.href = '/admin/login';

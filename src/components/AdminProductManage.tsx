@@ -617,8 +617,8 @@ const AdminProductManage: React.FC = () => {
         // 마이그레이션: 기존 string이면 en으로 간주
         return {
           id: doc.id,
-          name: typeof data.name === 'string' ? { en: data.name, ko: '' } : { en: data.name?.[adminLang] || '', ko: data.name?.[adminLang === 'ko' ? 'en' : 'ko'] || '' },
-          description: typeof data.description === 'string' ? { en: data.description, ko: '' } : { en: data.description?.[adminLang] || '', ko: data.description?.[adminLang === 'ko' ? 'en' : 'ko'] || '' },
+          name: typeof data.name === 'string' ? { en: data.name, ko: data.name } : { en: data.name?.en ?? '', ko: data.name?.ko ?? '' },
+          description: typeof data.description === 'string' ? { en: data.description, ko: data.description } : { en: data.description?.en ?? '', ko: data.description?.ko ?? '' },
           order: data.order ?? 0
         };
       });
@@ -637,12 +637,12 @@ const AdminProductManage: React.FC = () => {
         // 마이그레이션: 기존 string이면 en으로 간주
         return {
           id: doc.id,
-          name: typeof data.name === 'string' ? { en: data.name, ko: '' } : { en: data.name?.[adminLang] || '', ko: data.name?.[adminLang === 'ko' ? 'en' : 'ko'] || '' },
+          name: typeof data.name === 'string' ? { en: data.name, ko: data.name } : { en: data.name?.en ?? '', ko: data.name?.ko ?? '' },
           category: data.category || '',
           image: data.image || '',
-          allergens: typeof data.allergens === 'string' ? { en: data.allergens, ko: '' } : { en: data.allergens?.[adminLang] || '', ko: data.allergens?.[adminLang === 'ko' ? 'en' : 'ko'] || '' },
-          ingredients: typeof data.ingredients === 'string' ? { en: data.ingredients, ko: '' } : { en: data.ingredients?.[adminLang] || '', ko: data.ingredients?.[adminLang === 'ko' ? 'en' : 'ko'] || '' },
-          nutrition: typeof data.nutrition === 'string' ? { en: data.nutrition, ko: '' } : { en: data.nutrition?.[adminLang] || '', ko: data.nutrition?.[adminLang === 'ko' ? 'en' : 'ko'] || '' },
+          allergens: typeof data.allergens === 'string' ? { en: data.allergens, ko: data.allergens } : { en: data.allergens?.en ?? '', ko: data.allergens?.ko ?? '' },
+          ingredients: typeof data.ingredients === 'string' ? { en: data.ingredients, ko: data.ingredients } : { en: data.ingredients?.en ?? '', ko: data.ingredients?.ko ?? '' },
+          nutrition: typeof data.nutrition === 'string' ? { en: data.nutrition, ko: data.nutrition } : { en: data.nutrition?.en ?? '', ko: data.nutrition?.ko ?? '' },
           order: data.order ?? 0
         };
       });
@@ -865,7 +865,7 @@ const AdminProductManage: React.FC = () => {
   };
 
   return (
-    <AdminLayout>
+    <AdminLayout key={`product-manage-${adminLang}`}>
       <ToastContainer>
         {toasts.map(toast => (
           <Toast key={toast.id} $type={toast.type}>
@@ -875,13 +875,6 @@ const AdminProductManage: React.FC = () => {
       </ToastContainer>
       
       <AdminMain>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
-          <BackButton onClick={() => window.history.back()}>
-            <span style={{ fontSize: 20 }}>←</span> 대시보드로
-          </BackButton>
-          <AdminLogoutBtn onClick={logout}>로그아웃</AdminLogoutBtn>
-        </div>
-
         <AdminHeader>Product 관리</AdminHeader>
 
         <TabContainer>
@@ -1418,6 +1411,6 @@ const AdminProductManage: React.FC = () => {
       </AdminMain>
     </AdminLayout>
   );
-  };
+};
   
 export default AdminProductManage; 

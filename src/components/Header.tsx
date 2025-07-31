@@ -383,10 +383,10 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
       if (snap.exists()) {
         const data = snap.data();
         console.log('[Header] 메뉴 데이터:', data);
-        setMenuItems({
-          en: Array.isArray(data.en) ? data.en : Object.values(data.en),
-          ko: Array.isArray(data.ko) ? data.ko : Object.values(data.ko),
-        });
+        // 배열만 사용하도록 보장
+        const en = Array.isArray(data?.en) ? data.en : [];
+        const ko = Array.isArray(data?.ko) ? data.ko : [];
+        setMenuItems({ en, ko });
         console.log('[Header] 상태 업데이트 완료');
       } else {
         console.log('[Header] 메뉴 데이터 문서가 존재하지 않음');
@@ -431,11 +431,15 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
     setMobileMenuOpen(false);
   };
 
+  // 공통 언어 전환 함수
+  const setSiteLang = (lang: 'en' | 'ko') => {
+    localStorage.setItem('siteLang', lang);
+    window.dispatchEvent(new CustomEvent('languageChange', { detail: { language: lang } }));
+  };
+
   const handleLanguageChange = (lang: 'en' | 'ko') => {
     setLanguage(lang);
-    localStorage.setItem('siteLang', lang);
-    // 페이지 새로고침으로 언어 변경 적용
-    window.location.reload();
+    setSiteLang(lang);
   };
 
   // 메뉴 클릭 핸들러 - Firestore 데이터 기반으로 동작
@@ -463,8 +467,9 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
   const menuArray = (() => {
     if (!menuItems || !menuItems[language]) return [];
     const raw = menuItems[language];
-    const arr = Array.isArray(raw) ? raw : Object.values(raw);
-    return arr.filter(v => typeof v === 'string' && !Array.isArray(v) && v !== null && v !== undefined);
+    // 배열만 사용하도록 보장
+    const arr = Array.isArray(raw) ? raw : [];
+    return arr.filter(v => typeof v === 'string' && v !== null && v !== undefined);
   })() as string[];
 
   return (

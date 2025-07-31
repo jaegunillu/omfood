@@ -67,18 +67,55 @@ const VideoSection: React.FC = () => {
   const [main, setMain] = useState({
     mediaType: 'video',
     mediaUrl: process.env.PUBLIC_URL + '/main1.mp4',
-    mainText: 'Global Taste, Local Touch',
-    subText: 'From sauces to stores, we blend Korean flavor with local culture for every market we serve.'
+    mainText: { en: 'Global Taste, Local Touch', ko: '글로벌 맛, 로컬 터치' },
+    subText: { 
+      en: 'From sauces to stores, we blend Korean flavor with local culture for every market we serve.',
+      ko: '소스부터 매장까지, 우리는 한국의 맛을 현지 문화와 조화시켜 모든 시장에 제공합니다.'
+    }
   });
+  const [currentLang, setCurrentLang] = useState<'en' | 'ko'>(
+    localStorage.getItem('siteLang') === 'en' ? 'en' : 'ko'
+  );
 
   useEffect(() => {
     const docRef = doc(db, 'mainSection', 'content');
     const unsubscribe = onSnapshot(docRef, (doc) => {
       if (doc.exists()) {
-        setMain((prev) => ({ ...prev, ...doc.data() }));
+        const data = doc.data();
+        // 기존 데이터 구조 호환성 처리
+        const mainText = data.mainText;
+        const subText = data.subText;
+        
+        setMain((prev) => ({ 
+          ...prev, 
+          ...data,
+          mainText: typeof mainText === 'string' ? { en: mainText, ko: mainText } : (mainText && typeof mainText === 'object' ? mainText : prev.mainText),
+          subText: typeof subText === 'string' ? { en: subText, ko: subText } : (subText && typeof subText === 'object' ? subText : prev.subText)
+        }));
       }
     });
     return () => unsubscribe();
+  }, []);
+
+  // 언어 변경 감지
+  useEffect(() => {
+    const onLangChange = (event: any) => {
+      const lang = event?.detail?.language ?? (localStorage.getItem('siteLang') === 'en' ? 'en' : 'ko');
+      setCurrentLang(lang);
+    };
+
+    // 초기 언어 설정
+    const initialLang = localStorage.getItem('siteLang') === 'en' ? 'en' : 'ko';
+    setCurrentLang(initialLang);
+
+    // 커스텀 이벤트 리스너 (Header에서 발생하는 이벤트)
+    window.addEventListener('languageChange', onLangChange);
+    window.addEventListener('storage', onLangChange);
+    
+    return () => {
+      window.removeEventListener('languageChange', onLangChange);
+      window.removeEventListener('storage', onLangChange);
+    };
   }, []);
 
   return (
@@ -91,8 +128,8 @@ const VideoSection: React.FC = () => {
         <VideoBg as="img" src={main.mediaUrl} alt="main" />
       )}
       <MainTextOverlay>
-        <MainText dangerouslySetInnerHTML={{ __html: main.mainText }} />
-        <SubText dangerouslySetInnerHTML={{ __html: main.subText }} />
+        <MainText dangerouslySetInnerHTML={{ __html: (main.mainText?.[currentLang] ?? main.mainText?.en ?? '') }} />
+        <SubText dangerouslySetInnerHTML={{ __html: (main.subText?.[currentLang] ?? main.subText?.en ?? '') }} />
       </MainTextOverlay>
     </VideoContainer>
   );

@@ -32,6 +32,7 @@ type FormValues = {
 
 const ContactUsPage: React.FC = () => {
   const [showPrivacy, setShowPrivacy] = useState(false);
+  const [currentLang, setCurrentLang] = useState<'en'|'ko'>(localStorage.getItem('siteLang') === 'en' ? 'en' : 'ko');
 
   const { success, error } = useToast();
   const {
@@ -45,6 +46,32 @@ const ContactUsPage: React.FC = () => {
     mode: "onBlur",
     defaultValues: { agreedPrivacy: false },
   });
+
+  // 언어 변경 이벤트 리스너
+  useEffect(() => {
+    const onLang = (e: any) => {
+      const lang = e?.detail?.language || (localStorage.getItem('siteLang') === 'en' ? 'en' : 'ko');
+      setCurrentLang(lang);
+    };
+    window.addEventListener('languageChange', onLang);
+    window.addEventListener('storage', onLang);
+    return () => {
+      window.removeEventListener('languageChange', onLang);
+      window.removeEventListener('storage', onLang);
+    };
+  }, []);
+
+  // 다국어 안전 추출 유틸
+  function tx(val: any, lang: 'en'|'ko'): string {
+    if (val == null) return '';
+    if (typeof val === 'string') return val;
+    if (typeof val === 'object') {
+      if (typeof val[lang] === 'string') return val[lang];
+      if (typeof val.en === 'string') return val.en;
+      if (typeof val.ko === 'string') return val.ko;
+    }
+    return ''; // 객체가 오면 빈 문자열로 안전하게
+  }
 
   const onSubmit = async (data: FormValues) => {
     try {
@@ -75,10 +102,10 @@ const ContactUsPage: React.FC = () => {
 
   // 하단 정보 Firestore 연동
   const [mainInfo, setMainInfo] = useState({
-    address: "",
-    phone: "",
-    fax: "",
-    email: "",
+    address: { en: "", ko: "" },
+    phone: { en: "", ko: "" },
+    fax: { en: "", ko: "" },
+    email: { en: "", ko: "" },
   });
 
   useEffect(() => {
@@ -86,7 +113,16 @@ const ContactUsPage: React.FC = () => {
       doc(db, "contact_us_config", "main_info"),
       (docSnap) => {
         if (docSnap.exists()) {
-          setMainInfo(docSnap.data() as typeof mainInfo);
+          const data = docSnap.data();
+          // Firestore 스냅샷 호환 변환 (옛/새 스키마 동시 지원)
+          const norm = (v: any) => (typeof v === 'string' ? { en: v, ko: v } : (v || { en: '', ko: '' }));
+          const payload = {
+            address: norm(data.address),
+            phone: norm(data.phone),
+            fax: norm(data.fax),
+            email: norm(data.email),
+          };
+          setMainInfo(payload);
         }
       }
     );
@@ -97,23 +133,30 @@ const ContactUsPage: React.FC = () => {
     <div className="min-h-screen bg-[#FAF6F0] flex flex-col">
       <Header />
       <main className="flex-1 flex flex-col items-center justify-start py-12 mt-[120px] bg-[#fdf8f3]">
-        <h1 className="text-4xl font-extrabold text-[#5a3723] mb-8 font-pretendard tracking-tight">CONTACT US</h1>
+        <h1 className="text-4xl font-extrabold text-[#5a3723] mb-8 font-pretendard tracking-tight">
+          {currentLang === 'ko' ? '문의하기' : 'CONTACT US'}
+        </h1>
         <form
           className="bg-white rounded-2xl shadow-lg p-16 w-full max-w-3xl border-2 border-[#e5e5e5] mt-8 mb-12 text-[1.15rem] font-pretendard"
           style={{ minWidth: 480, fontSize: '1.15rem' }}
           onSubmit={handleSubmit(onSubmit)}
         >
           <div className="mb-8">
-            <b className="text-2xl font-extrabold text-[#5a3723] font-pretendard">Get in Touch</b>
+            <b className="text-2xl font-extrabold text-[#5a3723] font-pretendard">
+              {currentLang === 'ko' ? '연락하기' : 'Get in Touch'}
+            </b>
             <p className="text-base text-[#8c6450] mt-2 font-pretendard">
-              Have a question about our products, exploring partnership opportunities, or just want to learn more? We'd love to hear from you. Please fill out the form below and our team will get back to you as soon as possible.
+              {currentLang === 'ko' 
+                ? '제품에 대한 질문이 있으시거나, 파트너십 기회를 탐색하고 싶으시거나, 더 자세히 알고 싶으시다면? 저희가 도와드리겠습니다. 아래 양식을 작성해 주시면 저희 팀이 최대한 빨리 연락드리겠습니다.'
+                : 'Have a question about our products, exploring partnership opportunities, or just want to learn more? We\'d love to hear from you. Please fill out the form below and our team will get back to you as soon as possible.'
+              }
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-xs font-bold mb-1">
-                Please select the subject of your inquiry
+                {currentLang === 'ko' ? '문의 주제를 선택해 주세요' : 'Please select the subject of your inquiry'}
               </label>
               <div style={{ position: 'relative', width: '100%' }}>
                 <select
@@ -125,7 +168,7 @@ const ContactUsPage: React.FC = () => {
                   defaultValue=""
                 >
                   <option value="" disabled hidden>
-                    {focus.subject ? "" : "Choose here"}
+                    {focus.subject ? "" : (currentLang === 'ko' ? "선택해 주세요" : "Choose here")}
                   </option>
                   {SUBJECT_OPTIONS.map((opt) => (
                     <option key={opt} value={opt}>
@@ -147,11 +190,13 @@ const ContactUsPage: React.FC = () => {
               </div>
             </div>
             <div>
-              <label className="block text-xs font-bold mb-1">Product Name</label>
+              <label className="block text-xs font-bold mb-1">
+                {currentLang === 'ko' ? '제품명' : 'Product Name'}
+              </label>
               <input
                 {...register("productName")}
                 className="w-full border rounded px-3 py-2 text-sm"
-                placeholder={focus.productName ? "" : "e.g. Fire Sauce"}
+                placeholder={focus.productName ? "" : (currentLang === 'ko' ? "예: Fire Sauce" : "e.g. Fire Sauce")}
                 onFocus={() => setFocus((f) => ({ ...f, productName: true }))}
                 onBlur={() => setFocus((f) => ({ ...f, productName: false }))}
               />
@@ -159,23 +204,27 @@ const ContactUsPage: React.FC = () => {
           </div>
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
-              <label className="block text-xs font-bold mb-1">Country / City</label>
+              <label className="block text-xs font-bold mb-1">
+                {currentLang === 'ko' ? '국가 / 도시' : 'Country / City'}
+              </label>
               <input
                 {...register("country")}
                 className="w-full border rounded px-3 py-2 text-sm"
-                placeholder={focus.country ? "" : "Country"}
+                placeholder={focus.country ? "" : (currentLang === 'ko' ? "국가" : "Country")}
                 onFocus={() => setFocus((f) => ({ ...f, country: true }))}
                 onBlur={() => setFocus((f) => ({ ...f, country: false }))}
               />
             </div>
             <div>
-              <label className="block text-xs font-bold mb-1">Email</label>
+              <label className="block text-xs font-bold mb-1">
+                {currentLang === 'ko' ? '이메일' : 'Email'}
+              </label>
               <input
                 {...register("email", {
                   required: true,
                   pattern: {
                     value: /^[\w-.]+@([\w-]+\.)+[\w-]{2,}$/,
-                    message: "Please enter a valid email address",
+                    message: currentLang === 'ko' ? "올바른 이메일 주소를 입력해 주세요" : "Please enter a valid email address",
                   },
                 })}
                 className={`w-full border rounded px-3 py-2 text-sm ${errors.email ? "border-red-500" : ""}`}
@@ -184,19 +233,23 @@ const ContactUsPage: React.FC = () => {
                 onBlur={() => setFocus((f) => ({ ...f, email: false }))}
               />
               {errors.email && (
-                <span className="text-xs text-red-500">{errors.email.message || "Please enter a valid email address"}</span>
+                <span className="text-xs text-red-500">
+                  {errors.email.message || (currentLang === 'ko' ? "올바른 이메일 주소를 입력해 주세요" : "Please enter a valid email address")}
+                </span>
               )}
             </div>
           </div>
           <div className="mb-4">
-            <label className="block text-xs font-bold mb-1">Additional Information</label>
+            <label className="block text-xs font-bold mb-1">
+              {currentLang === 'ko' ? '추가 정보' : 'Additional Information'}
+            </label>
             <textarea
               {...register("comments", {
                 required: true,
                 maxLength: 2000,
               })}
               className="w-full border rounded px-3 py-2 text-sm min-h-[100px]"
-              placeholder={focus.comments ? "" : "Comments"}
+              placeholder={focus.comments ? "" : (currentLang === 'ko' ? "댓글" : "Comments")}
               onFocus={() => setFocus((f) => ({ ...f, comments: true }))}
               onBlur={() => setFocus((f) => ({ ...f, comments: false }))}
               maxLength={2000}
@@ -205,7 +258,9 @@ const ContactUsPage: React.FC = () => {
               {watch("comments")?.length || 0} / 2000
             </div>
             {errors.comments && (
-              <span className="text-xs text-red-500">Required (max 2000 chars)</span>
+              <span className="text-xs text-red-500">
+                {currentLang === 'ko' ? "필수 (최대 2000자)" : "Required (max 2000 chars)"}
+              </span>
             )}
           </div>
           <div className="mb-4 flex items-center">
@@ -216,7 +271,10 @@ const ContactUsPage: React.FC = () => {
               className="mr-2"
             />
             <label htmlFor="privacy" className="text-xs">
-              I've read and agree to the terms of the <b>privacy policy</b>
+              {currentLang === 'ko' 
+                ? '개인정보처리방침을 읽고 동의합니다'
+                : 'I\'ve read and agree to the terms of the <b>privacy policy</b>'
+              }
             </label>
             <button
               type="button"
@@ -242,30 +300,38 @@ const ContactUsPage: React.FC = () => {
             className="w-full bg-gray-300 text-white py-2 rounded mt-2 disabled:opacity-50"
             disabled={!watch("agreedPrivacy")}
           >
-            Submit
+            {currentLang === 'ko' ? '제출' : 'Submit'}
           </button>
         </form>
         {/* 하단 정보 */}
         <div className="contactBoxGrid mt-16 w-full max-w-4xl items-stretch">
           <div className="h-48 flex-1 flex flex-col items-center justify-center border rounded-2xl p-6 bg-white shadow font-pretendard contactBox w-full min-w-0 break-words">
             <LocationOn fontSize="large" className="text-[#E5002B]" />
-            <div className="font-bold mt-2 text-base text-center">OUR MAIN OFFICE</div>
-            <div className="text-xs text-center mt-1 text-[#5a3723] break-words">{mainInfo.address}</div>
+            <div className="font-bold mt-2 text-base text-center">
+              {currentLang === 'ko' ? '본사' : 'OUR MAIN OFFICE'}
+            </div>
+            <div className="text-xs text-center mt-1 text-[#5a3723] break-words">{tx(mainInfo.address, currentLang)}</div>
           </div>
           <div className="h-48 flex-1 flex flex-col items-center justify-center border rounded-2xl p-6 bg-white shadow font-pretendard contactBox w-full min-w-0 break-words">
             <Phone fontSize="large" className="text-[#E5002B]" />
-            <div className="font-bold mt-2 text-base text-center">PHONE NUMBER</div>
-            <div className="text-xs text-center mt-1 whitespace-pre-line text-[#5a3723] break-words">{mainInfo.phone}</div>
+            <div className="font-bold mt-2 text-base text-center">
+              {currentLang === 'ko' ? '전화번호' : 'PHONE NUMBER'}
+            </div>
+            <div className="text-xs text-center mt-1 whitespace-pre-line text-[#5a3723] break-words">{tx(mainInfo.phone, currentLang)}</div>
           </div>
           <div className="h-48 flex-1 flex flex-col items-center justify-center border rounded-2xl p-6 bg-white shadow font-pretendard contactBox w-full min-w-0 break-words">
             <Fax fontSize="large" className="text-[#E5002B]" />
-            <div className="font-bold mt-2 text-base text-center">FAX</div>
-            <div className="text-xs text-center mt-1 whitespace-pre-line text-[#5a3723] break-words">{mainInfo.fax}</div>
+            <div className="font-bold mt-2 text-base text-center">
+              {currentLang === 'ko' ? '팩스' : 'FAX'}
+            </div>
+            <div className="text-xs text-center mt-1 whitespace-pre-line text-[#5a3723] break-words">{tx(mainInfo.fax, currentLang)}</div>
           </div>
           <div className="h-48 flex-1 flex flex-col items-center justify-center border rounded-2xl p-6 bg-white shadow font-pretendard contactBox w-full min-w-0 break-words">
             <Email fontSize="large" className="text-[#E5002B]" />
-            <div className="font-bold mt-2 text-base text-center">EMAIL</div>
-            <div className="text-xs text-center mt-1 text-[#5a3723] break-words">{mainInfo.email}</div>
+            <div className="font-bold mt-2 text-base text-center">
+              {currentLang === 'ko' ? '이메일' : 'EMAIL'}
+            </div>
+            <div className="text-xs text-center mt-1 text-[#5a3723] break-words">{tx(mainInfo.email, currentLang)}</div>
           </div>
         </div>
       </main>
