@@ -19,6 +19,7 @@ import ContactUsPage from './components/ContactUsPage';
 import ContactUsAdminPage from './components/admin/ContactUsAdminPage';
 import FooterManagePage from './components/admin/FooterManagePage';
 import AboutPage from './components/AboutPage';
+
 import FoodServicePage from './components/FoodServicePage';
 // import ContactPage from './components/ContactPage';
 // import koreaFlag from '../public/korea.png';
@@ -3505,18 +3506,36 @@ function AdminBrandPageManage() {
     try {
       let url = mainMedia.url;
       let type = mainMedia.type;
+      
+      console.log('메인 미디어 저장 시작:', { url, type, file: mainMedia.file });
+      
       if (mainMedia.file) {
         const ext = mainMedia.file.name.split('.').pop();
         const uniqueName = `brandPage/mainMedia_${Date.now()}.${ext}`;
+        console.log('파일 업로드 정보:', { fileName: mainMedia.file.name, ext, uniqueName });
+        
         const fileStorageRef = storageRef(storage, uniqueName);
+        console.log('Storage 참조 생성:', uniqueName);
+        
         await uploadBytes(fileStorageRef, mainMedia.file);
+        console.log('파일 업로드 완료');
+        
         url = await getDownloadURL(fileStorageRef);
         type = mainMedia.file.type.startsWith('video') ? 'video' : 'image';
+        console.log('다운로드 URL 생성:', { url, type });
       }
+      
+      console.log('Firestore에 저장할 데이터:', { url, type });
       await setDoc(doc(db, 'brandPage', 'mainMedia'), { url, type });
+      console.log('Firestore 저장 완료');
+      
+      // 상태 업데이트를 즉시 반영하여 UI가 새로운 미디어를 표시하도록 함
       setMainMedia((prev: any) => ({ ...prev, url, type, file: null }));
+      console.log('상태 업데이트 완료');
+      
       success('저장되었습니다!');
     } catch (e) {
+      console.error('메인 미디어 저장 실패:', e);
       error('저장 실패');
     }
   };
@@ -3791,6 +3810,7 @@ function App() {
           <Route path="/brand" element={<BrandPage />} />
           <Route path="/product" element={<ProductPage />} />
           <Route path="/about" element={<><Header /><AboutPage /><Footer language={siteLang} /></>} />
+  
           <Route path="/foodservice" element={<><Header /><FoodServicePage /><Footer language={siteLang} /></>} />
           <Route path="/contact" element={<><Header /><ContactUsPage /><Footer language={siteLang} /></>} />
           {/* 기존 홈페이지 라우트 */}
