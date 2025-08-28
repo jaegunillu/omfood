@@ -1,8 +1,21 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTypewriter, Cursor } from 'react-simple-typewriter';
 
 const AboutPage: React.FC = () => {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const [text] = useTypewriter({
     words: ['먹는 사람도', '파는 사람도'],
     loop: 1,
@@ -24,7 +37,7 @@ const AboutPage: React.FC = () => {
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: 'white' }}>
+    <div className="about-page" style={{ minHeight: '100vh', backgroundColor: 'white' }}>
       {/* 메인 히어로 섹션: 원본 전체 이미지 그대로 노출 (크롭 없음) */}
       <section style={{ 
         position: 'relative', 
@@ -138,6 +151,7 @@ const AboutPage: React.FC = () => {
                 transition={{ duration: 0.22 }}
               >
                 <img
+                  className="card-img"
                   src={getImagePath('OM_E2.jpg')}
                   alt="Chess board with pawns"
                   style={{
@@ -250,6 +264,7 @@ const AboutPage: React.FC = () => {
                 transition={{ duration: 0.22 }}
               >
                 <img
+                  className="card-img"
                   src={getImagePath('OM_E3.jpg')}
                   alt="Stacked blocks"
                   style={{
@@ -396,6 +411,7 @@ const AboutPage: React.FC = () => {
 
 {/* 글로벌 K-푸드 시대 … Section */}
 <motion.section
+  className="om-global-kfood"
   style={{
     position: 'relative',
     padding: '20rem 2rem',              // 20rem → 6rem (원본 여백감에 맞춤)
@@ -501,9 +517,231 @@ const AboutPage: React.FC = () => {
       <div />
     </div>
   </div>
-</motion.section>
-    </div>
-  );
-};
+       </motion.section>
+       
+       <style>{`
+/* PC (1801px 이상)에는 기존 스타일 유지 */
+
+/* 중간 해상도 (769px ~ 1800px) 스타일 */
+@media (max-width: 1800px) {
+  .about-page section {
+    padding: clamp(4rem, 5vw, 6rem) clamp(1rem, 2vw, 4rem) !important;
+  }
+  .about-page section:nth-of-type(2) > div,
+  .about-page section:nth-of-type(3) > div {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  .about-page section:nth-of-type(2) > div > div,
+  .about-page section:nth-of-type(3) > div > div {
+    grid-template-columns: 1fr 1fr !important;
+    gap: clamp(1rem, 3vw, 2rem) !important;
+  }
+  .about-page section:nth-of-type(2) h2,
+  .about-page section:nth-of-type(3) h2 {
+    font-size: clamp(2.5rem, 4vw, 3.5rem) !important;
+    margin-bottom: clamp(0.5rem, 1.5vw, 1rem) !important;
+  }
+  .about-page section:nth-of-type(2) h3,
+  .about-page section:nth-of-type(3) h3 {
+    font-size: clamp(1.8rem, 2.5vw, 2.5rem) !important;
+    height: auto !important;
+    width: auto !important;
+    margin-bottom: clamp(1rem, 2.5vw, 1.5rem) !important;
+  }
+  .about-page section:nth-of-type(2) ul,
+  .about-page section:nth-of-type(3) ul {
+    list-style: none !important;
+    padding: 0 !important;
+    width: 100% !important;
+    text-align: left !important;
+  }
+  .about-page section:nth-of-type(2) ul li,
+  .about-page section:nth-of-type(3) ul li {
+    font-size: clamp(0.9rem, 1.5vw, 1.1rem) !important;
+    word-break: keep-all;
+    margin-bottom: 0.5rem !important;
+    padding-left: 0;
+    text-align: left !important;
+    width: 100% !important;
+  }
+  .about-page section:nth-of-type(2) ul li > span:first-child,
+  .about-page section:nth-of-type(3) ul li > span:first-child {
+    display: none !important;
+  }
+  .about-page section:nth-of-type(2) ul li > span:last-child,
+  .about-page section:nth-of-type(3) ul li > span:last-child {
+    display: block !important;
+    text-align: left !important;
+  }
+  .about-page section:nth-of-type(2) > div > div > div:last-child,
+  .about-page section:nth-of-type(3) > div > div > div:last-child {
+    align-items: flex-start !important;
+  }
+
+  /* 1. 히어로 섹션 */
+  .about-page section:first-of-type p {
+    font-size: clamp(24px, 3vw, 70px) !important;
+  }
+  .about-page section:first-of-type span {
+    font-size: clamp(40px, 6vw, 120px) !important;
+  }
+  
+  /* 3. 슬로건 섹션 */
+  .about-page section:nth-of-type(4) > div > div {
+    font-size: clamp(2.5rem, 5vw, 8rem) !important;
+    line-height: 1.2 !important;
+  }
+
+  /* 4. K-푸드 섹션 */
+  .about-page .om-global-kfood h2 {
+    font-size: clamp(1.8rem, 3vw, 2.2rem) !important;
+    text-align: left !important;
+  }
+  .about-page .om-global-kfood p {
+    font-size: clamp(0.9rem, 1.5vw, 1rem) !important;
+    text-align: left !important;
+  }
+}
+
+/* 모바일 (768px 이하) 스타일 */
+@media (max-width: 768px) {
+  .about-page section {
+    padding: 4rem 1rem !important;
+  }
+  .about-page section h2,
+  .about-page section h3,
+  .about-page section p {
+    text-align: center !important;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .about-page section:nth-of-type(2) > div > div,
+  .about-page section:nth-of-type(3) > div > div {
+    grid-template-columns: 1fr !important;
+    gap: 2rem !important;
+  }
+  .about-page section:nth-of-type(2) h2,
+  .about-page section:nth-of-type(3) h2 {
+    font-size: 2.5rem !important;
+    margin-bottom: 1rem !important;
+  }
+  .about-page section:nth-of-type(2) h3,
+  .about-page section:nth-of-type(3) h3 {
+    font-size: 1.8rem !important;
+    height: auto !important;
+    width: auto !important;
+    margin-bottom: 1.5rem !important;
+  }
+  .about-page section:nth-of-type(2) ul,
+  .about-page section:nth-of-type(3) ul {
+    list-style: none !important;
+    padding: 0 !important;
+    width: 100% !important;
+    text-align: center !important;
+  }
+  .about-page section:nth-of-type(2) ul li,
+  .about-page section:nth-of-type(3) ul li {
+    font-size: 1.1rem !important;
+    word-break: keep-all;
+    margin-bottom: 0.5rem !important;
+    padding-left: 0;
+    text-align: center !important;
+    width: 100% !important;
+  }
+  .about-page section:nth-of-type(2) ul li > span:first-child,
+  .about-page section:nth-of-type(3) ul li > span:first-child {
+    display: none !important;
+  }
+  .about-page section:nth-of-type(2) ul li > span:last-child,
+  .about-page section:nth-of-type(3) ul li > span:last-child {
+    display: block !important;
+    width: 100% !important;
+    text-align: center !important;
+  }
+  .about-page section:first-of-type {
+    padding: 0 !important;
+  }
+  .about-page section:first-of-type img {
+    width: 100% !important;
+    height: auto !important;
+    object-fit: cover !important;
+  }
+  .about-page section:first-of-type > div {
+    position: absolute !important;
+    top: auto !important;
+    left: auto !important;
+    right: 1rem !important;
+    bottom: 2rem !important;
+    transform: none !important;
+    flex-direction: column !important;
+    align-items: flex-end !important;
+    width: auto !important;
+  }
+  .about-page section:first-of-type p {
+    font-size: 24px !important;
+    margin-bottom: 0 !important;
+    text-align: right !important;
+    color: white !important;
+  }
+  .about-page section:first-of-type span {
+    font-size: 40px !important;
+    text-align: right !important;
+    color: white !important;
+  }
+  .about-page section:first-of-type > div > div:last-of-type {
+    display: none !important;
+  }
+  .about-page section:nth-of-type(2) > div > div > div:first-child,
+  .about-page section:nth-of-type(3) > div > div > div:first-child {
+    justify-content: center !important;
+    height: auto !important;
+    width: 100% !important;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .about-page img.card-img {
+    width: 100% !important;
+    height: auto !important;
+    object-fit: cover !important;
+    object-position: center !important;
+  }
+  .about-page section:nth-of-type(4) > div > div {
+    font-size: 3rem !important;
+    line-height: 1.2 !important;
+  }
+  .about-page .om-global-kfood {
+    padding: 4rem 1rem !important;
+  }
+  .om-global-kfood > div {
+    grid-template-columns: 1fr !important;
+  }
+  .om-global-kfood > div > div:first-child {
+    max-width: 100% !important;
+  }
+  .om-global-kfood h2 {
+    font-size: 2.2rem !important;
+    margin-bottom: 1rem !important;
+  }
+  .om-global-kfood p {
+    font-size: 1rem !important;
+    margin-bottom: 0.8rem !important;
+    text-align: center !important;
+  }
+  .om-global-kfood p:last-of-type {
+    margin-bottom: 0 !important;
+  }
+  .om-global-kfood > div[aria-hidden="true"] {
+    height: 300px;
+    background-position: center !important;
+    background-size: cover !important;
+    background-repeat: no-repeat !important;
+    margin-top: 2rem;
+  }
+}
+`}</style>
+     </div>
+   );
+ };
 
 export default AboutPage; 

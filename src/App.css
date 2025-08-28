@@ -143,6 +143,24 @@
   /* Mobile <768px */
 }
 
+/* === AboutPage 모바일 반응형 스타일 === */
+@media (max-width: 768px) {
+  /* 모바일에서 모든 섹션을 중앙 정렬 */
+  section h2,
+  section h3,
+  section ul {
+    text-align: center !important;
+  }
+  
+  /* 글로벌 K-푸드 섹션은 예외로 왼쪽 정렬 유지 */
+  section.om-global-kfood h2,
+  section.om-global-kfood h3,
+  section.om-global-kfood div,
+  section.om-global-kfood p {
+    text-align: left !important;
+  }
+}
+
 @media (max-width: 620px) {
   .contactBoxGrid {
     grid-template-columns: repeat(2, 1fr) !important;
