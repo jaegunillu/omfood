@@ -25,24 +25,23 @@ const AboutPage: React.FC = () => {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'white' }}>
-      {/* 1번 이미지와 완벽하게 동일한 메인 섹션 */}
+      {/* 메인 히어로 섹션: 원본 전체 이미지 그대로 노출 (크롭 없음) */}
       <section style={{ 
         position: 'relative', 
         width: '100%',
-        height: '100vh',
-        overflow: 'hidden'
+        // height: '100vh' 제거: 크롭 원인
+        overflow: 'hidden',
+        backgroundColor: '#000' // 레터박스 영역이 생길 때 자연스러운 배경
       }}>
-        {/* 메인 배경 이미지 - 1번 이미지와 동일하게 전체 화면 */}
+        {/* 원본 전체 이미지: 크롭 없이 */}
         <img 
           src={getImagePath('OM_E1.jpg')}
           alt="OM FOOD Background" 
           style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
+            display: 'block',
             width: '100%',
-            height: '100%',
-            objectFit: 'cover',
+            height: 'auto',       // 핵심: 비율 유지 + 크롭 없음
+            objectFit: 'contain', // 혹시 부모 높이가 생겨도 잘리지 않도록
             objectPosition: 'center'
           }}
         />
@@ -66,7 +65,7 @@ const AboutPage: React.FC = () => {
           }}>
             {/* 첫 번째 텍스트 - 1번 이미지와 동일한 사이즈 */}
             <p style={{ 
-              fontSize: '90px', 
+              fontSize: '70px', 
               color: 'white', 
               margin: 10,
               padding: 0,
@@ -86,7 +85,7 @@ const AboutPage: React.FC = () => {
               gap: '1rem' 
             }}>
               <span style={{ 
-                fontSize: '150px', 
+                fontSize: '120px', 
                 fontWeight: 'bold',
                 color: 'white',
                 fontFamily: 'sans-serif',
@@ -95,7 +94,7 @@ const AboutPage: React.FC = () => {
                 OM
               </span>
               <span style={{ 
-                fontSize: '150px', 
+                fontSize: '120px', 
                 fontWeight: 'bold',
                 color: 'white',
                 fontFamily: 'sans-serif',
@@ -109,7 +108,7 @@ const AboutPage: React.FC = () => {
           {/* 다홍색 세로 라인 - 1번 이미지와 동일한 색상과 크기 */}
           <div style={{ 
             width: '6px',
-            height: '244px',
+            height: '198px',
             backgroundColor: '#E25858',
             marginTop: '1rem',
             borderRadius: '3px'
