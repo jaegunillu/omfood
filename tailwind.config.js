@@ -1,7 +1,9 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    "./src/**/*.{js,jsx,ts,tsx}",
+    './index.html',
+    './src/**/*.{js,ts,jsx,tsx}',
+    './src/components/**/*.{js,ts,jsx,tsx}',
   ],
   theme: {
     extend: {
@@ -38,5 +40,30 @@ module.exports = {
       },
     },
   },
+  safelist: [
+    // CONTACT 페이지 핵심 유틸 (누락 방지)
+    'min-h-screen','bg-[#FAF6F0]','bg-[#fdf8f3]',
+    'text-5xl','text-3xl','text-lg','font-extrabold',
+    'rounded-2xl','shadow-lg','p-16','mt-8','mb-12',
+    'grid','grid-cols-2','gap-6','w-full','max-w-4xl',
+    'border','border-gray-200','border-gray-300',
+    'px-4','py-3','text-sm','focus:border-[#E5002B]',
+    'focus:ring-2','focus:ring-[#E5002B]','text-right',
+    'flex','flex-col','items-center','justify-start',
+    'py-12','mt-[120px]','text-center','mb-6','mb-10',
+    'max-w-3xl','mx-auto','leading-relaxed','gap-6',
+    'mb-2','text-gray-700','font-semibold','relative',
+    'appearance-none','WebkitAppearance-none','MozAppearance-none',
+    'pointer-events-none','text-xs','text-red-500','mt-1',
+    'min-h-[120px]','resize-none','mt-2','text-gray-400',
+    'flex-1','cursor-pointer','underline','hover:text-[#C4002B]',
+    'transition-colors','bg-gray-50','max-h-48','overflow-y-auto',
+    'disabled:opacity-50','disabled:cursor-not-allowed','font-semibold',
+    'text-base','transition-colors','duration-200','mt-6',
+    'mt-16','max-w-6xl','h-48','border-gray-200','rounded-2xl',
+    'p-6','bg-white','shadow','font-pretendard','text-[#E5002B]',
+    'mt-2','text-base','text-center','mt-1','text-[#5a3723]',
+    'break-words','whitespace-pre-line'
+  ],
   plugins: [],
 } 
