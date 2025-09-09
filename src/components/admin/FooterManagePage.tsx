@@ -29,7 +29,7 @@ const AdminCard = styled.div`
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   padding: 32px;
-  max-width: 1300px;
+  max-width: 2100px;
   width: 100%;
   margin: 0 auto 32px auto;
   box-sizing: border-box;
@@ -114,7 +114,7 @@ const AdminMain = styled.main`
   flex: 1;
   padding: 48px 50px 40px 50px;
   min-height: 100vh;
-  max-width: 1400px;
+  max-width: 2100px;
   margin: 0 auto;
   
   @media (max-width: 900px) {
@@ -621,10 +621,7 @@ const FooterManagePage: React.FC = () => {
   return (
     <AdminLayout>
       <AdminMain>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
-          <BackButton onClick={() => window.history.back()}>
-            <span style={{ fontSize: 20 }}>←</span> 대시보드로
-          </BackButton>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: 32 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <AdminLogoutBtn onClick={() => {
               localStorage.removeItem('admin_login');

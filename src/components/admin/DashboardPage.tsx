@@ -1,144 +1,147 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Button from '../common/Button';
-import { db } from '../../firebase';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { useAdminLang } from '../../App';
+import React from "react";
+import styled from "styled-components";
+import { useNavigate } from "react-router-dom";
+
+/**
+ * 관리자 대시보드
+ * - HOME 카드는 렌더 단계에서 필터링으로 숨김
+ * - 나머지 메뉴(메인페이지 관리 / ABOUT / BRAND / PRODUCT / CONTACT)는 그대로 노출
+ * - 필요한 경우 path 문자열만 실제 라우트에 맞게 조정하세요.
+ */
+
+const Wrapper = styled.div`
+  width: 100%;
+  min-height: 100vh;
+  background: #f7f7f8;
+`;
+
+const Container = styled.div`
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 56px 24px 80px;
+`;
+
+const HeaderBar = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 36px;
+`;
+
+const Title = styled.h1`
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #111;
+`;
+
+const Grid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 24px;
+
+  @media (max-width: 1200px) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  @media (max-width: 992px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const Card = styled.button`
+  width: 100%;
+  text-align: left;
+  padding: 22px 20px;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 14px;
+  box-shadow: 0 2px 10px rgba(16, 24, 40, 0.06);
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(16, 24, 40, 0.10);
+    border-color: #e6e6e6;
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(24, 119, 242, 0.25);
+  }
+`;
+
+const CardTitle = styled.div`
+  font-size: 16px;
+  font-weight: 800;
+  color: #222;
+  letter-spacing: 0.02em;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+`;
+
+const CardDesc = styled.div`
+  font-size: 12px;
+  color: #777;
+  letter-spacing: -0.01em;
+  line-height: 1.45;
+`;
+
+/** HOME인지 판별 (영/한 모두 대응) */
+const isHomeMenu = (title?: string, path?: string) => {
+  const t = (title || "").trim().toLowerCase();
+  const p = (path || "").trim().toLowerCase();
+  const titleIsHome =
+    t === "home" || t === "main" || t === "메인" || t === "홈" || /(^|\s)home($|\s)/.test(t);
+  const pathIsHome = p.includes("/home");
+  return titleIsHome || pathIsHome;
+};
 
 const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
-  const { adminLang } = useAdminLang();
-  const [menuNames, setMenuNames] = useState<{ en: string[]; ko: string[] } | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const ref = doc(db, 'header_menu', 'main');
-    const unsub = onSnapshot(ref, (snap) => {
-      if (snap.exists()) {
-        const data = snap.data();
-        if (data && Array.isArray(data.en) && Array.isArray(data.ko)) {
-          setMenuNames({ en: [...data.en], ko: [...data.ko] });
-        }
-      }
-      setLoading(false);
-    });
-    return () => unsub();
-  }, []);
-
-  // 메뉴 설명(고정)
-  const menuDescriptions = [
-    '헤더, 메인 섹션, 슬로건, 스토어, 브랜드 관리',
-    '브랜드 페이지 관리',
-    '제품 관리',
-    '스토어 관리',
-    '푸터 영역 관리',
-    '시스템 설정'
+  /** 관리자 대시보드 카드 정의 (필요시 path만 수정) */
+  const cards: Array<{ title: string; desc?: string; path: string }> = [
+    {
+      title: "메인페이지 관리",
+      desc: "헤더, 메인 섹션, 슬로건, 스토어, 브랜드 등 관리",
+      path: "/admin/main",
+    },
+    // HOME은 데이터엔 포함하되 렌더에서 필터로 숨깁니다.
+    { title: "HOME", desc: "HOME 페이지 관리", path: "/admin/home" },
+    { title: "ABOUT", desc: "ABOUT 페이지 관리", path: "/admin/about" },
+    { title: "BRAND", desc: "BRAND 페이지 관리", path: "/admin/brand" },
+    { title: "PRODUCT", desc: "PRODUCT 페이지 관리", path: "/admin/product" },
+    { title: "CONTACT", desc: "CONTACT 페이지 관리", path: "/admin/contact" },
   ];
 
-  // 메뉴 경로(고정)
-  const menuPaths = [
-    '/admin/mainpage',
-    '/admin/brandpage',
-    '/admin/products',
-    '/admin/stores',
-    '/admin/footer',
-    '/admin/settings'
-  ];
-
-  // 메뉴 아이콘(고정)
-  const menuIcons = ['🏠', '🏢', '📦', '🏪', '📄', '⚙️'];
-  const menuColors = [
-    'bg-gradient-to-br from-orange-500 to-orange-600',
-    'bg-gradient-to-br from-blue-500 to-blue-600',
-    'bg-gradient-to-br from-green-500 to-green-600',
-    'bg-gradient-to-br from-purple-500 to-purple-600',
-    'bg-gradient-to-br from-orange-400 to-orange-600',
-    'bg-gradient-to-br from-gray-500 to-gray-600'
-  ];
-
-  // 현재 언어의 메뉴명 배열 가져오기
-  const currentMenuNames = menuNames?.[adminLang] || [];
+  // items 조립 이후, 렌더 전에 HOME 제거
+  const visibleItems = (cards || []).filter((it) => !isHomeMenu(it.title, it.path));
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* 헤더 */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 font-pretendard mb-2">
-            OM FOOD 관리자 대시보드
-          </h1>
-          <p className="text-gray-600 font-pretendard">
-            웹사이트 콘텐츠와 설정을 관리하세요
-          </p>
-        </div>
+    <Wrapper>
+      <Container>
+        <HeaderBar>
+          <Title>관리자 대시보드</Title>
+        </HeaderBar>
 
-        {/* 메뉴 그리드 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {loading || !menuNames ? (
-            <div>로딩 중...</div>
-          ) : (
-            currentMenuNames.map((title, index) => (
-              <div
-                key={index}
-                className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group cursor-pointer"
-                onClick={() => navigate(menuPaths[index] || '/')}
-              >
-                <div className={`${menuColors[index]} p-6 text-white`}>
-                  <div className="text-3xl mb-2">{menuIcons[index]}</div>
-                  <h3 className="text-xl font-semibold font-pretendard mb-1">
-                    {title}
-                  </h3>
-                  <p className="text-orange-100 text-sm font-pretendard">
-                    {menuDescriptions[index]}
-                  </p>
-                </div>
-                <div className="p-6">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-500 font-pretendard">
-                      클릭하여 관리
-                    </span>
-                    <div className="w-6 h-6 text-gray-400 group-hover:text-orange-500 transition-colors">
-                      →
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-
-        {/* 빠른 액션 */}
-        <div className="mt-12 bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-xl font-semibold text-gray-900 font-pretendard mb-4">
-            빠른 액션
-          </h2>
-          <div className="flex flex-wrap gap-3">
-            <Button
-              variant="primary"
-              size="md"
-              onClick={() => navigate('/admin/mainpage')}
-            >
-              메인페이지 수정
-            </Button>
-            <Button
-              variant="outline"
-              size="md"
-              onClick={() => navigate('/admin/brandpage')}
-            >
-              브랜드 추가
-            </Button>
-            <Button
-              variant="outline"
-              size="md"
-              onClick={() => navigate('/admin/products')}
-            >
-              제품 추가
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
+         <Grid>
+           {visibleItems.map((c) => (
+             <Card key={c.title} onClick={() => navigate(c.path)}>
+               <CardTitle>{c.title}</CardTitle>
+               {c.desc ? <CardDesc>{c.desc}</CardDesc> : null}
+             </Card>
+           ))}
+         </Grid>
+      </Container>
+    </Wrapper>
   );
 };
 
-export default DashboardPage; 
+export default DashboardPage;

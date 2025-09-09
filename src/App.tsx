@@ -19,6 +19,7 @@ import ContactUsPage from './components/ContactUsPage';
 import ContactUsAdminPage from './components/admin/ContactUsAdminPage';
 import FooterManagePage from './components/admin/FooterManagePage';
 import AboutPage from './components/AboutPage';
+import AboutPageAdmin from './components/admin/AboutPage_admin';
 
 import FoodServicePage from './components/FoodServicePage';
 // import ContactPage from './components/ContactPage';
@@ -153,7 +154,7 @@ const SectionBg = styled.div`
 
 const Section = styled.section`
   width: 100%;
-  max-width: 1400px;
+  max-width: 2100px;
   padding: 130px 32px 110px 32px;
   display: flex;
   flex-direction: column;
@@ -531,7 +532,7 @@ const AdminMain = styled.main`
   flex: 1;
   padding: 48px 50px 40px 50px;
   min-height: 100vh;
-  max-width: 1400px;
+  max-width: 2100px;
   margin: 0 auto;
   
   @media (max-width: 900px) {
@@ -596,12 +597,16 @@ function AdminLayoutComponent({ children, showBackButton = true, backTo, backLab
               </BackButton>
             )}
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <button onClick={() => handleLangChange('en')} style={{ background: 'none', border: 'none', padding: 0, margin: 0, cursor: 'pointer', outline: 'none', opacity: adminLang === 'en' ? 1 : 0.5 }}>
-                <img src="/america.png" alt="EN" style={{ width: 32, height: 32, objectFit: 'contain' }} />
-              </button>
-              <button onClick={() => handleLangChange('ko')} style={{ background: 'none', border: 'none', padding: 0, margin: 0, cursor: 'pointer', outline: 'none', opacity: adminLang === 'ko' ? 1 : 0.5 }}>
-                <img src="/korea.png" alt="KO" style={{ width: 32, height: 32, objectFit: 'contain' }} />
-              </button>
+              {showBackButton && (
+                <>
+                  <button onClick={() => handleLangChange('en')} style={{ background: 'none', border: 'none', padding: 0, margin: 0, cursor: 'pointer', outline: 'none', opacity: adminLang === 'en' ? 1 : 0.5 }}>
+                    <img src="/america.png" alt="EN" style={{ width: 32, height: 32, objectFit: 'contain' }} />
+                  </button>
+                  <button onClick={() => handleLangChange('ko')} style={{ background: 'none', border: 'none', padding: 0, margin: 0, cursor: 'pointer', outline: 'none', opacity: adminLang === 'ko' ? 1 : 0.5 }}>
+                    <img src="/korea.png" alt="KO" style={{ width: 32, height: 32, objectFit: 'contain' }} />
+                  </button>
+                </>
+              )}
               <AdminLogoutBtn onClick={logout}>로그아웃</AdminLogoutBtn>
             </div>
           </div>
@@ -929,6 +934,16 @@ function AdminDashboard() {
     return () => unsubscribe();
   }, []);
 
+  // HOME인지 판별 (영/한 모두 대응)
+  const isHomeMenu = (title?: string, path?: string) => {
+    const t = (title || "").trim().toLowerCase();
+    const p = (path || "").trim().toLowerCase();
+    const titleIsHome =
+      t === "home" || t === "main" || t === "메인" || t === "홈" || /(^|\s)home($|\s)/.test(t);
+    const pathIsHome = p.includes("/home");
+    return titleIsHome || pathIsHome;
+  };
+
   // 메뉴명에 맞는 경로 매핑 (동적)
   const getMenuRoute = (name: string) => {
     const upper = name.toUpperCase();
@@ -940,11 +955,14 @@ function AdminDashboard() {
     return '/admin';
   };
 
+  // items 조립 이후, 렌더 전에 HOME 제거
+  const visibleItems = (menuNames[adminLang] || []).filter((it) => !isHomeMenu(it, getMenuRoute(it)));
+
   return (
     <AdminLayoutComponent showBackButton={false}>
       <AdminHeader style={{ textAlign: 'center' }}>관리자 대시보드</AdminHeader>
       <div style={{ 
-        maxWidth: '1400px', 
+        maxWidth: '2100px', 
         margin: '100px auto 0 auto', 
         display: 'grid', 
         gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
@@ -992,7 +1010,7 @@ function AdminDashboard() {
           </div>
         </div>
         {/* 동적 메뉴 관리 버튼 */}
-        {(menuNames[adminLang] || []).map((name, index) => (
+        {visibleItems.map((name, index) => (
           <div key={index} style={{ 
             width: '100%', 
             background: colors.white, 
@@ -1043,14 +1061,14 @@ function AdminMainPageManage() {
   const navigate = useNavigate();
   
   return (
-    <AdminLayoutComponent>
+    <AdminLayoutComponent showBackButton={false}>
       <AdminHeader>메인페이지 관리</AdminHeader>
       <div className="admin-mainpage-grid" style={{ 
         display: 'grid', 
         gridTemplateColumns: 'repeat(5, 1fr)', 
         gap: '24px', 
         marginBottom: '40px',
-        maxWidth: '1400px',
+        maxWidth: '2100px',
         margin: '0 auto 40px auto',
         padding: '0 20px'
       }}>
@@ -1377,7 +1395,7 @@ function AdminAboutManage() {
 
   if (loading) {
     return (
-      <AdminLayoutComponent>
+      <AdminLayoutComponent showBackButton={false}>
         <AdminHeader>About OMFOOD 관리</AdminHeader>
         <AdminCard>
           <div style={{ textAlign: 'center', color: '#888', fontSize: 16 }}>
@@ -1389,7 +1407,7 @@ function AdminAboutManage() {
   }
 
   return (
-    <AdminLayoutComponent key={`about-manage-${adminLang}`} backTo="/admin/dashboard" backLabel="대시보드로">
+    <AdminLayoutComponent key={`about-manage-${adminLang}`} showBackButton={false}>
       <AdminHeader>About OMFOOD 관리</AdminHeader>
       
       <AdminCard>
@@ -1574,7 +1592,7 @@ function AdminFoodServiceManage() {
 
   if (loading) {
     return (
-      <AdminLayoutComponent>
+      <AdminLayoutComponent showBackButton={false}>
         <AdminHeader>Food Service 관리</AdminHeader>
         <AdminCard>
           <div style={{ textAlign: 'center', color: '#888', fontSize: 16 }}>
@@ -1586,7 +1604,7 @@ function AdminFoodServiceManage() {
   }
 
   return (
-    <AdminLayoutComponent key={`foodservice-manage-${adminLang}`} backTo="/admin/dashboard" backLabel="대시보드로">
+    <AdminLayoutComponent key={`foodservice-manage-${adminLang}`} showBackButton={false}>
       <AdminHeader>Food Service 관리</AdminHeader>
       
       <AdminCard>
@@ -1796,7 +1814,7 @@ function AdminContactManage() {
 
   if (loading) {
       return (
-    <AdminLayoutComponent key={`contact-manage-${adminLang}`} backTo="/admin/dashboard" backLabel="대시보드로">
+    <AdminLayoutComponent key={`contact-manage-${adminLang}`} showBackButton={false}>
       <AdminHeader>Contact 관리</AdminHeader>
         <AdminCard>
           <div style={{ textAlign: 'center', color: '#888', fontSize: 16 }}>
@@ -1808,7 +1826,7 @@ function AdminContactManage() {
   }
 
   return (
-    <AdminLayoutComponent key={`contact-manage-${adminLang}`} backTo="/admin/dashboard" backLabel="대시보드로">
+    <AdminLayoutComponent key={`contact-manage-${adminLang}`} showBackButton={false}>
       <AdminHeader>Contact 관리</AdminHeader>
       
       <AdminCard>
@@ -1936,7 +1954,7 @@ const AdminCard = styled.div`
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   padding: 32px;
-  max-width: 1300px;
+  max-width: 2100px;
   width: 100%;
   margin: 0 auto 32px auto;
   box-sizing: border-box;
@@ -2093,7 +2111,7 @@ const AdminGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 32px;
-  max-width: 1300px;
+  max-width: 2100px;
   width: 100%;
   margin: 0 auto;
   
@@ -3629,7 +3647,6 @@ function AdminBrandPageManage() {
     <div style={{ background: '#f7f8fa', minHeight: '100vh', paddingBottom: 60 }}>
       <div style={{ maxWidth: 1600, margin: '0 auto', padding: '32px 0 0 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 18 }}>
-          <span style={{ fontSize: 16, color: '#888', cursor: 'pointer', marginRight: 18 }} onClick={() => window.history.back()}>&larr; 대시보드로</span>
         </div>
         <h1 style={{ fontWeight: 800, fontSize: '2.1rem', marginBottom: 36, textAlign: 'center', letterSpacing: '-1px', color: '#222' }}>Brand 페이지 관리</h1>
       </div>
@@ -3800,7 +3817,7 @@ function App() {
           <Route path="/admin/footer" element={<AdminRoute><FooterManagePage /></AdminRoute>} />
           
           {/* 각 페이지별 관리 기능들 */}
-          <Route path="/admin/about" element={<AdminRoute><AdminAboutManage /></AdminRoute>} />
+          <Route path="/admin/about" element={<AdminRoute><AboutPageAdmin /></AdminRoute>} />
           <Route path="/admin/foodservice" element={<AdminRoute><AdminFoodServiceManage /></AdminRoute>} />
           <Route path="/admin/product" element={<AdminRoute><AdminProductManage /></AdminRoute>} />
           <Route path="/admin/contact" element={<AdminRoute><ContactUsAdminPage /></AdminRoute>} />

@@ -113,7 +113,7 @@ const AdminMain = styled.main`
   flex: 1;
   padding: 48px 50px 40px 50px;
   min-height: 100vh;
-  max-width: 1400px;
+  max-width: 2100px;
   margin: 0 auto;
   
   @media (max-width: 900px) {
@@ -154,7 +154,7 @@ const AdminCard = styled.div`
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   padding: 32px;
-  max-width: 1300px;
+  max-width: 2100px;
   width: 100%;
   margin: 0 auto 32px auto;
   box-sizing: border-box;

@@ -456,8 +456,8 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
       navigate('/contact');
     } else if (key.includes('about') || key.includes('소개')) {
       navigate('/about');
-    } else if (key.includes('foodservice') || key.includes('푸드서비스') || key.includes('food')) {
-      navigate('/foodservice');
+    } else if (key.includes('home') || key.includes('홈') || key.includes('foodservice') || key.includes('푸드서비스') || key.includes('food')) {
+      navigate('/');
     } else {
       console.log('[Header] 알 수 없는 메뉴:', item);
     }
@@ -537,23 +537,33 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
                     handleMenuClick(item);
                   }}
                 >
-                  {item}
+                  {item.split('').map((char, charIdx) => (
+                    <MenuChar
+                      key={charIdx}
+                      $isActive={hoveredItem === item}
+                      $delay={charIdx * 50}
+                    >
+                      {char}
+                    </MenuChar>
+                  ))}
                 </MenuItem>
               ) : null
             )
           ) : null}
         </Nav>
       </NavWrapper>
-      <LanguageSelector>
-        <FlagWrapper onClick={() => handleLanguageChange('en')} title="English">
-          {language === 'en' && <RedDot />}
-          <FlagIcon src={`${process.env.PUBLIC_URL}/america.png`} alt="English" />
-        </FlagWrapper>
-        <FlagWrapper onClick={() => handleLanguageChange('ko')} title="한국어">
-          {language === 'ko' && <RedDot />}
-          <FlagIcon src={`${process.env.PUBLIC_URL}/korea.png`} alt="한국어" />
-        </FlagWrapper>
-      </LanguageSelector>
+      {!location.pathname.includes('/admin') && (
+        <LanguageSelector>
+          <FlagWrapper onClick={() => handleLanguageChange('en')} title="English">
+            {language === 'en' && <RedDot />}
+            <FlagIcon src={`${process.env.PUBLIC_URL}/america.png`} alt="English" />
+          </FlagWrapper>
+          <FlagWrapper onClick={() => handleLanguageChange('ko')} title="한국어">
+            {language === 'ko' && <RedDot />}
+            <FlagIcon src={`${process.env.PUBLIC_URL}/korea.png`} alt="한국어" />
+          </FlagWrapper>
+        </LanguageSelector>
+      )}
       <MobileNav $open={mobileMenuOpen}>
         {mobileMenuOpen && (
           <MobileCloseButton onClick={handleMobileMenuClose} title="닫기" style={{color:'#fff', zIndex:10001, background:'none'}}>
@@ -582,16 +592,18 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
             </MenuItem>
           ))
         ) : null}
-        <MobileLanguageSelector>
-          <FlagWrapper onClick={() => handleLanguageChange('en')} title="English">
-            {language === 'en' && <RedDot />}
-            <FlagIcon src={`${process.env.PUBLIC_URL}/america.png`} alt="English" style={{background:'#fff', border:'2px solid #fff'}} />
-          </FlagWrapper>
-          <FlagWrapper onClick={() => handleLanguageChange('ko')} title="한국어">
-            {language === 'ko' && <RedDot />}
-            <FlagIcon src={`${process.env.PUBLIC_URL}/korea.png`} alt="한국어" style={{background:'#fff', border:'2px solid #fff'}} />
-          </FlagWrapper>
-        </MobileLanguageSelector>
+        {!location.pathname.includes('/admin') && (
+          <MobileLanguageSelector>
+            <FlagWrapper onClick={() => handleLanguageChange('en')} title="English">
+              {language === 'en' && <RedDot />}
+              <FlagIcon src={`${process.env.PUBLIC_URL}/america.png`} alt="English" style={{background:'#fff', border:'2px solid #fff'}} />
+            </FlagWrapper>
+            <FlagWrapper onClick={() => handleLanguageChange('ko')} title="한국어">
+              {language === 'ko' && <RedDot />}
+              <FlagIcon src={`${process.env.PUBLIC_URL}/korea.png`} alt="한국어" style={{background:'#fff', border:'2px solid #fff'}} />
+            </FlagWrapper>
+          </MobileLanguageSelector>
+        )}
       </MobileNav>
     </HeaderContainer>
   );

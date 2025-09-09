@@ -23,9 +23,16 @@ interface Product {
 }
 
 interface ProductPageData {
-  slogan: string;
-  subSlogan: string;
-  bottomText: string;
+  ko: {
+    slogan: string;
+    subSlogan: string;
+    bottomText: string;
+  };
+  en: {
+    slogan: string;
+    subSlogan: string;
+    bottomText: string;
+  };
 }
 
 // 상세정보 모달 컴포넌트
@@ -93,9 +100,16 @@ const ProductPage: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [pageData, setPageData] = useState<ProductPageData>({
-    slogan: 'Signature Flavors\nGlobal Standards',
-    subSlogan: 'OM FOOD supplies sauces and seasoning powders to its overseas stores in Taiwan, Vietnam, and Mongolia,\nas well as to local Korean restaurants and various kitchens abroad. Crafted to capture the rich, authentic flavors of Korean cuisine while blending seamlessly into local food cultures, these products win over local palates and further enhance the value and appeal of K-Food.',
-    bottomText: 'With certified domestic manufacturing expertise and proprietary recipes,\nwe can produce customized products tailored to buyer needs.'
+    ko: {
+      slogan: '시그니처 플레이버\n글로벌 스탠다드',
+      subSlogan: 'OM FOOD는 대만, 베트남, 몽골의 해외 매장과 현지 한국 식당 및 해외 각지의 주방에 소스와 시즈닝 파우더를 공급합니다. 한국 음식의 풍부하고 진정한 맛을 포착하면서 현지 식문화에 자연스럽게 녹아들도록 제작된 이 제품들은 현지 입맛을 사로잡고 K-Food의 가치와 매력을 더욱 높입니다.',
+      bottomText: '인증된 국내 제조 전문성과 독점 레시피를 바탕으로\n바이어의 요구에 맞춘 맞춤형 제품을 생산할 수 있습니다.'
+    },
+    en: {
+      slogan: 'Signature Flavors\nGlobal Standards',
+      subSlogan: 'OM FOOD supplies sauces and seasoning powders to its overseas stores in Taiwan, Vietnam, and Mongolia,\nas well as to local Korean restaurants and various kitchens abroad. Crafted to capture the rich, authentic flavors of Korean cuisine while blending seamlessly into local food cultures, these products win over local palates and further enhance the value and appeal of K-Food.',
+      bottomText: 'With certified domestic manufacturing expertise and proprietary recipes,\nwe can produce customized products tailored to buyer needs.'
+    }
   });
   const [modalProduct, setModalProduct] = useState<any>(null);
   const navigate = useNavigate();
@@ -119,20 +133,42 @@ const ProductPage: React.FC = () => {
       setProducts(prods);
     });
     const loadPageData = async () => {
-      const docRef = doc(db, 'productPage', 'content');
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        setPageData({
-          slogan: docSnap.data().slogan || 'Signature Flavors\nGlobal Standards',
-          subSlogan: docSnap.data().subSlogan || 'OM FOOD supplies sauces and seasoning powders to its overseas stores in Taiwan, Vietnam, and Mongolia,\nas well as to local Korean restaurants and various kitchens abroad. Crafted to capture the rich, authentic flavors of Korean cuisine while blending seamlessly into local food cultures, these products win over local palates and further enhance the value and appeal of K-Food.',
-          bottomText: docSnap.data().bottomText || 'With certified domestic manufacturing expertise and proprietary recipes,\nwe can produce customized products tailored to buyer needs.'
-        });
+      try {
+        const koDoc = await getDoc(doc(db, 'productPage', 'ko'));
+        const enDoc = await getDoc(doc(db, 'productPage', 'en'));
+        
+        if (koDoc.exists() || enDoc.exists()) {
+          setPageData(prev => ({
+            ...prev,
+            ko: koDoc.exists() ? { ...prev.ko, ...koDoc.data() } : prev.ko,
+            en: enDoc.exists() ? { ...prev.en, ...enDoc.data() } : prev.en
+          }));
+        }
+      } catch (error) {
+        console.error('ProductPage 데이터 로드 실패:', error);
       }
     };
     loadPageData();
     return () => {
       unsubscribeCategories();
       unsubscribeProducts();
+    };
+  }, []);
+
+  // 언어 변경 이벤트 구독
+  useEffect(() => {
+    const handleLangChange = (event: any) => {
+      const lang = event.detail?.language as 'ko' | 'en';
+      if (lang && (lang === 'ko' || lang === 'en')) {
+        setLanguage(lang);
+      }
+    };
+
+    // 언어 변경 이벤트 구독
+    window.addEventListener('languageChange', handleLangChange);
+    
+    return () => {
+      window.removeEventListener('languageChange', handleLangChange);
     };
   }, []);
 
@@ -151,7 +187,7 @@ const ProductPage: React.FC = () => {
       el.style.padding = '0 10px';
       el.style.whiteSpace = 'pre-line';
     }
-  }, [pageData.subSlogan]);
+  }, [pageData[language].subSlogan, language]);
 
   useEffect(() => {
     // 이미 삽입된 style 태그가 있으면 제거
@@ -175,18 +211,18 @@ const ProductPage: React.FC = () => {
       }
     `;
     document.head.appendChild(style);
-  }, [pageData.subSlogan, styles.productPageSloganSub]);
+  }, [pageData[language].subSlogan, language, styles.productPageSloganSub]);
 
   return (
     <>
       <Header isBrandPage />
       <div className={styles.pageBg}>
         <section className={styles.sloganContainer}>
-          <div className={styles.sloganTitle} dangerouslySetInnerHTML={{ __html: pageData.slogan.replace(/\n/g, '<br/>') }} />
+          <div className={styles.sloganTitle} dangerouslySetInnerHTML={{ __html: pageData[language].slogan.replace(/\n/g, '<br/>') }} />
           <div
             ref={subSloganRef}
             className={styles.productPageSloganSub}
-            dangerouslySetInnerHTML={{ __html: pageData.subSlogan.replace(/\n/g, '<br/>') }}
+            dangerouslySetInnerHTML={{ __html: pageData[language].subSlogan.replace(/\n/g, '<br/>') }}
           />
         </section>
         {categories.map(category => (
@@ -207,12 +243,12 @@ const ProductPage: React.FC = () => {
           </section>
         ))}
         <section className={styles.customSection}>
-          <div className={styles.customText} dangerouslySetInnerHTML={{ __html: pageData.bottomText.replace(/\n/g, '<br/>') }} />
+          <div className={styles.customText} dangerouslySetInnerHTML={{ __html: pageData[language].bottomText.replace(/\n/g, '<br/>') }} />
           <button 
             className={styles.moreButton}
             onClick={() => navigate('/contact')}
           >
-            More &gt;&gt;
+            {language === 'ko' ? '더보기 &gt;&gt;' : 'More &gt;&gt;'}
           </button>
         </section>
       </div>
