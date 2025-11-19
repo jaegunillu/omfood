@@ -2,20 +2,11 @@ import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { db } from '../firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
-import Modal from './common/Modal';
 
 interface FooterConfig {
   links: { name: string; url: string }[];
   sns: { icon: string; url: string }[];
   copyright: string;
-  privacyPolicy: {
-    ko: { button: string; title: string; content: string };
-    en: { button: string; title: string; content: string };
-  };
-  emailReject: {
-    ko: { button: string; title: string; content: string };
-    en: { button: string; title: string; content: string };
-  };
 }
 
 const FooterContainer = styled.footer`
@@ -118,8 +109,6 @@ const Copyright = styled.div`
 export default function Footer({ language = 'ko' }: { language?: 'ko' | 'en' }) {
   const [footerConfig, setFooterConfig] = useState<FooterConfig | null>(null);
   const [loading, setLoading] = useState(true);
-  const [privacyOpen, setPrivacyOpen] = useState(false);
-  const [emailRejectOpen, setEmailRejectOpen] = useState(false);
 
   useEffect(() => {
     const ref = doc(db, 'footer_config', 'main');
@@ -187,24 +176,9 @@ export default function Footer({ language = 'ko' }: { language?: 'ko' | 'en' }) 
         </SNSList>
       </LeftBlock>
       <RightBlock>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginBottom: 8 }}>
-          <button style={{ background: 'none', border: 'none', color: '#fff', fontWeight: 700, fontSize: '1.02rem', cursor: 'pointer', padding: 0 }} onClick={() => setPrivacyOpen(true)}>
-            {footerConfig?.privacyPolicy?.[language]?.button || '개인정보처리방침'}
-          </button>
-          <span style={{ color: '#888', fontWeight: 400, fontSize: '1.1rem' }}>|</span>
-          <button style={{ background: 'none', border: 'none', color: '#fff', fontWeight: 700, fontSize: '1.02rem', cursor: 'pointer', padding: 0 }} onClick={() => setEmailRejectOpen(true)}>
-            {footerConfig?.emailReject?.[language]?.button || '이메일무단수집거부'}
-          </button>
-        </div>
         <Copyright>
           {footerConfig?.copyright || 'COPYRIGHT(C) OMFOOD ALL RIGHT RESERVED.'}
         </Copyright>
-        <Modal open={privacyOpen} onClose={() => setPrivacyOpen(false)} title={footerConfig?.privacyPolicy?.[language]?.title || '개인정보처리방침'} width="800px">
-          <div dangerouslySetInnerHTML={{ __html: footerConfig?.privacyPolicy?.[language]?.content || '' }} />
-        </Modal>
-        <Modal open={emailRejectOpen} onClose={() => setEmailRejectOpen(false)} title={footerConfig?.emailReject?.[language]?.title || '이메일무단수집거부'} width="600px">
-          <div dangerouslySetInnerHTML={{ __html: footerConfig?.emailReject?.[language]?.content || '' }} />
-        </Modal>
       </RightBlock>
     </FooterContainer>
   );

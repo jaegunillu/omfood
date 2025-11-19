@@ -9,6 +9,7 @@ const AboutPage: React.FC = () => {
   const [currentLang, setCurrentLang] = useState<'ko' | 'en'>('ko');
   const [aboutData, setAboutData] = useState({
     ko: {
+      headerImage: '',
       headerTitle: '진심이 담긴 맛',
       headerSubtitle: 'OM FOOD',
       philosophyTitle: '경영 이념',
@@ -20,6 +21,7 @@ const AboutPage: React.FC = () => {
         '고객에게는 참신하고 새로운 맛과 분위기로 성공브랜드 정착',
         '지속적이고 철저한 사후관리로 믿음과 신뢰를 바탕으로 한 가맹점 우수경영'
       ],
+      philosophyImage: '',
       spiritTitle: '기업 정신',
       spiritSubtitle: '고객의 만족을 최우선으로 미래를 지향하는 기업이 되겠습니다.',
       spiritItems: [
@@ -29,7 +31,9 @@ const AboutPage: React.FC = () => {
         '최고의 맛과 서비스 및 분위기 제공, 고객만족을 추구하는 기업이 되겠습니다.',
         '표준 메뉴얼과 체계화된 교육프로그램으로 사전교육, 사후관리를 철저히 실시 하도록 하겠습니다.'
       ],
+      spiritImage: '',
       sloganText: '음식은\n먹는 사람도\n파는 사람도\n건강해야 한다',
+      sloganImage: '',
       messageTitle: '글로벌 K-푸드 시대를 이끄는 외식문화 선도기업 OM FOOD',
       messageContent: `OM FOOD는 건강하고 정직한 식문화를 통해 고객의 일상에 따뜻한 가치를 더하는 것을 목표로 합니다.
 
@@ -40,9 +44,16 @@ const AboutPage: React.FC = () => {
 세계 여러 나라의 식문화와 고객의 입맛을 연구하고, 이를 반영한 현지 맞춤형 메뉴와 서비스로 글로벌 외식시장에서의 경쟁력을 확보해 나가고 있습니다.
 
 OM FOOD는 앞으로도 건강한 재료, 정직한 조리, 감동 있는 서비스로 고객의 신뢰를 쌓아가며 K-푸드를 대표하는 글로벌 외식 브랜드로 성장하겠습니다.`,
-      representativeName: '대표이사 박성우'
+      representativeName: '대표이사 박성우',
+      messageImage: '',
+      headerImagePos: { x: 50, y: 50 },
+      philosophyImagePos: { x: 50, y: 50 },
+      spiritImagePos: { x: 50, y: 50 },
+      sloganImagePos: { x: 50, y: 50 },
+      messageImagePos: { x: 50, y: 50 }
     },
     en: {
+      headerImage: '',
       headerTitle: 'Taste with Sincerity',
       headerSubtitle: 'OM FOOD',
       philosophyTitle: 'Management Philosophy',
@@ -54,6 +65,7 @@ OM FOOD는 앞으로도 건강한 재료, 정직한 조리, 감동 있는 서비
         'Establishing a successful brand with fresh and new tastes and atmosphere for customers',
         'Excellent franchise management based on trust and reliability through continuous and thorough after-sales service'
       ],
+      philosophyImage: '',
       spiritTitle: 'Corporate Spirit',
       spiritSubtitle: 'We will be a company that prioritizes customer satisfaction and aims for the future.',
       spiritItems: [
@@ -63,7 +75,9 @@ OM FOOD는 앞으로도 건강한 재료, 정직한 조리, 감동 있는 서비
         'We will become a company that pursues customer satisfaction by providing the best taste, service, and atmosphere.',
         'We will thoroughly implement pre-education and after-sales management through standardized manuals and systematic education programs.'
       ],
+      spiritImage: '',
       sloganText: 'Food must be healthy\nfor both those who eat it\nand those who sell it',
+      sloganImage: '',
       messageTitle: 'OM FOOD, a leading restaurant culture company that leads the global K-Food era',
       messageContent: `OM FOOD aims to add warm value to customers' daily lives through healthy and honest food culture.
 
@@ -74,7 +88,13 @@ Furthermore, OM FOOD is moving beyond a simple franchise to become a brand that 
 By researching the food cultures and tastes of various countries around the world and reflecting them in localized menus and services, OM FOOD is securing its competitiveness in the global dining market.
 
 OM FOOD will continue to grow as a global dining brand representing K-Food, building customer trust with healthy ingredients, honest cooking, and impressive service.`,
-      representativeName: 'CEO Park Sung-woo'
+      representativeName: 'CEO Park Sung-woo',
+      messageImage: '',
+      headerImagePos: { x: 50, y: 50 },
+      philosophyImagePos: { x: 50, y: 50 },
+      spiritImagePos: { x: 50, y: 50 },
+      sloganImagePos: { x: 50, y: 50 },
+      messageImagePos: { x: 50, y: 50 }
     }
   });
 
@@ -215,26 +235,41 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
     return `${process.env.PUBLIC_URL}/ABOUT_IMG/${imageName}`;
   };
 
+  const headerImageSrc = aboutData[currentLang].headerImage || getImagePath('OM_E1.jpg');
+  const philosophyImageSrc = aboutData[currentLang].philosophyImage || getImagePath('OM_E2.jpg');
+  const spiritImageSrc = aboutData[currentLang].spiritImage || getImagePath('OM_E3.jpg');
+  const sloganImageSrc = aboutData[currentLang].sloganImage || getImagePath('OM_E4.jpg');
+  const messageImageSrc = aboutData[currentLang].messageImage || getImagePath('OM_E5.jpg');
+
+  // 이미지 포커스 포인트 위치 정보
+  const headerImagePos = aboutData[currentLang].headerImagePos || { x: 50, y: 50 };
+  const philosophyImagePos = aboutData[currentLang].philosophyImagePos || { x: 50, y: 50 };
+  const spiritImagePos = aboutData[currentLang].spiritImagePos || { x: 50, y: 50 };
+  const sloganImagePos = aboutData[currentLang].sloganImagePos || { x: 50, y: 50 };
+  const messageImagePos = aboutData[currentLang].messageImagePos || { x: 50, y: 50 };
+
   return (
-    <div className="about-page" style={{ minHeight: '100vh', backgroundColor: 'white' }}>
-      {/* 메인 히어로 섹션: 원본 전체 이미지 그대로 노출 (크롭 없음) */}
+    <div className="about-page" style={{ minHeight: '800px', backgroundColor: 'white' }}>
+      {/* 메인 히어로 섹션 */}
       <section style={{ 
         position: 'relative', 
         width: '100%',
-        // height: '100vh' 제거: 크롭 원인
+        height: '800px',
         overflow: 'hidden',
-        backgroundColor: '#000' // 레터박스 영역이 생길 때 자연스러운 배경
+        backgroundColor: '#000'
       }}>
-        {/* 원본 전체 이미지: 크롭 없이 */}
         <img 
-          src={getImagePath('OM_E1.jpg')}
+          src={headerImageSrc}
           alt="OM FOOD Background" 
           style={{
-            display: 'block',
+            position: 'absolute',
+            top: 0,
+            left: 0,
             width: '100%',
-            height: 'auto',       // 핵심: 비율 유지 + 크롭 없음
-            objectFit: 'contain', // 혹시 부모 높이가 생겨도 잘리지 않도록
-            objectPosition: 'center'
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: `${headerImagePos.x}% ${headerImagePos.y}%`,
+            zIndex: 0
           }}
         />
         
@@ -380,12 +415,13 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
               >
                 <img
                   className="card-img"
-                  src={getImagePath('OM_E2.jpg')}
+                  src={philosophyImageSrc}
                   alt="Chess board with pawns"
                   style={{
                     width: '33.75rem',                 // 540px
                     height: '50.625rem',               // 810px (세로 우세 비율)
                     objectFit: 'cover',
+                    objectPosition: `${philosophyImagePos.x}% ${philosophyImagePos.y}%`,
                     borderRadius: '1.5rem',            // 24px 라운드
                     boxShadow: '0 20px 48px rgba(0, 0, 0, 0.12)'
                   }}
@@ -534,12 +570,13 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
               >
                 <img
                   className="card-img"
-                  src={getImagePath('OM_E3.jpg')}
+                  src={spiritImageSrc}
                   alt="Stacked blocks"
                   style={{
                     width: '33.75rem',               // 540px
                     height: '50.625rem',             // 810px
                     objectFit: 'cover',
+                    objectPosition: `${spiritImagePos.x}% ${spiritImagePos.y}%`,
                     borderRadius: '1.5rem',          // 24px
                     boxShadow: '0 20px 48px rgba(0, 0, 0, 0.12)'
                   }}
@@ -664,13 +701,13 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
       {/* 배경 이미지 */}
       <div style={{ position: 'absolute', inset: 0 }}>
         <img 
-          src={getImagePath('OM_E4.jpg')}
+          src={sloganImageSrc}
           alt="Kitchen background" 
           style={{
             width: '100%',
             height: '100%',
             objectFit: 'cover',
-            objectPosition: 'center'
+            objectPosition: `${sloganImagePos.x}% ${sloganImagePos.y}%`
           }}
         />
       </div> 
@@ -757,13 +794,10 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
     style={{
       position: 'absolute',
       inset: 0,
-      backgroundImage: `url(${getImagePath('OM_E5.jpg')})`,
+      backgroundImage: `url(${messageImageSrc})`,
       backgroundRepeat: 'no-repeat',
-      // 오른쪽으로 너무 붙지 않도록 살짝 왼쪽으로 당김
-      // (오른쪽 여백 약 8~10rem 확보 느낌)
-      backgroundPosition: 'calc(10% - 0rem) center',
-      // 데스크톱 기준 크기 고정 + 상한/하한 (원본처럼 큼직하게)
-      backgroundSize: 'clamp(160rem, 50vw, 200rem)',
+      backgroundPosition: `${messageImagePos.x}% ${messageImagePos.y}%`,
+      backgroundSize: 'cover',
       opacity: 0.58,
       filter: 'grayscale(100%)',
       mixBlendMode: 'multiply',

@@ -248,7 +248,7 @@ const ProductPage: React.FC = () => {
             className={styles.moreButton}
             onClick={() => navigate('/contact')}
           >
-            {language === 'ko' ? '더보기 &gt;&gt;' : 'More &gt;&gt;'}
+            {language === 'ko' ? '더보기' : 'More'}
           </button>
         </section>
       </div>

@@ -599,11 +599,41 @@ function AdminLayoutComponent({ children, showBackButton = true, backTo, backLab
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
               {showBackButton && (
                 <>
-                  <button onClick={() => handleLangChange('en')} style={{ background: 'none', border: 'none', padding: 0, margin: 0, cursor: 'pointer', outline: 'none', opacity: adminLang === 'en' ? 1 : 0.5 }}>
-                    <img src="/america.png" alt="EN" style={{ width: 32, height: 32, objectFit: 'contain' }} />
+                  <button 
+                    onClick={() => handleLangChange('en')} 
+                    style={{ 
+                      background: 'none', 
+                      border: 'none', 
+                      padding: '8px 12px', 
+                      margin: 0, 
+                      cursor: 'pointer', 
+                      outline: 'none',
+                      fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif',
+                      fontSize: '1.125rem',
+                      fontWeight: adminLang === 'en' ? 700 : 400,
+                      color: adminLang === 'en' ? colors.black : colors.grayMedium,
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    [ENG]
                   </button>
-                  <button onClick={() => handleLangChange('ko')} style={{ background: 'none', border: 'none', padding: 0, margin: 0, cursor: 'pointer', outline: 'none', opacity: adminLang === 'ko' ? 1 : 0.5 }}>
-                    <img src="/korea.png" alt="KO" style={{ width: 32, height: 32, objectFit: 'contain' }} />
+                  <button 
+                    onClick={() => handleLangChange('ko')} 
+                    style={{ 
+                      background: 'none', 
+                      border: 'none', 
+                      padding: '8px 12px', 
+                      margin: 0, 
+                      cursor: 'pointer', 
+                      outline: 'none',
+                      fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif',
+                      fontSize: '1.125rem',
+                      fontWeight: adminLang === 'ko' ? 700 : 400,
+                      color: adminLang === 'ko' ? colors.black : colors.grayMedium,
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    [KOR]
                   </button>
                 </>
               )}
@@ -2384,22 +2414,26 @@ function AdminMainManage() {
         mediaChanged = true;
       }
 
-      // 필드 경로로 부분 업데이트
+      // 필드 경로로 부분 업데이트 (단일 요청으로 처리하여 깜빡임 방지)
       const ref = doc(db, 'mainSection', 'content');
-      
-      // 메인 텍스트만 수정
-      await setDoc(ref, { [`mainText.${adminLang}`]: form.main ?? '' }, { merge: true });
-      
-      // 서브 텍스트만 수정
-      await setDoc(ref, { [`subText.${adminLang}`]: form.sub ?? '' }, { merge: true });
-      
+      const updatePayload: Record<string, any> = {
+        mainText: {
+          ...(docData.mainText || {}),
+          [adminLang]: form.main ?? '',
+        },
+        subText: {
+          ...(docData.subText || {}),
+          [adminLang]: form.sub ?? '',
+        },
+      };
+
       // 미디어 변경 시에만 포함
       if (mediaChanged) {
-        await setDoc(ref, { 
-          mediaType: file?.type.startsWith('video') ? 'video' : 'image',
-          mediaUrl: mediaUrl 
-        }, { merge: true });
+        updatePayload.mediaType = file?.type.startsWith('video') ? 'video' : 'image';
+        updatePayload.mediaUrl = mediaUrl;
       }
+
+      await setDoc(ref, updatePayload, { merge: true });
 
       console.log('[SAVE mainSection]', adminLang, { 
         [`mainText.${adminLang}`]: form.main,
@@ -2563,34 +2597,42 @@ function AdminSloganManage() {
         <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>로딩 중...</div>
       ) : (
         <AdminCard>
-          <AdminLabel>메인 슬로건 ({adminLang.toUpperCase()})</AdminLabel>
-          <div style={{ marginBottom: 24 }}>
-            <ReactQuill
-              key={`slogan-main-quill-${adminLang}`}
-              value={form.main}
-              onChange={val => setForm(prev => ({ ...prev, main: val }))}
-              modules={quillModules}
-              formats={formats}
-              theme="snow"
-              placeholder={`${adminLang === 'en' ? '영어' : '한국어'} 메인 슬로건을 입력하세요`}
-              style={{ height: 120, marginBottom: 12, background: '#fff' }}
-            />
+          {/* 메인 슬로건 섹션 */}
+          <div style={{ marginBottom: 48 }}>
+            <AdminLabel>메인 슬로건 ({adminLang.toUpperCase()})</AdminLabel>
+            <div style={{ marginTop: 12, marginBottom: 24 }}>
+              <ReactQuill
+                key={`slogan-main-quill-${adminLang}`}
+                value={form.main}
+                onChange={val => setForm(prev => ({ ...prev, main: val }))}
+                modules={quillModules}
+                formats={formats}
+                theme="snow"
+                placeholder={`${adminLang === 'en' ? '영어' : '한국어'} 메인 슬로건을 입력하세요`}
+                style={{ height: 120, marginBottom: 12, background: '#fff' }}
+              />
+            </div>
           </div>
-          <AdminLabel style={{ marginTop: 24 }}>서브 슬로건 ({adminLang.toUpperCase()})</AdminLabel>
-          <div style={{ marginBottom: 24 }}>
-            <ReactQuill
-              key={`slogan-sub-quill-${adminLang}`}
-              value={form.sub}
-              onChange={val => setForm(prev => ({ ...prev, sub: val }))}
-              modules={quillModules}
-              formats={formats}
-              theme="snow"
-              placeholder={`${adminLang === 'en' ? '영어' : '한국어'} 서브 슬로건을 입력하세요`}
-              style={{ height: 120, marginBottom: 12, background: '#fff' }}
-            />
+
+          {/* 서브 슬로건 섹션 */}
+          <div style={{ marginBottom: 48 }}>
+            <AdminLabel>서브 슬로건 ({adminLang.toUpperCase()})</AdminLabel>
+            <div style={{ marginTop: 12, marginBottom: 24 }}>
+              <ReactQuill
+                key={`slogan-sub-quill-${adminLang}`}
+                value={form.sub}
+                onChange={val => setForm(prev => ({ ...prev, sub: val }))}
+                modules={quillModules}
+                formats={formats}
+                theme="snow"
+                placeholder={`${adminLang === 'en' ? '영어' : '한국어'} 서브 슬로건을 입력하세요`}
+                style={{ height: 120, marginBottom: 12, background: '#fff' }}
+              />
+            </div>
           </div>
-          {/* 실시간 프리뷰 */}
-          <div style={{ marginTop: 32, padding: 24, background: '#f8f9fa', borderRadius: 8, border: '1px solid #e0e0e0' }}>
+
+          {/* 실시간 프리뷰 섹션 */}
+          <div style={{ marginBottom: 48, padding: 24, background: '#f8f9fa', borderRadius: 8, border: '1px solid #e0e0e0' }}>
             <h5 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 16, color: '#333' }}>실시간 Preview ({adminLang.toUpperCase()})</h5>
             <div style={{ background: '#fff', padding: 24, borderRadius: 8, border: '1px solid #e0e0e0' }}>
               <div style={{ maxWidth: '1440px', margin: '0 auto', textAlign: 'center' }}>
@@ -2605,6 +2647,8 @@ function AdminSloganManage() {
               </div>
             </div>
           </div>
+
+          {/* 저장 버튼 섹션 */}
           <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 32 }}>
             <AdminButton onClick={handleSave} $primary>저장하기</AdminButton>
           </div>

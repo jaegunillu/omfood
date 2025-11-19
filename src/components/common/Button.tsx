@@ -1,16 +1,177 @@
 import React from 'react';
+import styled from 'styled-components';
 
 interface ButtonProps {
   children: React.ReactNode;
   onClick?: () => void;
   type?: 'button' | 'submit' | 'reset';
-  variant?: 'primary' | 'secondary' | 'danger' | 'outline';
+  variant?: 'primary' | 'secondary' | 'danger' | 'outline' | 'success';
   size?: 'sm' | 'md' | 'lg';
   disabled?: boolean;
   loading?: boolean;
   className?: string;
+  style?: React.CSSProperties;
   icon?: React.ReactNode;
 }
+
+// 디자인 시스템 - 컬러 팔레트
+const colors = {
+  primary: '#E5002B',
+  secondary: '#F88D2A',
+  black: '#111111',
+  grayDark: '#444444',
+  grayLight: '#F5F5F5',
+  white: '#FFFFFF',
+  grayMedium: '#888888',
+  grayBorder: '#E0E0E0',
+  success: '#28a745',
+  error: '#dc3545',
+  info: '#17a2b8'
+};
+
+const StyledButton = styled.button<{ 
+  $variant: 'primary' | 'secondary' | 'danger' | 'outline' | 'success';
+  $size: 'sm' | 'md' | 'lg';
+  $loading: boolean;
+}>`
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  cursor: ${({ $loading }) => $loading ? 'not-allowed' : 'pointer'};
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  
+  /* Size variants */
+  ${({ $size }) => {
+    switch ($size) {
+      case 'sm':
+        return `
+          padding: 8px 16px;
+          font-size: 0.875rem;
+        `;
+      case 'md':
+        return `
+          padding: 12px 24px;
+          font-size: 1rem;
+        `;
+      case 'lg':
+        return `
+          padding: 16px 32px;
+          font-size: 1.125rem;
+        `;
+      default:
+        return `
+          padding: 12px 24px;
+          font-size: 1rem;
+        `;
+    }
+  }}
+  
+  /* Variant styles */
+  ${({ $variant, $loading }) => {
+    if ($loading) {
+      return `
+        background: ${colors.grayMedium};
+        color: ${colors.grayDark};
+      `;
+    }
+    
+    switch ($variant) {
+      case 'primary':
+        return `
+          background: ${colors.primary};
+          color: ${colors.white};
+          &:hover {
+            background: #c40023;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(229, 0, 43, 0.3);
+          }
+        `;
+      case 'secondary':
+        return `
+          background: ${colors.grayDark};
+          color: ${colors.white};
+          &:hover {
+            background: #333333;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+          }
+        `;
+      case 'danger':
+        return `
+          background: ${colors.error};
+          color: ${colors.white};
+          &:hover {
+            background: #c82333;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+          }
+        `;
+      case 'success':
+        return `
+          background: ${colors.success};
+          color: ${colors.white};
+          &:hover {
+            background: #218838;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+          }
+        `;
+      case 'outline':
+        return `
+          background: transparent;
+          color: ${colors.primary};
+          border: 2px solid ${colors.primary};
+          &:hover {
+            background: ${colors.primary};
+            color: ${colors.white};
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(229, 0, 43, 0.2);
+          }
+        `;
+      default:
+        return `
+          background: ${colors.grayLight};
+          color: ${colors.black};
+          &:hover {
+            background: ${colors.grayBorder};
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+          }
+        `;
+    }
+  }}
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+  
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(229, 0, 43, 0.1);
+  }
+`;
+
+const LoadingSpinner = styled.div`
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`;
 
 const Button: React.FC<ButtonProps> = ({
   children,
@@ -21,38 +182,24 @@ const Button: React.FC<ButtonProps> = ({
   disabled = false,
   loading = false,
   className = '',
+  style,
   icon
 }) => {
-  const baseClasses = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed font-pretendard';
-  
-  const variantClasses = {
-    primary: 'bg-orange-600 text-white hover:bg-orange-700 focus:ring-orange-500',
-    secondary: 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500',
-    danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
-    outline: 'border-2 border-orange-600 text-orange-600 hover:bg-orange-50 focus:ring-orange-500'
-  };
-  
-  const sizeClasses = {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2 text-sm',
-    lg: 'px-6 py-3 text-base'
-  };
-
   return (
-    <button
+    <StyledButton
       type={type}
       onClick={onClick}
       disabled={disabled || loading}
-      className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
+      $variant={variant}
+      $size={size}
+      $loading={loading}
+      className={className}
+      style={style}
     >
-      {loading && (
-        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-      )}
-      {icon && !loading && (
-        <span className="mr-2">{icon}</span>
-      )}
+      {loading && <LoadingSpinner />}
+      {icon && !loading && <span>{icon}</span>}
       {children}
-    </button>
+    </StyledButton>
   );
 };
 

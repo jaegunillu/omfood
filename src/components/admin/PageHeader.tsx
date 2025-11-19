@@ -11,6 +11,21 @@ interface PageHeaderProps {
   onLogout?: () => void;
 }
 
+// 디자인 시스템 - 컬러 팔레트
+const colors = {
+  primary: '#E5002B',
+  secondary: '#F88D2A',
+  black: '#111111',
+  grayDark: '#444444',
+  grayLight: '#F5F5F5',
+  white: '#FFFFFF',
+  grayMedium: '#888888',
+  grayBorder: '#E0E0E0',
+  success: '#28a745',
+  error: '#dc3545',
+  info: '#17a2b8'
+};
+
 const HeaderContainer = styled.div`
   display: flex;
   justify-content: space-between;
@@ -42,18 +57,18 @@ const BackButton = styled.button`
   gap: 8px;
   background: none;
   border: none;
-  color: #888888;
+  color: ${colors.grayMedium};
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   padding: 8px 12px;
   border-radius: 6px;
   transition: all 0.2s ease;
   
   &:hover {
-    background: #f0f0f0;
-    color: #111111;
+    background: ${colors.grayLight};
+    color: ${colors.black};
   }
   
   span {
@@ -69,13 +84,13 @@ const TitleSection = styled.div`
 
 const PageTitle = styled.h1`
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 24px;
+  font-size: 2.5rem;
   font-weight: 700;
-  color: #111111;
+  color: ${colors.black};
   margin: 0;
   
   @media (max-width: 768px) {
-    font-size: 20px;
+    font-size: 2rem;
   }
 `;
 
@@ -83,7 +98,7 @@ const PageSubtitle = styled.p`
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 16px;
   font-weight: 400;
-  color: #888888;
+  color: ${colors.grayMedium};
   margin: 0;
   
   @media (max-width: 768px) {
@@ -92,26 +107,28 @@ const PageSubtitle = styled.p`
 `;
 
 const LogoutButton = styled.button`
-  background: #F88D2A;
-  color: white;
-  border: none;
-  padding: 10px 20px;
+  background: ${colors.white};
+  color: ${colors.black};
+  border: 1px solid ${colors.grayBorder};
+  padding: 12px 24px;
   border-radius: 8px;
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 14px;
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   
   &:hover {
-    background: #e67e22;
+    background: ${colors.primary};
+    color: ${colors.white};
     transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(248, 141, 42, 0.3);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
   }
   
   @media (max-width: 768px) {
-    padding: 8px 16px;
-    font-size: 13px;
+    padding: 10px 20px;
+    font-size: 0.875rem;
   }
 `;
 

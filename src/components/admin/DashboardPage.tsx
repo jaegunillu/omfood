@@ -1,6 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
+import PageHeader from './PageHeader';
 
 /**
  * 관리자 대시보드
@@ -9,31 +10,40 @@ import { useNavigate } from "react-router-dom";
  * - 필요한 경우 path 문자열만 실제 라우트에 맞게 조정하세요.
  */
 
-const Wrapper = styled.div`
-  width: 100%;
-  min-height: 100vh;
-  background: #f7f7f8;
-`;
+// 디자인 시스템 - 컬러 팔레트
+const colors = {
+  primary: '#E5002B',
+  secondary: '#F88D2A',
+  black: '#111111',
+  grayDark: '#444444',
+  grayLight: '#F5F5F5',
+  white: '#FFFFFF',
+  grayMedium: '#888888',
+  grayBorder: '#E0E0E0',
+  success: '#28a745',
+  error: '#dc3545',
+  info: '#17a2b8'
+};
 
-const Container = styled.div`
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 56px 24px 80px;
-`;
-
-const HeaderBar = styled.div`
+const AdminLayout = styled.div`
   display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 36px;
+  min-height: 100vh;
+  background: ${colors.grayLight};
+  position: relative;
 `;
 
-const Title = styled.h1`
-  font-size: 28px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: #111;
+const AdminMain = styled.main`
+  flex: 1;
+  padding: 48px 50px 40px 50px;
+  min-height: 100vh;
+  max-width: 2100px;
+  margin: 0 auto;
+  
+  @media (max-width: 900px) {
+    padding: 24px 16px;
+  }
 `;
+
 
 const Grid = styled.div`
   display: grid;
@@ -125,22 +135,28 @@ const DashboardPage: React.FC = () => {
   const visibleItems = (cards || []).filter((it) => !isHomeMenu(it.title, it.path));
 
   return (
-    <Wrapper>
-      <Container>
-        <HeaderBar>
-          <Title>관리자 대시보드</Title>
-        </HeaderBar>
+    <AdminLayout>
+      <AdminMain>
+        <PageHeader 
+          title="관리자 대시보드"
+          subtitle="시스템의 각 영역을 관리할 수 있습니다"
+          showBackButton={false}
+          onLogout={() => {
+            localStorage.removeItem('admin_login');
+            window.location.href = '/admin/login';
+          }}
+        />
 
-         <Grid>
-           {visibleItems.map((c) => (
-             <Card key={c.title} onClick={() => navigate(c.path)}>
-               <CardTitle>{c.title}</CardTitle>
-               {c.desc ? <CardDesc>{c.desc}</CardDesc> : null}
-             </Card>
-           ))}
-         </Grid>
-      </Container>
-    </Wrapper>
+        <Grid>
+          {visibleItems.map((c) => (
+            <Card key={c.title} onClick={() => navigate(c.path)}>
+              <CardTitle>{c.title}</CardTitle>
+              {c.desc ? <CardDesc>{c.desc}</CardDesc> : null}
+            </Card>
+          ))}
+        </Grid>
+      </AdminMain>
+    </AdminLayout>
   );
 };
 

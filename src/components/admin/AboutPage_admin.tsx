@@ -1,14 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { db } from '../../firebase';
+import { db, storage } from '../../firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useAdminLang } from '../../App';
 
 // File: /src/components/admin/AboutPage_admin.tsx
 // [주의] 오직 이 파일만 수정하고, 다른 파일은 절대 건드리지 마세요.
 
+interface ImagePosition {
+  x: number;
+  y: number;
+}
+
 interface AboutContent {
   // 헤더 섹션
   headerImage: string;
+  headerImagePos?: ImagePosition;
   headerTitle: string;
   headerSubtitle: string;
   
@@ -17,22 +24,26 @@ interface AboutContent {
   philosophySubtitle: string;
   philosophyItems: string[];
   philosophyImage: string;
+  philosophyImagePos?: ImagePosition;
   
   // 기업 정신 섹션
   spiritTitle: string;
   spiritSubtitle: string;
   spiritItems: string[];
   spiritImage: string;
+  spiritImagePos?: ImagePosition;
   
   // 핵심 슬로건 섹션
   sloganText: string;
   sloganImage: string;
+  sloganImagePos?: ImagePosition;
   
   // 대표 메시지 섹션
   messageTitle: string;
   messageContent: string;
   representativeName: string;
   messageImage: string;
+  messageImagePos?: ImagePosition;
 }
 
 const AboutPageAdmin: React.FC = () => {
@@ -124,13 +135,36 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
   const setCurrentContent = adminLang === 'ko' ? setKoContent : setEnContent;
 
   // 이미지 업로드 핸들러
-  const handleImageUpload = (field: keyof AboutContent, file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const imageUrl = e.target?.result as string;
-      setCurrentContent(prev => ({ ...prev, [field]: imageUrl }));
-    };
-    reader.readAsDataURL(file);
+  const handleImageUpload = async (field: keyof AboutContent, file: File) => {
+    try {
+      const fileRef = storageAvailableRef(field, file);
+      await uploadBytes(fileRef, file);
+      const downloadUrl = await getDownloadURL(fileRef);
+      setCurrentContent(prev => ({ ...prev, [field]: downloadUrl }));
+    } catch (error) {
+      console.error('이미지 업로드 실패:', error);
+      alert('이미지 업로드 중 오류가 발생했습니다.');
+    }
+  };
+
+  // 이미지 포커스 포인트 클릭 핸들러
+  const handleImageClick = (e: React.MouseEvent<HTMLImageElement>, posField: keyof AboutContent) => {
+    const img = e.currentTarget;
+    const rect = img.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    
+    setCurrentContent(prev => ({
+      ...prev,
+      [posField]: { x: Math.round(x), y: Math.round(y) }
+    }));
+  };
+
+  const storageAvailableRef = (field: keyof AboutContent, file: File) => {
+    const timestamp = Date.now();
+    const extension = file.name.split('.').pop();
+    const safeField = String(field);
+    return storageRef(storage, `about/${safeField}_${timestamp}.${extension || 'jpg'}`);
   };
 
   // 리스트 아이템 추가
@@ -526,11 +560,31 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
               <div className="mb-8">
                 <div className="relative bg-black rounded-lg overflow-hidden mb-4">
                   {currentContent.headerImage ? (
-                    <img 
-                      src={currentContent.headerImage} 
-                      alt="Header" 
-                      className="w-full h-64 object-cover"
-                    />
+                    <div className="relative" style={{ cursor: 'crosshair' }}>
+                      <img 
+                        src={currentContent.headerImage} 
+                        alt="Header" 
+                        className="w-full h-64 object-cover"
+                        onClick={(e) => handleImageClick(e, 'headerImagePos')}
+                      />
+                      {currentContent.headerImagePos && (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            left: `${currentContent.headerImagePos.x}%`,
+                            top: `${currentContent.headerImagePos.y}%`,
+                            transform: 'translate(-50%, -50%)',
+                            width: '20px',
+                            height: '20px',
+                            borderRadius: '50%',
+                            backgroundColor: 'red',
+                            border: '2px solid white',
+                            pointerEvents: 'none',
+                            zIndex: 10
+                          }}
+                        />
+                      )}
+                    </div>
                   ) : (
                     <div className="w-full h-64 bg-gray-300 flex items-center justify-center">
                       <span className="text-gray-500">헤더 이미지</span>
@@ -551,11 +605,31 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     {currentContent.philosophyImage ? (
-                      <img 
-                        src={currentContent.philosophyImage} 
-                        alt="Philosophy" 
-                        className="w-full h-64 object-cover rounded-lg"
-                      />
+                      <div className="relative" style={{ cursor: 'crosshair' }}>
+                        <img 
+                          src={currentContent.philosophyImage} 
+                          alt="Philosophy" 
+                          className="w-full h-64 object-cover rounded-lg"
+                          onClick={(e) => handleImageClick(e, 'philosophyImagePos')}
+                        />
+                        {currentContent.philosophyImagePos && (
+                          <div
+                            style={{
+                              position: 'absolute',
+                              left: `${currentContent.philosophyImagePos.x}%`,
+                              top: `${currentContent.philosophyImagePos.y}%`,
+                              transform: 'translate(-50%, -50%)',
+                              width: '20px',
+                              height: '20px',
+                              borderRadius: '50%',
+                              backgroundColor: 'red',
+                              border: '2px solid white',
+                              pointerEvents: 'none',
+                              zIndex: 10
+                            }}
+                          />
+                        )}
+                      </div>
                     ) : (
                       <div className="w-full h-64 bg-gray-300 rounded-lg flex items-center justify-center">
                         <span className="text-gray-500">경영 이념 이미지</span>
@@ -582,11 +656,31 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     {currentContent.spiritImage ? (
-                      <img 
-                        src={currentContent.spiritImage} 
-                        alt="Spirit" 
-                        className="w-full h-64 object-cover rounded-lg"
-                      />
+                      <div className="relative" style={{ cursor: 'crosshair' }}>
+                        <img 
+                          src={currentContent.spiritImage} 
+                          alt="Spirit" 
+                          className="w-full h-64 object-cover rounded-lg"
+                          onClick={(e) => handleImageClick(e, 'spiritImagePos')}
+                        />
+                        {currentContent.spiritImagePos && (
+                          <div
+                            style={{
+                              position: 'absolute',
+                              left: `${currentContent.spiritImagePos.x}%`,
+                              top: `${currentContent.spiritImagePos.y}%`,
+                              transform: 'translate(-50%, -50%)',
+                              width: '20px',
+                              height: '20px',
+                              borderRadius: '50%',
+                              backgroundColor: 'red',
+                              border: '2px solid white',
+                              pointerEvents: 'none',
+                              zIndex: 10
+                            }}
+                          />
+                        )}
+                      </div>
                     ) : (
                       <div className="w-full h-64 bg-gray-300 rounded-lg flex items-center justify-center">
                         <span className="text-gray-500">기업 정신 이미지</span>
@@ -612,11 +706,31 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
               <div className="mb-8">
                 <div className="relative bg-gray-800 rounded-lg overflow-hidden">
                   {currentContent.sloganImage ? (
-                    <img 
-                      src={currentContent.sloganImage} 
-                      alt="Slogan" 
-                      className="w-full h-64 object-cover"
-                    />
+                    <div className="relative" style={{ cursor: 'crosshair' }}>
+                      <img 
+                        src={currentContent.sloganImage} 
+                        alt="Slogan" 
+                        className="w-full h-64 object-cover"
+                        onClick={(e) => handleImageClick(e, 'sloganImagePos')}
+                      />
+                      {currentContent.sloganImagePos && (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            left: `${currentContent.sloganImagePos.x}%`,
+                            top: `${currentContent.sloganImagePos.y}%`,
+                            transform: 'translate(-50%, -50%)',
+                            width: '20px',
+                            height: '20px',
+                            borderRadius: '50%',
+                            backgroundColor: 'red',
+                            border: '2px solid white',
+                            pointerEvents: 'none',
+                            zIndex: 10
+                          }}
+                        />
+                      )}
+                    </div>
                   ) : (
                     <div className="w-full h-64 bg-gray-300 flex items-center justify-center">
                       <span className="text-gray-500">슬로건 배경 이미지</span>
@@ -649,11 +763,31 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
                     </div>
                     <div>
                       {currentContent.messageImage ? (
-                        <img 
-                          src={currentContent.messageImage} 
-                          alt="Message" 
-                          className="w-full h-64 object-cover rounded-lg"
-                        />
+                        <div className="relative" style={{ cursor: 'crosshair' }}>
+                          <img 
+                            src={currentContent.messageImage} 
+                            alt="Message" 
+                            className="w-full h-64 object-cover rounded-lg"
+                            onClick={(e) => handleImageClick(e, 'messageImagePos')}
+                          />
+                          {currentContent.messageImagePos && (
+                            <div
+                              style={{
+                                position: 'absolute',
+                                left: `${currentContent.messageImagePos.x}%`,
+                                top: `${currentContent.messageImagePos.y}%`,
+                                transform: 'translate(-50%, -50%)',
+                                width: '20px',
+                                height: '20px',
+                                borderRadius: '50%',
+                                backgroundColor: 'red',
+                                border: '2px solid white',
+                                pointerEvents: 'none',
+                                zIndex: 10
+                              }}
+                            />
+                          )}
+                        </div>
                       ) : (
                         <div className="w-full h-64 bg-gray-300 rounded-lg flex items-center justify-center">
                           <span className="text-gray-500">대표 메시지 이미지</span>

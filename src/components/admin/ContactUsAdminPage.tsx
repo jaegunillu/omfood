@@ -9,6 +9,8 @@ import ToastContainer from '../common/ToastContainer';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { useAdminLang } from '../../App';
+import PageHeader from './PageHeader';
+import Button from '../common/Button';
 
 // 디자인 시스템 - 컬러 팔레트
 const colors = {
@@ -98,32 +100,6 @@ const AdminLogoutBtn = styled.button`
   }
 `;
 
-// AdminButton 스타일 컴포넌트 정의
-const AdminButton = styled.button<{ $primary?: boolean; $danger?: boolean; $loading?: boolean }>`
-  padding: 14px 24px;
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 1rem;
-  font-weight: 600;
-  border-radius: 8px;
-  border: none;
-  background: ${({ $primary, $danger, $loading }) => 
-    $loading ? colors.grayMedium : $danger ? colors.error : $primary ? colors.primary : colors.grayLight};
-  color: ${({ $primary, $danger, $loading }) => 
-    $loading ? colors.grayDark : $danger ? colors.white : $primary ? colors.white : colors.black};
-  cursor: ${({ $loading }) => $loading ? 'not-allowed' : 'pointer'};
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  
-  &:hover { 
-    background: ${({ $primary, $danger, $loading }) => 
-      $loading ? colors.grayMedium : $danger ? '#c82333' : $primary ? '#c40023' : colors.grayBorder};
-    transform: ${({ $loading }) => $loading ? 'none' : 'translateY(-1px)'};
-    box-shadow: ${({ $loading }) => $loading ? 'none' : '0 4px 8px rgba(0,0,0,0.15)'};
-  }
-`;
 
 const ContactUsAdminPage: React.FC = () => {
   const navigate = useNavigate();
@@ -210,13 +186,11 @@ const ContactUsAdminPage: React.FC = () => {
   return (
     <AdminLayout>
       <AdminMain>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: 32 }}>
-          <AdminLogoutBtn onClick={handleLogout}>
-            로그아웃
-          </AdminLogoutBtn>
-        </div>
-        
-        <AdminHeader>CONTACT US 문의 관리</AdminHeader>
+        <PageHeader 
+          title="CONTACT US 문의 관리"
+          subtitle="문의 리스트와 하단 정보를 관리합니다"
+          onLogout={handleLogout}
+        />
         
         <ToastContainer>
           <div></div>
@@ -264,14 +238,14 @@ const ContactUsAdminPage: React.FC = () => {
             <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center' }}>
               <b>Email:</b>
               <span style={{ marginLeft: 8 }}>{selected.email}</span>
-              <AdminButton onClick={() => copyEmail(selected.email)}>복사</AdminButton>
+              <Button onClick={() => copyEmail(selected.email)}>복사</Button>
             </div>
             <div style={{ marginBottom: 12 }}>
               <b>Comments:</b>
               <div style={{ border: '1px solid #e0e0e0', borderRadius: 8, padding: 12, background: '#f8f9fa', marginTop: 6, fontSize: 15 }}>{selected.comments}</div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 24 }}>
-              <AdminButton $primary onClick={() => setSelected(null)}>닫기</AdminButton>
+              <Button variant="primary" onClick={() => setSelected(null)}>닫기</Button>
             </div>
           </div>
         )}
@@ -298,8 +272,8 @@ const ContactUsAdminPage: React.FC = () => {
                 <input style={{ width: '100%', border: '1px solid #e0e0e0', borderRadius: 8, padding: '10px 14px', fontSize: 15 }} value={editInfo.email[adminLang] || ''} onChange={e => setEditInfo({ ...editInfo, email: { ...editInfo.email, [adminLang]: e.target.value } })} />
               </div>
               <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
-                <AdminButton $primary onClick={saveInfo}>저장</AdminButton>
-                <AdminButton onClick={() => setEditMode(false)}>취소</AdminButton>
+                <Button variant="primary" onClick={saveInfo}>저장</Button>
+                <Button onClick={() => setEditMode(false)}>취소</Button>
               </div>
             </>
           ) : (
@@ -309,7 +283,7 @@ const ContactUsAdminPage: React.FC = () => {
               <div style={{ marginBottom: 12, fontSize: 16 }}><b>팩스:</b> {mainInfo.fax[adminLang]}</div>
               <div style={{ marginBottom: 12, fontSize: 16 }}><b>이메일:</b> {mainInfo.email[adminLang]}</div>
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
-                <AdminButton $primary onClick={() => setEditMode(true)}>수정</AdminButton>
+                <Button variant="primary" onClick={() => setEditMode(true)}>수정</Button>
               </div>
             </>
           )}

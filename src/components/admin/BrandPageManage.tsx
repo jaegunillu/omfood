@@ -6,8 +6,145 @@ import Accordion from '../common/Accordion';
 import DragDropList from '../common/DragDropList';
 import ImageUploader from '../common/ImageUploader';
 import Button from '../common/Button';
+import PageHeader from './PageHeader';
 import { useToast } from '../common/ToastContext';
 import { useAdminLang } from '../../App';
+import styled from 'styled-components';
+
+// 디자인 시스템 - 컬러 팔레트
+const colors = {
+  primary: '#E5002B',
+  secondary: '#F88D2A',
+  black: '#111111',
+  grayDark: '#444444',
+  grayLight: '#F5F5F5',
+  white: '#FFFFFF',
+  grayMedium: '#888888',
+  grayBorder: '#E0E0E0',
+  success: '#28a745',
+  error: '#dc3545',
+  info: '#17a2b8'
+};
+
+const AdminLayout = styled.div`
+  display: flex;
+  min-height: 100vh;
+  background: ${colors.grayLight};
+  position: relative;
+`;
+
+const AdminMain = styled.main`
+  flex: 1;
+  padding: 60px 80px 60px 80px;
+  min-height: 100vh;
+  max-width: 2400px;
+  margin: 0 auto;
+  width: 100%;
+  
+  @media (max-width: 1400px) {
+    padding: 48px 60px 48px 60px;
+  }
+  
+  @media (max-width: 1200px) {
+    padding: 40px 40px 40px 40px;
+  }
+  
+  @media (max-width: 900px) {
+    padding: 32px 24px 32px 24px;
+  }
+`;
+
+const AdminCard = styled.div`
+  background: ${colors.white};
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  padding: 48px;
+  max-width: 2400px;
+  width: 100%;
+  margin: 0 auto 40px auto;
+  box-sizing: border-box;
+  
+  @media (max-width: 1400px) {
+    padding: 40px;
+  }
+  
+  @media (max-width: 1200px) {
+    padding: 32px;
+  }
+  
+  @media (max-width: 768px) {
+    padding: 24px 20px;
+  }
+`;
+
+const AdminLabel = styled.label`
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin-bottom: 12px;
+  display: block;
+  color: ${colors.black};
+`;
+
+const AdminInput = styled.input`
+  width: 100%;
+  padding: 16px 20px;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 1.1rem;
+  border: 2px solid ${colors.grayBorder};
+  border-radius: 12px;
+  margin-bottom: 32px;
+  background: ${colors.white};
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: ${colors.primary};
+    box-shadow: 0 0 0 4px rgba(229, 0, 43, 0.1);
+    transform: translateY(-1px);
+  }
+  
+  &:hover {
+    border-color: ${colors.grayDark};
+  }
+`;
+
+const AdminTextarea = styled.textarea`
+  width: 100%;
+  padding: 16px 20px;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 1.1rem;
+  border: 2px solid ${colors.grayBorder};
+  border-radius: 12px;
+  margin-bottom: 32px;
+  background: ${colors.white};
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+  resize: vertical;
+  min-height: 120px;
+  
+  &:focus {
+    outline: none;
+    border-color: ${colors.primary};
+    box-shadow: 0 0 0 4px rgba(229, 0, 43, 0.1);
+    transform: translateY(-1px);
+  }
+  
+  &:hover {
+    border-color: ${colors.grayDark};
+  }
+`;
+
+const SectionTitle = styled.h2`
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 40px;
+  color: ${colors.black};
+  border-bottom: 3px solid ${colors.primary};
+  padding-bottom: 16px;
+`;
 
 interface BrandPageData {
   id: string;
@@ -207,12 +344,12 @@ const BrandPageManage: React.FC = () => {
         }
       }}
     >
-      <div className="space-y-6">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
         {/* 기본 정보 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '32px' }}>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 font-pretendard">브랜드명</label>
-            <input
+            <AdminLabel>브랜드명</AdminLabel>
+            <AdminInput
               type="text"
               value={brand.name[adminLang] || ''}
               onChange={(e) => {
@@ -221,12 +358,11 @@ const BrandPageManage: React.FC = () => {
                 );
                 setBrandPages(updated);
               }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 font-pretendard">설명</label>
-            <textarea
+            <AdminLabel>설명</AdminLabel>
+            <AdminTextarea
               value={brand.description[adminLang] || ''}
               onChange={(e) => {
                 const updated = brandPages.map(b => 
@@ -234,22 +370,21 @@ const BrandPageManage: React.FC = () => {
                 );
                 setBrandPages(updated);
               }}
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              rows={4}
             />
           </div>
         </div>
 
         {/* 브랜드 이미지/영상 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '40px' }}>
           <ImageUploader
             currentImage={brand.image}
             onImageUpload={(file) => handleImageUpload(file, brand.id, 'image')}
             label="브랜드 이미지"
           />
-          <div className="space-y-3">
-            <label className="block text-sm font-medium text-gray-700 font-pretendard">브랜드 영상</label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <AdminLabel>브랜드 영상</AdminLabel>
+            <div style={{ border: '2px dashed', borderColor: colors.grayBorder, borderRadius: '12px', padding: '24px', background: '#fafafa' }}>
               <input
                 type="file"
                 accept="video/*"
@@ -259,14 +394,14 @@ const BrandPageManage: React.FC = () => {
                     handleVideoUpload(file, brand.id, 'video');
                   }
                 }}
-                className="w-full"
+                style={{ width: '100%', padding: '12px', fontSize: '1rem' }}
               />
               {brand.video && (
-                <div className="mt-3">
+                <div style={{ marginTop: '20px' }}>
                   <video
                     src={brand.video}
                     controls
-                    className="w-full h-32 object-cover rounded"
+                    style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '12px' }}
                   />
                 </div>
               )}
@@ -278,17 +413,16 @@ const BrandPageManage: React.FC = () => {
         <Accordion
           title="메인 영역 미디어 관리"
           defaultExpanded={false}
-          className="mt-6"
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '40px', padding: '20px 0' }}>
             <ImageUploader
               currentImage={brand.mainImage}
               onImageUpload={(file) => handleImageUpload(file, brand.id, 'mainImage')}
               label="메인 영역 이미지"
             />
-            <div className="space-y-3">
-              <label className="block text-sm font-medium text-gray-700 font-pretendard">메인 영역 영상</label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <AdminLabel>메인 영역 영상</AdminLabel>
+              <div style={{ border: '2px dashed', borderColor: colors.grayBorder, borderRadius: '12px', padding: '24px', background: '#fafafa' }}>
                 <input
                   type="file"
                   accept="video/*"
@@ -298,14 +432,14 @@ const BrandPageManage: React.FC = () => {
                       handleVideoUpload(file, brand.id, 'mainVideo');
                     }
                   }}
-                  className="w-full"
+                  style={{ width: '100%', padding: '12px', fontSize: '1rem' }}
                 />
                 {brand.mainVideo && (
-                  <div className="mt-3">
+                  <div style={{ marginTop: '20px' }}>
                     <video
                       src={brand.mainVideo}
                       controls
-                      className="w-full h-32 object-cover rounded"
+                      style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '12px' }}
                     />
                   </div>
                 )}
@@ -315,10 +449,10 @@ const BrandPageManage: React.FC = () => {
         </Accordion>
 
         {/* 액션 버튼 */}
-        <div className="flex justify-end space-x-2 pt-4 border-t border-gray-200">
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px', paddingTop: '24px', borderTop: `2px solid ${colors.grayBorder}`, marginTop: '20px' }}>
           <Button
             variant="danger"
-            size="sm"
+            size="lg"
             onClick={() => handleDelete(brand.id)}
           >
             삭제
@@ -331,70 +465,91 @@ const BrandPageManage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 font-pretendard">데이터를 불러오는 중...</p>
-        </div>
-      </div>
+      <AdminLayout>
+        <AdminMain>
+          <div style={{ 
+            textAlign: 'center', 
+            color: colors.grayDark, 
+            fontSize: '1.4rem',
+            padding: '80px 0',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '20px'
+          }}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              border: `4px solid ${colors.grayBorder}`,
+              borderTop: `4px solid ${colors.primary}`,
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite'
+            }}></div>
+            <div>데이터를 불러오는 중...</div>
+            <style>{`
+              @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+              }
+            `}</style>
+          </div>
+        </AdminMain>
+      </AdminLayout>
     );
   }
 
   return (
-    <div className="min-h-screen">
-      <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8" style={{ width: '2100px', maxWidth: '2100px' }}>
-        {/* 헤더 */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 font-pretendard mb-2">
-            브랜드 페이지 관리
-          </h1>
-          <p className="text-gray-600 font-pretendard">
-            브랜드 페이지의 콘텐츠와 메인 영역 미디어를 관리하세요
-          </p>
-        </div>
+    <AdminLayout>
+      <AdminMain>
+        <PageHeader 
+          title="브랜드 페이지 관리"
+          subtitle="브랜드 페이지의 콘텐츠와 메인 영역 미디어를 관리하세요"
+          onLogout={() => {
+            localStorage.removeItem('admin_login');
+            window.location.href = '/admin/login';
+          }}
+        />
 
         {/* 브랜드 추가 */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
+        <AdminCard>
           <Accordion
             title="새 브랜드 추가"
             defaultExpanded={showAddForm}
             onToggle={(expanded) => setShowAddForm(expanded)}
           >
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '32px' }}>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2 font-pretendard">브랜드명</label>
-                  <input
+                  <AdminLabel>브랜드명</AdminLabel>
+                  <AdminInput
                     type="text"
                     value={newBrand.name[adminLang] || ''}
                     onChange={(e) => setNewBrand({ ...newBrand, name: { ...newBrand.name, [adminLang]: e.target.value } })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     placeholder="브랜드명을 입력하세요"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2 font-pretendard">설명</label>
-                  <textarea
+                  <AdminLabel>설명</AdminLabel>
+                  <AdminTextarea
                     value={newBrand.description[adminLang] || ''}
                     onChange={(e) => setNewBrand({ ...newBrand, description: { ...newBrand.description, [adminLang]: e.target.value } })}
-                    rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    rows={4}
                     placeholder="브랜드 설명을 입력하세요"
                   />
                 </div>
               </div>
               
-              <div className="flex justify-end space-x-2">
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px', paddingTop: '20px', borderTop: `2px solid ${colors.grayBorder}` }}>
                 <Button
                   variant="outline"
-                  size="md"
+                  size="lg"
                   onClick={() => setShowAddForm(false)}
                 >
                   취소
                 </Button>
                 <Button
                   variant="primary"
-                  size="md"
+                  size="lg"
                   onClick={handleAddBrand}
                 >
                   브랜드 추가
@@ -402,22 +557,20 @@ const BrandPageManage: React.FC = () => {
               </div>
             </div>
           </Accordion>
-        </div>
+        </AdminCard>
 
         {/* 브랜드 목록 */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-xl font-semibold text-gray-900 font-pretendard mb-6">
-            브랜드 목록 ({brandPages.length}개)
-          </h2>
+        <AdminCard>
+          <SectionTitle>브랜드 목록 ({brandPages.length}개)</SectionTitle>
           
           <DragDropList
             items={brandPages}
             onReorder={handleReorder}
             renderItem={renderBrandItem}
           />
-        </div>
-      </div>
-    </div>
+        </AdminCard>
+      </AdminMain>
+    </AdminLayout>
   );
 };
 

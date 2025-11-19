@@ -256,37 +256,28 @@ const LanguageSelector = styled.div`
   }
 `;
 
-const FlagWrapper = styled.div`
-  position: relative;
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+const LangTextButton = styled.button<{
+  $isMainPage: boolean;
+  $isHeaderHover: boolean;
+  $navHover: boolean;
+  $logoHover: boolean;
+  $isActive: boolean;
+  $isMobile?: boolean;
+}>`
+  background: none;
+  border: none;
+  color: ${({ $isMainPage, $isHeaderHover, $navHover, $logoHover, $isMobile }) =>
+    $isMobile ? '#fff' : ($isMainPage && !($isHeaderHover || $navHover || $logoHover) ? '#fff' : '#222')};
+  font-size: 1.125rem;
+  font-weight: ${({ $isActive }) => ($isActive ? 700 : 400)};
   cursor: pointer;
-`;
-
-const FlagIcon = styled.img`
-  width: 32px;
-  height: 32px;
-  object-fit: cover;
-  border-radius: 50%;
-  border: 1.5px solid #eee;
-  background: #fff;
-`;
-
-const RedDot = styled.div`
-  position: absolute;
-  top: -12px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 7px;
-  height: 7px;
-  background: #ff2d2d;
-  border-radius: 50%;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-  z-index: 2;
-  margin-bottom: 5px;
+  padding: 8px 12px;
+  transition: color 0.4s ease-in-out, font-weight 0.2s ease;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  
+  &:hover {
+    font-weight: 600;
+  }
 `;
 
 // 모바일 메뉴 내 언어 선택자
@@ -554,14 +545,28 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
       </NavWrapper>
       {!location.pathname.includes('/admin') && (
         <LanguageSelector>
-          <FlagWrapper onClick={() => handleLanguageChange('en')} title="English">
-            {language === 'en' && <RedDot />}
-            <FlagIcon src={`${process.env.PUBLIC_URL}/america.png`} alt="English" />
-          </FlagWrapper>
-          <FlagWrapper onClick={() => handleLanguageChange('ko')} title="한국어">
-            {language === 'ko' && <RedDot />}
-            <FlagIcon src={`${process.env.PUBLIC_URL}/korea.png`} alt="한국어" />
-          </FlagWrapper>
+          <LangTextButton
+            onClick={() => handleLanguageChange('en')}
+            $isMainPage={isMainPage}
+            $isHeaderHover={isHeaderHover}
+            $navHover={navHover}
+            $logoHover={logoHover}
+            $isActive={language === 'en'}
+            title="English"
+          >
+            [ENG]
+          </LangTextButton>
+          <LangTextButton
+            onClick={() => handleLanguageChange('ko')}
+            $isMainPage={isMainPage}
+            $isHeaderHover={isHeaderHover}
+            $navHover={navHover}
+            $logoHover={logoHover}
+            $isActive={language === 'ko'}
+            title="한국어"
+          >
+            [KOR]
+          </LangTextButton>
         </LanguageSelector>
       )}
       <MobileNav $open={mobileMenuOpen}>
@@ -594,14 +599,30 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
         ) : null}
         {!location.pathname.includes('/admin') && (
           <MobileLanguageSelector>
-            <FlagWrapper onClick={() => handleLanguageChange('en')} title="English">
-              {language === 'en' && <RedDot />}
-              <FlagIcon src={`${process.env.PUBLIC_URL}/america.png`} alt="English" style={{background:'#fff', border:'2px solid #fff'}} />
-            </FlagWrapper>
-            <FlagWrapper onClick={() => handleLanguageChange('ko')} title="한국어">
-              {language === 'ko' && <RedDot />}
-              <FlagIcon src={`${process.env.PUBLIC_URL}/korea.png`} alt="한국어" style={{background:'#fff', border:'2px solid #fff'}} />
-            </FlagWrapper>
+            <LangTextButton
+              onClick={() => handleLanguageChange('en')}
+              $isMainPage={isMainPage}
+              $isHeaderHover={isHeaderHover}
+              $navHover={navHover}
+              $logoHover={logoHover}
+              $isActive={language === 'en'}
+              $isMobile={true}
+              title="English"
+            >
+              [ENG]
+            </LangTextButton>
+            <LangTextButton
+              onClick={() => handleLanguageChange('ko')}
+              $isMainPage={isMainPage}
+              $isHeaderHover={isHeaderHover}
+              $navHover={navHover}
+              $logoHover={logoHover}
+              $isActive={language === 'ko'}
+              $isMobile={true}
+              title="한국어"
+            >
+              [KOR]
+            </LangTextButton>
           </MobileLanguageSelector>
         )}
       </MobileNav>
