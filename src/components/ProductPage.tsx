@@ -36,9 +36,51 @@ interface ProductPageData {
 }
 
 // 상세정보 모달 컴포넌트
-const removeInlineColor = (html: string) => html.replace(/ style="color:[^"]*"/g, '');
-const ProductDetailModal = ({ product, onClose }: { product: any, onClose: () => void }) => {
+const removeInlineColor = (html: any) => {
+  if (typeof html !== 'string') return '';
+  return html.replace(/ style="color:[^"]*"/g, '');
+};
+
+interface LabelSettings {
+  allergens: { en: string; ko: string };
+  ingredients: { en: string; ko: string };
+  nutrition: { en: string; ko: string };
+}
+
+const defaultLabels: LabelSettings = {
+  allergens: { en: 'Allergens', ko: '알레르기' },
+  ingredients: { en: 'Ingredients', ko: '성분' },
+  nutrition: { en: 'Nutrition Facts', ko: '영양 정보' }
+};
+
+const ProductDetailModal = ({ product, onClose, language, labels }: { product: any, onClose: () => void, language: 'en' | 'ko', labels?: LabelSettings }) => {
   if (!product) return null;
+  const getLocalizedText = (data: any) => {
+    if (typeof data === 'string') return data;
+    if (data && typeof data === 'object') {
+      const localized = data[language] ?? data.en ?? data.ko;
+      if (typeof localized === 'string') return localized;
+    }
+    return '';
+  };
+
+  const productName = getLocalizedText(product.name) || '';
+  
+  // getLocalizedText로 다국어 데이터를 문자열로 변환한 후 removeInlineColor 적용
+  const allergensRaw = getLocalizedText(product.allergens);
+  const ingredientsRaw = getLocalizedText(product.ingredients);
+  const nutritionRaw = getLocalizedText(product.nutrition);
+  
+  const allergensText = allergensRaw ? removeInlineColor(allergensRaw) : 'None';
+  const ingredientsText = ingredientsRaw ? removeInlineColor(ingredientsRaw) : '-';
+  const nutritionText = nutritionRaw ? removeInlineColor(nutritionRaw) : '-';
+  
+  // 라벨 텍스트 가져오기 (전달받은 labels가 있으면 사용, 없으면 기본값)
+  const currentLabels = labels || defaultLabels;
+  const allergensLabel = currentLabels?.allergens?.[language] || currentLabels?.allergens?.en || defaultLabels.allergens[language] || defaultLabels.allergens.en;
+  const ingredientsLabel = currentLabels?.ingredients?.[language] || currentLabels?.ingredients?.en || defaultLabels.ingredients[language] || defaultLabels.ingredients.en;
+  const nutritionLabel = currentLabels?.nutrition?.[language] || currentLabels?.nutrition?.en || defaultLabels.nutrition[language] || defaultLabels.nutrition.en;
+
   return (
     <div style={{
       position: 'fixed', zIndex: 1000, left: 0, top: 0, width: '100vw', height: '100vh',
@@ -75,20 +117,20 @@ const ProductDetailModal = ({ product, onClose }: { product: any, onClose: () =>
         `}</style>
         <div className="product-modal-scroll">
           <div style={{ textAlign: 'center', marginBottom: 24, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <img src={product.image} alt={product.name} style={{ width: '100%', minWidth: 240, maxWidth: 360, height: 'auto', objectFit: 'contain', margin: 0, marginBottom: -50, display: 'block' }} />
-            <div style={{ fontWeight: 700, fontSize: 22, marginTop: 0, marginBottom: 8 }}>{product.name}</div>
+            <img src={product.image} alt={productName} style={{ width: '100%', minWidth: 240, maxWidth: 360, height: 'auto', objectFit: 'contain', margin: 0, marginBottom: -50, display: 'block' }} />
+            <div style={{ fontWeight: 700, fontSize: 22, marginTop: 0, marginBottom: 8 }}>{productName}</div>
           </div>
           <div className="product-modal-content" style={{ marginBottom: 16 }}>
-            <div style={{ fontWeight: 600, fontSize: 17, marginBottom: 4 }}>Allergens</div>
-            <div dangerouslySetInnerHTML={{ __html: removeInlineColor(product.allergens || 'None') }} />
+            <div style={{ fontWeight: 600, fontSize: 17, marginBottom: 4 }}>{allergensLabel}</div>
+            <div dangerouslySetInnerHTML={{ __html: allergensText }} />
           </div>
           <div className="product-modal-content" style={{ marginBottom: 16 }}>
-            <div style={{ fontWeight: 600, fontSize: 17, marginBottom: 4 }}>Ingredients</div>
-            <div dangerouslySetInnerHTML={{ __html: removeInlineColor(product.ingredients || '-') }} />
+            <div style={{ fontWeight: 600, fontSize: 17, marginBottom: 4 }}>{ingredientsLabel}</div>
+            <div dangerouslySetInnerHTML={{ __html: ingredientsText }} />
           </div>
           <div className="product-modal-content">
-            <div style={{ fontWeight: 600, fontSize: 17, marginBottom: 4 }}>Nutrition</div>
-            <div dangerouslySetInnerHTML={{ __html: removeInlineColor(product.nutrition || '-') }} />
+            <div style={{ fontWeight: 600, fontSize: 17, marginBottom: 4 }}>{nutritionLabel}</div>
+            <div dangerouslySetInnerHTML={{ __html: nutritionText }} />
           </div>
         </div>
       </div>
@@ -114,6 +156,7 @@ const ProductPage: React.FC = () => {
   const [modalProduct, setModalProduct] = useState<any>(null);
   const navigate = useNavigate();
   const [language, setLanguage] = useState<'en' | 'ko'>(localStorage.getItem('siteLang') === 'en' ? 'en' : 'ko');
+  const [labelSettings, setLabelSettings] = useState<LabelSettings>(defaultLabels);
 
   useEffect(() => {
     const unsubscribeCategories = onSnapshot(collection(db, 'productCategories'), (snapshot) => {
@@ -149,9 +192,42 @@ const ProductPage: React.FC = () => {
       }
     };
     loadPageData();
+    
+    // 라벨 설정 실시간 구독
+    const unsubscribeLabels = onSnapshot(doc(db, 'productPage', 'labels'), (labelSnap) => {
+      if (labelSnap.exists()) {
+        const data = labelSnap.data();
+        const newLabelSettings = {
+          allergens: {
+            en: data.allergens?.en || defaultLabels.allergens.en,
+            ko: data.allergens?.ko || defaultLabels.allergens.ko,
+          },
+          ingredients: {
+            en: data.ingredients?.en || defaultLabels.ingredients.en,
+            ko: data.ingredients?.ko || defaultLabels.ingredients.ko,
+          },
+          nutrition: {
+            en: data.nutrition?.en || defaultLabels.nutrition.en,
+            ko: data.nutrition?.ko || defaultLabels.nutrition.ko,
+          }
+        };
+        setLabelSettings(newLabelSettings);
+        console.log('라벨 설정 로드됨:', newLabelSettings);
+      } else {
+        // 문서가 없으면 기본값 사용
+        setLabelSettings(defaultLabels);
+        console.log('라벨 설정 문서 없음, 기본값 사용:', defaultLabels);
+      }
+    }, (error) => {
+      console.error('라벨 설정 로드 실패:', error);
+      // 에러 발생 시 기본값 사용
+      setLabelSettings(defaultLabels);
+    });
+    
     return () => {
       unsubscribeCategories();
       unsubscribeProducts();
+      unsubscribeLabels();
     };
   }, []);
 
@@ -253,7 +329,7 @@ const ProductPage: React.FC = () => {
         </section>
       </div>
       {modalProduct && (
-        <ProductDetailModal product={modalProduct} onClose={() => setModalProduct(null)} />
+        <ProductDetailModal product={modalProduct} onClose={() => setModalProduct(null)} language={language} labels={labelSettings} />
       )}
       <Footer />
     </>

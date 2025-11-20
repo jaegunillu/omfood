@@ -543,7 +543,8 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
           ) : null}
         </Nav>
       </NavWrapper>
-      {!location.pathname.includes('/admin') && (
+      {/* PC 버전 언어 선택 버튼 숨김 처리 */}
+      {/* {!location.pathname.includes('/admin') && (
         <LanguageSelector>
           <LangTextButton
             onClick={() => handleLanguageChange('en')}
@@ -568,7 +569,7 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
             [KOR]
           </LangTextButton>
         </LanguageSelector>
-      )}
+      )} */}
       <MobileNav $open={mobileMenuOpen}>
         {mobileMenuOpen && (
           <MobileCloseButton onClick={handleMobileMenuClose} title="닫기" style={{color:'#fff', zIndex:10001, background:'none'}}>
@@ -597,7 +598,8 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
             </MenuItem>
           ))
         ) : null}
-        {!location.pathname.includes('/admin') && (
+        {/* 모바일 버전 언어 선택 버튼 숨김 처리 */}
+        {/* {!location.pathname.includes('/admin') && (
           <MobileLanguageSelector>
             <LangTextButton
               onClick={() => handleLanguageChange('en')}
@@ -624,7 +626,7 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
               [KOR]
             </LangTextButton>
           </MobileLanguageSelector>
-        )}
+        )} */}
       </MobileNav>
     </HeaderContainer>
   );

@@ -42,6 +42,7 @@ const colors = {
 };
 
 // Quill 툴바 옵션 (통일된 포맷팅)
+// Enter 키는 기본 동작 유지 (새 <p> 태그 생성)
 const quillModules = {
   toolbar: [
     ['bold', 'italic', 'underline', 'strike'],
@@ -194,7 +195,7 @@ const SubText = styled.p`
   font-size: 1.15rem;
   color: #222;
   max-width: 1000px;
-  line-height: 1.7;
+  line-height: 1.35; /* 기존 1.7 → 1.35 로 줄임 */
   text-align: center;
   white-space: pre-line;
   opacity: 0.95;
@@ -597,7 +598,8 @@ function AdminLayoutComponent({ children, showBackButton = true, backTo, backLab
               </BackButton>
             )}
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              {showBackButton && (
+              {/* 언어 선택 버튼 숨김 처리 */}
+              {/* {showBackButton && (
                 <>
                   <button 
                     onClick={() => handleLangChange('en')} 
@@ -636,7 +638,7 @@ function AdminLayoutComponent({ children, showBackButton = true, backTo, backLab
                     [KOR]
                   </button>
                 </>
-              )}
+              )} */}
               <AdminLogoutBtn onClick={logout}>로그아웃</AdminLogoutBtn>
             </div>
           </div>
@@ -845,13 +847,102 @@ const SloganSubTextLine = styled.span<{ $show: boolean; $delay: number }>`
   `}
 `;
 
+const SloganImageWrapper = styled.div`
+  width: 100%;
+  overflow: hidden;
+  line-height: 0;
+  position: relative;
+`;
+
+const SloganBannerImage = styled.img`
+  width: 100%;
+  height: auto;
+  max-height: 100vh;
+  object-fit: cover;
+  display: block;
+`;
+
+const SloganTextOverlay = styled.div<{ $x: number; $y: number }>`
+  position: absolute;
+  top: ${({ $y }) => $y}%;
+  left: ${({ $x }) => $x}%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 90%;
+  max-width: 1400px;
+`;
+
+const SloganMainTextOverlay = styled.div<{ $color?: string; $fontSize?: string }>`
+  font-size: ${({ $fontSize }) => $fontSize || '2.8rem'};
+  font-weight: 700;
+  color: ${({ $color }) => $color || '#fff'};
+  margin-bottom: 56px;
+  text-align: center;
+  width: 100%;
+  white-space: pre-wrap;
+  word-break: keep-all;
+`;
+
+const SloganSubTextOverlay = styled.div<{ $color?: string; $fontSize?: string }>`
+  font-size: ${({ $fontSize }) => $fontSize || '1.15rem'};
+  color: ${({ $color }) => $color || '#fff'};
+  width: 90% !important;
+  max-width: 1200px !important;
+  text-align: center;
+  opacity: 0.95;
+  display: block !important;
+  margin: 0 auto !important;
+
+  /* 전체 줄간격을 강하게 줄임 */
+  line-height: 1.25 !important;
+
+  /* 내부 모든 자식에 동일한 줄간격/여백 강제 */
+  & > * {
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1.25 !important;
+    white-space: pre-wrap !important;
+    word-break: keep-all !important;
+  }
+
+  /* 혹시 p 태그가 들어오는 경우 문단 간 여백 제거 */
+  & p {
+    margin-bottom: 0 !important;
+    min-height: 1em;
+  }
+
+  /* <br> 에 의한 여백이 과하게 느껴지지 않도록 */
+  & br {
+    line-height: 0 !important;
+  }
+`;
+
+const TypewriterChar = styled.span<{ $show: boolean; $delay: number }>`
+  opacity: ${({ $show }) => ($show ? 1 : 0)};
+  transition: opacity 0.1s ease-in;
+  transition-delay: ${({ $delay }) => $delay}ms;
+  display: inline;
+  white-space: normal;
+  word-break: inherit;
+`;
+
 function SloganSection() {
   const { adminLang } = useAdminLang();
   const [mainText, setMainText] = useState<{ en: string; ko: string }>({ en: '', ko: '' });
   const [subText, setSubText] = useState<{ en: string; ko: string }>({ en: '', ko: '' });
+  const [sloganImage, setSloganImage] = useState<string | null>(null);
+  const [textPos, setTextPos] = useState<{ x: number; y: number }>({ x: 50, y: 50 });
+  const [mainColor, setMainColor] = useState<string>('#ffffff');
+  const [subColor, setSubColor] = useState<string>('#ffffff');
+  const [mainFontSize, setMainFontSize] = useState<string>('2.8rem');
+  const [subFontSize, setSubFontSize] = useState<string>('1.15rem');
   const [loading, setLoading] = useState(true);
   const [show, setShow] = useState(false);
-  const [subShow, setSubShow] = useState<number>(0);
+  const [visibleChars, setVisibleChars] = useState<{ main: number; sub: number }>({ main: 0, sub: 0 });
   const ref = useRef<HTMLDivElement>(null);
   const siteLang = localStorage.getItem('siteLang') === 'en' ? 'en' : 'ko';
 
@@ -863,6 +954,12 @@ function SloganSection() {
         // 마이그레이션: 기존 string이면 en으로 간주
         setMainText(typeof data.mainText === 'string' ? { en: data.mainText, ko: '' } : { en: data.mainText?.en || '', ko: data.mainText?.ko || '' });
         setSubText(typeof data.subText === 'string' ? { en: data.subText, ko: '' } : { en: data.subText?.en || '', ko: data.subText?.ko || ''         });
+        setSloganImage(data.sloganImage || null);
+        setTextPos(data.textPos || { x: 50, y: 50 });
+        setMainColor(data.mainColor || '#ffffff');
+        setSubColor(data.subColor || '#ffffff');
+        setMainFontSize(data.mainFontSize || '2.8rem');
+        setSubFontSize(data.subFontSize || '1.15rem');
       }
       setLoading(false);
     });
@@ -877,6 +974,7 @@ function SloganSection() {
         setShow(true);
       } else {
         setShow(false);
+        setVisibleChars({ main: 0, sub: 0 });
       }
     };
     window.addEventListener('scroll', onScroll);
@@ -885,25 +983,235 @@ function SloganSection() {
   }, []);
 
   useEffect(() => {
-    if (!show) return;
-    setSubShow(0);
-    const lines = subText[siteLang].split(/<br\s*\/?>|\n/);
-    lines.forEach((_, i) => {
-      setTimeout(() => setSubShow(idx => Math.max(idx, i + 1)), 400 + i * 350);
+    if (!show) {
+      setVisibleChars({ main: 0, sub: 0 });
+      return;
+    }
+
+    // HTML 태그를 제거하고 순수 텍스트만 추출
+    const stripHtml = (html: string) => {
+      const tmp = document.createElement('DIV');
+      tmp.innerHTML = html;
+      return tmp.textContent || tmp.innerText || '';
+    };
+
+    const mainTextPlain = stripHtml(mainText[siteLang] || '');
+    const subTextPlain = stripHtml(subText[siteLang] || '');
+
+    // MainText 타자기 애니메이션 (속도 향상: 50ms -> 15ms -> 8ms)
+    mainTextPlain.split('').forEach((_, i) => {
+      setTimeout(() => {
+        setVisibleChars(prev => ({ ...prev, main: i + 1 }));
+      }, i * 8);
     });
-  }, [show, subText, siteLang]);
+
+    // SubText는 MainText가 끝난 후 시작 (속도 향상: 30ms -> 10ms -> 5ms)
+    const mainTextDelay = mainTextPlain.length * 8;
+    subTextPlain.split('').forEach((_, i) => {
+      setTimeout(() => {
+        setVisibleChars(prev => ({ ...prev, sub: i + 1 }));
+      }, mainTextDelay + 100 + i * 5);
+    });
+  }, [show, mainText, subText, siteLang]);
 
   if (loading) return null;
 
-  const subLines = subText[siteLang].split(/<br\s*\/?>|\n/);
+  // HTML 태그를 제거하고 순수 텍스트만 추출하는 함수
+  const stripHtml = (html: string) => {
+    const tmp = document.createElement('DIV');
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || '';
+  };
+
+  // HTML을 파싱하여 텍스트 노드와 줄바꿈을 정확히 추출
+  // <p>, <div>, <br> 태그의 종료 시점을 명확한 줄바꿈으로 변환
+  const parseHtmlToTextNodes = (html: string) => {
+    if (!html || html.trim() === '') return [];
+    
+    const tmp = document.createElement('DIV');
+    tmp.innerHTML = html;
+    const textNodes: Array<{ type: 'text' | 'br'; content?: string }> = [];
+    
+    const processNode = (node: Node, isFirstInParent: boolean = false) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const text = node.textContent || '';
+        // 공백만 있는 텍스트도 보존 (줄바꿈 유지)
+        if (text.length > 0) {
+          textNodes.push({ type: 'text', content: text });
+        }
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        const element = node as Element;
+        const tagName = element.tagName.toUpperCase();
+        
+        if (tagName === 'BR') {
+          // <br> 태그는 명확한 줄바꿈
+          textNodes.push({ type: 'br' });
+        } else if (tagName === 'P') {
+          // P 태그 시작 전에 줄바꿈 추가 (이전 형제가 P 또는 DIV인 경우)
+          if (!isFirstInParent) {
+            const prevSibling = element.previousElementSibling;
+            if (prevSibling && (prevSibling.tagName.toUpperCase() === 'P' || prevSibling.tagName.toUpperCase() === 'DIV')) {
+              textNodes.push({ type: 'br' });
+            }
+          }
+          
+          // P 태그 내부 노드 처리
+          const children = Array.from(element.childNodes);
+          if (children.length === 0) {
+            // 빈 P 태그도 줄바꿈으로 처리 (엔터만 친 경우)
+            textNodes.push({ type: 'br' });
+          } else {
+            children.forEach((child, idx) => {
+              processNode(child, idx === 0);
+            });
+          }
+          
+          // P 태그 종료 시점에 줄바꿈 추가 (다음 형제가 P, DIV, 또는 텍스트 노드인 경우)
+          const nextSibling = element.nextElementSibling;
+          if (nextSibling) {
+            const nextTag = nextSibling.tagName.toUpperCase();
+            if (nextTag === 'P' || nextTag === 'DIV') {
+              textNodes.push({ type: 'br' });
+            }
+          }
+        } else if (tagName === 'DIV') {
+          // DIV 태그도 P와 유사하게 처리
+          if (!isFirstInParent) {
+            const prevSibling = element.previousElementSibling;
+            if (prevSibling && (prevSibling.tagName.toUpperCase() === 'P' || prevSibling.tagName.toUpperCase() === 'DIV')) {
+              textNodes.push({ type: 'br' });
+            }
+          }
+          
+          const children = Array.from(element.childNodes);
+          if (children.length === 0) {
+            // 빈 DIV도 줄바꿈으로 처리
+            textNodes.push({ type: 'br' });
+          } else {
+            children.forEach((child, idx) => {
+              processNode(child, idx === 0);
+            });
+          }
+          
+          // DIV 태그 종료 시점에 줄바꿈 추가
+          const nextSibling = element.nextElementSibling;
+          if (nextSibling && (nextSibling.nodeType === Node.ELEMENT_NODE)) {
+            const nextElement = nextSibling as Element;
+            const nextTag = nextElement.tagName.toUpperCase();
+            if (nextTag === 'P' || nextTag === 'DIV') {
+              textNodes.push({ type: 'br' });
+            }
+          }
+        } else {
+          // 기타 인라인 태그는 자식 노드만 처리
+          Array.from(element.childNodes).forEach((child, idx) => {
+            processNode(child, idx === 0);
+          });
+        }
+      }
+    };
+    
+    // 루트의 모든 자식 노드 처리
+    const rootChildren = Array.from(tmp.childNodes);
+    rootChildren.forEach((child, idx) => {
+      processNode(child, idx === 0);
+    });
+    
+    return textNodes;
+  };
+
+  const renderTextWithAnimation = (text: string, visibleCount: number, isMain: boolean) => {
+    const plainText = stripHtml(text);
+    const chars = plainText.split('');
+    const textNodes = parseHtmlToTextNodes(text);
+    let charIndex = 0;
+    
+    if (isMain) {
+      return (
+        <SloganMainTextOverlay $color={mainColor} $fontSize={mainFontSize}>
+          {textNodes.map((node, nodeIdx) => {
+            if (node.type === 'br') {
+              return <br key={`br-${nodeIdx}`} />;
+            }
+            if (node.type === 'text' && node.content) {
+              return node.content.split('').map((char, charIdx) => {
+                const currentCharIndex = charIndex++;
+                return (
+                  <TypewriterChar
+                    key={`${nodeIdx}-${charIdx}`}
+                    $show={show && currentCharIndex < visibleCount}
+                    $delay={currentCharIndex * 8}
+                  >
+                    {char === ' ' ? '\u00A0' : char}
+                  </TypewriterChar>
+                );
+              });
+            }
+            return null;
+          })}
+        </SloganMainTextOverlay>
+      );
+    } else {
+      const mainTextPlain = stripHtml(mainText[siteLang] || '');
+      const mainTextDelay = mainTextPlain.length * 8;
+      return (
+        <SloganSubTextOverlay $color={subColor} $fontSize={subFontSize}>
+          {textNodes.map((node, nodeIdx) => {
+            if (node.type === 'br') {
+              return <br key={`br-${nodeIdx}`} />;
+            }
+            if (node.type === 'text' && node.content) {
+              // 단어 단위로 나누어서 렌더링 (줄바꿈 개선)
+              const words = node.content.split(/(\s+)/);
+              return words.map((word, wordIdx) => {
+                if (word.trim() === '') {
+                  // 공백은 그대로 유지
+                  return <span key={`${nodeIdx}-word-${wordIdx}`} style={{ whiteSpace: 'pre' }}>{word}</span>;
+                }
+                return (
+                  <span key={`${nodeIdx}-word-${wordIdx}`} style={{ display: 'inline-block', whiteSpace: 'normal' }}>
+                    {word.split('').map((char, charIdx) => {
+                      const currentCharIndex = charIndex++;
+                      return (
+                        <TypewriterChar
+                          key={`${nodeIdx}-${wordIdx}-${charIdx}`}
+                          $show={show && currentCharIndex < visibleCount}
+                          $delay={mainTextDelay + 100 + currentCharIndex * 5}
+                        >
+                          {char}
+                        </TypewriterChar>
+                      );
+                    })}
+                  </span>
+                );
+              });
+            }
+            return null;
+          })}
+        </SloganSubTextOverlay>
+      );
+    }
+  };
 
   return (
-    <SectionBg>
-      <Section ref={ref}>
-        <SloganMainText $show={show} dangerouslySetInnerHTML={{ __html: mainText[siteLang] || '' }} />
-        <SubText style={{ minHeight: 48 }} dangerouslySetInnerHTML={{ __html: subText[siteLang] || '' }} />
-      </Section>
-    </SectionBg>
+    <>
+      {sloganImage ? (
+        <SloganImageWrapper ref={ref}>
+          <SloganBannerImage src={sloganImage} alt="Slogan Banner" />
+          <SloganTextOverlay $x={textPos.x} $y={textPos.y}>
+            {renderTextWithAnimation(mainText[siteLang] || '', visibleChars.main, true)}
+            {renderTextWithAnimation(subText[siteLang] || '', visibleChars.sub, false)}
+          </SloganTextOverlay>
+        </SloganImageWrapper>
+      ) : (
+        <SectionBg>
+          <Section ref={ref}>
+            <SloganMainText $show={show} dangerouslySetInnerHTML={{ __html: mainText[siteLang] || '' }} />
+            <SubText style={{ minHeight: 48 }} dangerouslySetInnerHTML={{ __html: subText[siteLang] || '' }} />
+          </Section>
+        </SectionBg>
+      )}
+    </>
   );
 }
 
@@ -2531,6 +2839,34 @@ function AdminSloganManage() {
   // 언어 전환 시 폼 값 즉시 스위치
   const [form, setForm] = useState({ main: '', sub: '' });
   
+  // 편집 상태 관리 (편집 중일 때 Firestore 업데이트가 폼을 덮어쓰지 않도록)
+  const [isEditing, setIsEditing] = useState(false);
+  
+  // 저장 직후 롤백 방지를 위한 저장된 값 추적
+  const savedFormRef = useRef<{ main: string; sub: string } | null>(null);
+  
+  // 슬로건 이미지 관련 state
+  const [sloganImage, setSloganImage] = useState<string>('');
+  const [sloganImageFile, setSloganImageFile] = useState<File | null>(null);
+  const [sloganImagePreview, setSloganImagePreview] = useState<string>('');
+  
+  // 텍스트 위치 state
+  const [textPos, setTextPos] = useState<{ x: number; y: number }>({ x: 50, y: 50 });
+  
+  // 텍스트 색상 state
+  const [mainColor, setMainColor] = useState<string>('#ffffff');
+  const [subColor, setSubColor] = useState<string>('#ffffff');
+  
+  // 텍스트 폰트 사이즈 state
+  const [mainFontSize, setMainFontSize] = useState<string>('2.8rem');
+  const [subFontSize, setSubFontSize] = useState<string>('1.15rem');
+  
+  // 프리뷰 이미지 크기 추적
+  const [previewImageWidth, setPreviewImageWidth] = useState<number>(800);
+  const [previewImageHeight, setPreviewImageHeight] = useState<number>(0);
+  const [previewImageAspectRatio, setPreviewImageAspectRatio] = useState<number>(1);
+  const previewImageRef = useRef<HTMLImageElement>(null);
+  
   const [loading, setLoading] = useState(true);
 
   // 실시간 데이터 구독
@@ -2538,31 +2874,113 @@ function AdminSloganManage() {
     const unsubscribe = onSnapshot(doc(db, 'slogan', 'main'), snap => {
       if (!snap.exists()) return;
       const d = snap.data();
+      
+      // Map 구조와 문자열 키 구조를 모두 확인하여 호환성 확보
+      // Map 구조 우선, 없으면 문자열 키 확인
+      const mainTextData = {
+        en: d.mainText?.en || (d as any)['mainText.en'] || (typeof d.mainText === 'string' ? d.mainText : ''),
+        ko: d.mainText?.ko || (d as any)['mainText.ko'] || ''
+      };
+      
+      const subTextData = {
+        en: d.subText?.en || (d as any)['subText.en'] || (typeof d.subText === 'string' ? d.subText : ''),
+        ko: d.subText?.ko || (d as any)['subText.ko'] || ''
+      };
+      
       setDocData({
-        mainText: typeof d.mainText === 'string' ? { en: d.mainText, ko: d.mainText } : { en: d?.mainText?.en || '', ko: d?.mainText?.ko || '' },
-        subText: typeof d.subText === 'string' ? { en: d.subText, ko: d.subText } : { en: d?.subText?.en || '', ko: d?.subText?.ko || '' },
+        mainText: mainTextData,
+        subText: subTextData,
       });
+      setSloganImage(d.sloganImage || '');
+      setTextPos(d.textPos || { x: 50, y: 50 });
+      setMainColor(d.mainColor || '#ffffff');
+      setSubColor(d.subColor || '#ffffff');
+      setMainFontSize(d.mainFontSize || '2.8rem');
+      setSubFontSize(d.subFontSize || '1.15rem');
       setLoading(false);
     });
     return () => unsubscribe();
   }, []);
 
-  // 언어 전환 시 폼 값 즉시 스위치
+  // 프리뷰 이미지 크기 및 비율 추적
   useEffect(() => {
+    const updateImageSize = () => {
+      if (previewImageRef.current) {
+        const img = previewImageRef.current;
+        setPreviewImageWidth(img.offsetWidth);
+        setPreviewImageHeight(img.offsetHeight);
+        
+        // naturalWidth와 naturalHeight를 사용하여 실제 비율 계산
+        if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+          const aspectRatio = img.naturalWidth / img.naturalHeight;
+          setPreviewImageAspectRatio(aspectRatio);
+        }
+      }
+    };
+    
+    if (sloganImagePreview || sloganImage) {
+      updateImageSize();
+      window.addEventListener('resize', updateImageSize);
+      return () => window.removeEventListener('resize', updateImageSize);
+    }
+  }, [sloganImagePreview, sloganImage]);
+
+  // 언어 전환 시 폼 값 즉시 스위치 (HTML 태그 보존 - 가공하지 않음)
+  // 편집 중이 아닐 때만 Firestore 데이터로 폼을 업데이트
+  // 서버 데이터(docData)와 로컬 폼 데이터(form)가 다를 때만 업데이트
+  useEffect(() => {
+    if (isEditing) {
+      // 편집 중일 때는 Firestore 업데이트가 폼을 덮어쓰지 않도록 무시
+      return;
+    }
+    
+    const mainTextValue = docData.mainText[adminLang] || '';
+    const subTextValue = docData.subText[adminLang] || '';
+    
+    // 저장 직후 롤백 방지: 저장된 값과 현재 폼 값이 같으면 업데이트하지 않음
+    if (savedFormRef.current && 
+        savedFormRef.current.main === form.main && 
+        savedFormRef.current.sub === form.sub &&
+        savedFormRef.current.main === mainTextValue &&
+        savedFormRef.current.sub === subTextValue) {
+      // 저장된 값과 현재 폼 값이 같고, 서버 데이터도 같으면 업데이트하지 않음
+      savedFormRef.current = null; // 플래그 해제
+      return;
+    }
+    
+    // 서버 데이터(docData)와 로컬 폼 데이터(form)가 다를 때만 업데이트
+    // 이 조건이 없으면 저장 직후 useEffect가 실행되어 입력값이 롤백될 수 있음
+    // 정확한 비교를 위해 trim()을 사용하지 않고 HTML 문자열을 그대로 비교
+    const mainTextMatches = form.main === mainTextValue;
+    const subTextMatches = form.sub === subTextValue;
+    
+    if (mainTextMatches && subTextMatches) {
+      // 데이터가 같으면 업데이트하지 않음 (불필요한 리렌더링 및 롤백 방지)
+      return;
+    }
+    
+    console.log('[AdminSloganManage LOAD] 메인 텍스트 HTML:', mainTextValue);
+    console.log('[AdminSloganManage LOAD] 서브 텍스트 HTML:', subTextValue);
+    console.log('[AdminSloganManage LOAD] 현재 폼 값 - 메인:', form.main, '서브:', form.sub);
+    console.log('[AdminSloganManage LOAD] 데이터 비교 - 메인 일치:', mainTextMatches, '서브 일치:', subTextMatches);
+    
+    // ReactQuill HTML을 그대로 사용 (가공하지 않음)
     setForm({
-      main: docData.mainText[adminLang] || '',
-      sub: docData.subText[adminLang] || '',
+      main: mainTextValue,
+      sub: subTextValue,
     });
-  }, [adminLang, docData]);
+  }, [adminLang, docData, isEditing]);
 
   // 언어 변경 이벤트 구독
   useEffect(() => {
     const handleAdminLangChange = (event: any) => {
       const lang = event.detail?.language as 'en' | 'ko';
       if (lang) {
+        const mainTextValue = docData.mainText[lang] || '';
+        const subTextValue = docData.subText[lang] || '';
         setForm({
-          main: docData.mainText[lang] || '',
-          sub: docData.subText[lang] || '',
+          main: mainTextValue,
+          sub: subTextValue,
         });
       }
     };
@@ -2573,20 +2991,147 @@ function AdminSloganManage() {
     };
   }, [docData]);
 
+  const handleSloganImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    setSloganImageFile(file);
+    setSloganImagePreview(url);
+  };
+
+  const handleImageClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const img = e.currentTarget.querySelector('img') as HTMLImageElement;
+    if (!img) return;
+    
+    // 이미지에서 직접 클릭 이벤트가 발생한 경우
+    if (e.target === img) {
+      const nativeEvent = e.nativeEvent as MouseEvent;
+      const offsetX = nativeEvent.offsetX;
+      const offsetY = nativeEvent.offsetY;
+      
+      // 이미지의 실제 크기 사용
+      const imgWidth = img.offsetWidth || img.width;
+      const imgHeight = img.offsetHeight || img.height;
+      
+      const x = (offsetX / imgWidth) * 100;
+      const y = (offsetY / imgHeight) * 100;
+      
+      // 좌표 범위 제한 (0-100%)
+      const clampedX = Math.max(0, Math.min(100, x));
+      const clampedY = Math.max(0, Math.min(100, y));
+      
+      setTextPos({ x: clampedX, y: clampedY });
+    } else {
+      // div에서 클릭한 경우 (이미지 영역 내)
+      const rect = e.currentTarget.getBoundingClientRect();
+      const imgRect = img.getBoundingClientRect();
+      const x = ((e.clientX - imgRect.left) / imgRect.width) * 100;
+      const y = ((e.clientY - imgRect.top) / imgRect.height) * 100;
+      
+      const clampedX = Math.max(0, Math.min(100, x));
+      const clampedY = Math.max(0, Math.min(100, y));
+      
+      setTextPos({ x: clampedX, y: clampedY });
+    }
+  };
+
   const handleSave = async () => {
     // 필드 경로로 부분 업데이트
     const ref = doc(db, 'slogan', 'main');
     
-    // 메인 텍스트만 수정
-    await setDoc(ref, { [`mainText.${adminLang}`]: form.main ?? '' }, { merge: true });
+    // 이미지 업로드 처리
+    let imageUrl = sloganImage;
+    if (sloganImageFile) {
+      try {
+        const ext = sloganImageFile.name.split('.').pop();
+        const uniqueName = `slogan/image_${Date.now()}.${ext}`;
+        const fileStorageRef = storageRef(storage, uniqueName);
+        await uploadBytes(fileStorageRef, sloganImageFile);
+        imageUrl = await getDownloadURL(fileStorageRef);
+        setSloganImage(imageUrl);
+        setSloganImageFile(null);
+        setSloganImagePreview('');
+      } catch (error) {
+        console.error('이미지 업로드 실패:', error);
+        success('이미지 업로드 중 오류가 발생했습니다.');
+        return;
+      }
+    }
     
-    // 서브 텍스트만 수정
-    await setDoc(ref, { [`subText.${adminLang}`]: form.sub ?? '' }, { merge: true });
+    // ReactQuill의 HTML을 그대로 저장 (가공하지 않음 - 줄바꿈 포함)
+    // stripHtml, replace 등 모든 HTML 가공 로직 제거
+    const mainTextToSave = form.main ?? '';
+    const subTextToSave = form.sub ?? '';
+    
+    console.log('[SAVE] 메인 텍스트 HTML:', mainTextToSave);
+    console.log('[SAVE] 서브 텍스트 HTML:', subTextToSave);
+    
+    // Optimistic UI: Firestore 저장 직전에 로컬 상태를 먼저 업데이트하여 롤백 방지
+    // 이렇게 하면 useEffect가 실행되더라도 docData가 이미 최신 상태이므로 입력값이 유지됨
+    setDocData(prev => ({
+      ...prev,
+      mainText: {
+        ...(prev.mainText || {}),
+        [adminLang]: mainTextToSave,
+      },
+      subText: {
+        ...(prev.subText || {}),
+        [adminLang]: subTextToSave,
+      },
+    }));
+    
+    // 한 번에 모든 데이터 저장 (트랜잭션처럼)
+    // 중첩 객체 구조로 저장하여 Map 필드가 정확히 업데이트되도록 함
+    const updateData: any = {
+      mainText: {
+        ...(docData.mainText || {}),
+        [adminLang]: mainTextToSave
+      },
+      subText: {
+        ...(docData.subText || {}),
+        [adminLang]: subTextToSave
+      }
+    };
+    
+    // 이미지 URL 저장
+    if (imageUrl) {
+      updateData.sloganImage = imageUrl;
+    }
+    
+    // 텍스트 위치 저장
+    updateData.textPos = textPos;
+    
+    // 텍스트 색상 저장
+    updateData.mainColor = mainColor;
+    updateData.subColor = subColor;
+    
+    // 텍스트 폰트 사이즈 저장
+    updateData.mainFontSize = mainFontSize;
+    updateData.subFontSize = subFontSize;
+    
+    // Firestore에 저장 (중첩 객체 구조로 저장)
+    await setDoc(ref, updateData, { merge: true });
 
     console.log('[SAVE slogan]', adminLang, { 
-      [`mainText.${adminLang}`]: form.main,
-      [`subText.${adminLang}`]: form.sub 
+      [`mainText.${adminLang}`]: mainTextToSave,
+      [`subText.${adminLang}`]: subTextToSave,
+      sloganImage: imageUrl,
+      textPos,
+      mainColor,
+      subColor,
+      mainFontSize,
+      subFontSize
     });
+    
+    // 저장 직후 롤백 방지: 저장된 값을 ref에 저장
+    savedFormRef.current = {
+      main: mainTextToSave,
+      sub: subTextToSave
+    };
+    
+    // 저장 완료 후 편집 상태 해제
+    // docData가 이미 업데이트되었고, savedFormRef로 useEffect가 폼을 덮어쓰지 않으므로 입력값이 유지됨
+    setIsEditing(false);
     success('슬로건이 저장되었습니다!');
   };
 
@@ -2597,14 +3142,99 @@ function AdminSloganManage() {
         <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>로딩 중...</div>
       ) : (
         <AdminCard>
+          {/* 슬로건 섹션 상단 이미지 업로드 */}
+          <div style={{ marginBottom: 48 }}>
+            <AdminLabel>슬로건 섹션 상단 이미지</AdminLabel>
+            <div style={{ marginTop: 12, marginBottom: 24 }}>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleSloganImageChange}
+                style={{ marginBottom: 12 }}
+              />
+              {(sloganImagePreview || sloganImage) && (
+                <div
+                  onClick={handleImageClick}
+                  style={{
+                    position: 'relative',
+                    cursor: 'crosshair',
+                    width: '100%',
+                    maxWidth: '800px',
+                    height: 'auto',
+                    minHeight: '200px',
+                    marginBottom: 12,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <img
+                    ref={previewImageRef}
+                    src={sloganImagePreview || sloganImage}
+                    alt="슬로건 배너 미리보기"
+                    style={{ width: '100%', height: 'auto', maxHeight: '400px', objectFit: 'contain', display: 'block' }}
+                    onLoad={() => {
+                      if (previewImageRef.current) {
+                        const img = previewImageRef.current;
+                        setPreviewImageWidth(img.offsetWidth);
+                        setPreviewImageHeight(img.offsetHeight);
+                        if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+                          setPreviewImageAspectRatio(img.naturalWidth / img.naturalHeight);
+                        }
+                      }
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: `${textPos.y}%`,
+                      left: `${textPos.x}%`,
+                      transform: 'translate(-50%, -50%)',
+                      width: '12px',
+                      height: '12px',
+                      borderRadius: '50%',
+                      background: '#E5002B',
+                      border: '2px solid #fff',
+                      boxShadow: '0 0 0 2px #E5002B',
+                      pointerEvents: 'none',
+                      zIndex: 10
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* 메인 슬로건 섹션 */}
           <div style={{ marginBottom: 48 }}>
-            <AdminLabel>메인 슬로건 ({adminLang.toUpperCase()})</AdminLabel>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 8, flexWrap: 'wrap' }}>
+              <AdminLabel style={{ marginBottom: 0 }}>메인 슬로건 ({adminLang.toUpperCase()})</AdminLabel>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <label style={{ fontSize: '0.9rem', color: '#666' }}>색상:</label>
+                <input
+                  type="color"
+                  value={mainColor}
+                  onChange={e => setMainColor(e.target.value)}
+                  style={{ width: '40px', height: '32px', border: '1px solid #e0e0e0', borderRadius: '4px', cursor: 'pointer' }}
+                />
+                <label style={{ fontSize: '0.9rem', color: '#666', marginLeft: 8 }}>폰트 사이즈:</label>
+                <input
+                  type="text"
+                  value={mainFontSize}
+                  onChange={e => setMainFontSize(e.target.value)}
+                  placeholder="2.8rem"
+                  style={{ width: '80px', padding: '4px 8px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '0.9rem' }}
+                />
+              </div>
+            </div>
             <div style={{ marginTop: 12, marginBottom: 24 }}>
               <ReactQuill
                 key={`slogan-main-quill-${adminLang}`}
                 value={form.main}
-                onChange={val => setForm(prev => ({ ...prev, main: val }))}
+                onChange={val => {
+                  setIsEditing(true);
+                  setForm(prev => ({ ...prev, main: val }));
+                }}
                 modules={quillModules}
                 formats={formats}
                 theme="snow"
@@ -2616,12 +3246,34 @@ function AdminSloganManage() {
 
           {/* 서브 슬로건 섹션 */}
           <div style={{ marginBottom: 48 }}>
-            <AdminLabel>서브 슬로건 ({adminLang.toUpperCase()})</AdminLabel>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 8, flexWrap: 'wrap' }}>
+              <AdminLabel style={{ marginBottom: 0 }}>서브 슬로건 ({adminLang.toUpperCase()})</AdminLabel>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <label style={{ fontSize: '0.9rem', color: '#666' }}>색상:</label>
+                <input
+                  type="color"
+                  value={subColor}
+                  onChange={e => setSubColor(e.target.value)}
+                  style={{ width: '40px', height: '32px', border: '1px solid #e0e0e0', borderRadius: '4px', cursor: 'pointer' }}
+                />
+                <label style={{ fontSize: '0.9rem', color: '#666', marginLeft: 8 }}>폰트 사이즈:</label>
+                <input
+                  type="text"
+                  value={subFontSize}
+                  onChange={e => setSubFontSize(e.target.value)}
+                  placeholder="1.15rem"
+                  style={{ width: '80px', padding: '4px 8px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '0.9rem' }}
+                />
+              </div>
+            </div>
             <div style={{ marginTop: 12, marginBottom: 24 }}>
               <ReactQuill
                 key={`slogan-sub-quill-${adminLang}`}
                 value={form.sub}
-                onChange={val => setForm(prev => ({ ...prev, sub: val }))}
+                onChange={val => {
+                  setIsEditing(true);
+                  setForm(prev => ({ ...prev, sub: val }));
+                }}
                 modules={quillModules}
                 formats={formats}
                 theme="snow"
@@ -2634,18 +3286,143 @@ function AdminSloganManage() {
           {/* 실시간 프리뷰 섹션 */}
           <div style={{ marginBottom: 48, padding: 24, background: '#f8f9fa', borderRadius: 8, border: '1px solid #e0e0e0' }}>
             <h5 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 16, color: '#333' }}>실시간 Preview ({adminLang.toUpperCase()})</h5>
-            <div style={{ background: '#fff', padding: 24, borderRadius: 8, border: '1px solid #e0e0e0' }}>
-              <div style={{ maxWidth: '1440px', margin: '0 auto', textAlign: 'center' }}>
-                <div 
-                  style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: 16, color: '#222' }}
-                  dangerouslySetInnerHTML={{ __html: form.main || '<em>메인 슬로건을 입력하세요...</em>' }}
+            {(sloganImagePreview || sloganImage) ? (
+              <div style={{ position: 'relative', width: '100%', maxWidth: '800px', margin: '0 auto', borderRadius: 8, overflow: 'hidden' }}>
+                <img
+                  src={sloganImagePreview || sloganImage}
+                  alt="슬로건 배너 프리뷰"
+                  style={{ width: '100%', height: 'auto', maxHeight: '400px', objectFit: 'contain', display: 'block' }}
+                  onLoad={(e) => {
+                    const img = e.currentTarget;
+                    if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+                      const aspectRatio = img.naturalWidth / img.naturalHeight;
+                      setPreviewImageAspectRatio(aspectRatio);
+                    }
+                    setPreviewImageWidth(img.offsetWidth);
+                    setPreviewImageHeight(img.offsetHeight);
+                  }}
                 />
-                <div 
-                  style={{ fontSize: '1rem', lineHeight: 1.6, color: '#666' }}
-                  dangerouslySetInnerHTML={{ __html: form.sub || '<em>서브 슬로건을 입력하세요...</em>' }}
-                />
+                {previewImageWidth > 0 && previewImageAspectRatio > 0 && (() => {
+                  const previewScale = previewImageWidth / 1920;
+                  // 이미지 비율에 맞춘 높이 계산 (1920px 기준)
+                  const containerHeight = 1920 / previewImageAspectRatio;
+                  return (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: '50%',
+                        width: '1920px',
+                        height: `${containerHeight}px`,
+                        transform: `translateX(-50%) scale(${previewScale})`,
+                        transformOrigin: 'top center',
+                        pointerEvents: 'none'
+                      }}
+                    >
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: `${textPos.y}%`,
+                          left: `${textPos.x}%`,
+                          transform: 'translate(-50%, -50%)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          textAlign: 'center',
+                          width: '90%',
+                          maxWidth: '1200px'
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontSize: mainFontSize || '2.8rem',
+                            fontWeight: 700,
+                            marginBottom: '56px',
+                            color: mainColor,
+                            textAlign: 'center',
+                            width: '100%',
+                            whiteSpace: 'pre-wrap',
+                            wordBreak: 'keep-all'
+                          }}
+                          dangerouslySetInnerHTML={{ __html: form.main || '<em>메인 슬로건을 입력하세요...</em>' }}
+                        />
+                        <div
+                          className="slogan-sub-preview"
+                          style={{
+                            fontSize: subFontSize || '1.15rem',
+                            lineHeight: 1.3,
+                            color: subColor,
+                            opacity: 0.95,
+                            textAlign: 'center',
+                            width: '100%',
+                            maxWidth: '1200px',
+                            whiteSpace: 'pre-wrap',
+                            wordBreak: 'keep-all',
+                            display: 'block',
+                            margin: '0 auto',
+                            boxSizing: 'border-box'
+                          }}
+                          dangerouslySetInnerHTML={{ __html: form.sub || '<em>서브 슬로건을 입력하세요...</em>' }}
+                        />
+                        <style>{`
+                          .slogan-sub-preview {
+                            line-height: 1.3 !important;
+                          }
+                          .slogan-sub-preview > * {
+                            margin: 0 !important;
+                            padding: 0 !important;
+                            line-height: 1.3 !important;
+                            white-space: pre-wrap !important;
+                            word-break: keep-all !important;
+                          }
+                          .slogan-sub-preview p {
+                            margin: 0 !important;
+                            margin-bottom: 0 !important;
+                            padding: 0 !important;
+                            line-height: 1.3 !important;
+                            min-height: 1em;
+                          }
+                          .slogan-sub-preview br {
+                            display: block;
+                            content: "";
+                            margin: 0 !important;
+                            height: 0 !important;
+                            line-height: 0 !important;
+                          }
+                        `}</style>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
-            </div>
+            ) : (
+              <div style={{ background: '#fff', padding: 24, borderRadius: 8, border: '1px solid #e0e0e0' }}>
+                <div style={{ maxWidth: '1440px', margin: '0 auto', textAlign: 'center' }}>
+                  <div 
+                    style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: 16, color: '#222' }}
+                    dangerouslySetInnerHTML={{ __html: form.main || '<em>메인 슬로건을 입력하세요...</em>' }}
+                  />
+                  <div 
+                    className="slogan-sub-preview"
+                    style={{ 
+                      fontSize: subFontSize || '1.15rem', 
+                      lineHeight: 1.3, 
+                      color: subColor || '#666',
+                      opacity: 0.95,
+                      textAlign: 'center',
+                      width: '100%',
+                      maxWidth: '1200px',
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'keep-all',
+                      display: 'block',
+                      margin: '0 auto',
+                      boxSizing: 'border-box'
+                    }}
+                    dangerouslySetInnerHTML={{ __html: form.sub || '<em>서브 슬로건을 입력하세요...</em>' }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* 저장 버튼 섹션 */}

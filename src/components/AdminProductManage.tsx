@@ -542,6 +542,20 @@ interface Toast {
   type: 'success' | 'error' | 'info';
 }
 
+type LabelField = 'allergens' | 'ingredients' | 'nutrition';
+
+interface LabelSettings {
+  allergens: { en: string; ko: string };
+  ingredients: { en: string; ko: string };
+  nutrition: { en: string; ko: string };
+}
+
+const defaultLabels: LabelSettings = {
+  allergens: { en: 'Allergens', ko: '알레르기' },
+  ingredients: { en: 'Ingredients', ko: '성분' },
+  nutrition: { en: 'Nutrition Facts', ko: '영양 정보' }
+};
+
 const AdminProductManage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'categories' | 'products' | 'page' | 'bottomText'>('categories');
   const [categories, setCategories] = useState<Category[]>([]);
@@ -551,6 +565,7 @@ const AdminProductManage: React.FC = () => {
     subSlogan: { en: '', ko: '' },
     bottomText: { en: '', ko: '' }
   });
+  const [labelSettings, setLabelSettings] = useState<LabelSettings>(defaultLabels);
   const [msg, setMsg] = useState('');
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -672,6 +687,36 @@ const AdminProductManage: React.FC = () => {
     loadPageData();
   }, [adminLang]);
 
+  // 라벨 설정 로드
+  useEffect(() => {
+    const loadLabelSettings = async () => {
+      try {
+        const labelRef = doc(db, 'productPage', 'labels');
+        const labelSnap = await getDoc(labelRef);
+        if (labelSnap.exists()) {
+          const data = labelSnap.data();
+          setLabelSettings({
+            allergens: {
+              en: data.allergens?.en || defaultLabels.allergens.en,
+              ko: data.allergens?.ko || defaultLabels.allergens.ko,
+            },
+            ingredients: {
+              en: data.ingredients?.en || defaultLabels.ingredients.en,
+              ko: data.ingredients?.ko || defaultLabels.ingredients.ko,
+            },
+            nutrition: {
+              en: data.nutrition?.en || defaultLabels.nutrition.en,
+              ko: data.nutrition?.ko || defaultLabels.nutrition.ko,
+            }
+          });
+        }
+      } catch (error) {
+        addToast('라벨 정보를 불러오지 못했습니다.', 'error');
+      }
+    };
+    loadLabelSettings();
+  }, []);
+
   // 카테고리 추가
   const handleAddCategory = async () => {
     if (!newCategory.name[adminLang].trim()) return;
@@ -759,6 +804,8 @@ const AdminProductManage: React.FC = () => {
     setSavingProducts(prev => new Set(prev).add(product.id));
     try {
       await setDoc(doc(db, 'products', product.id), product);
+      // 라벨 설정도 함께 저장 (전역 설정이므로)
+      await setDoc(doc(db, 'productPage', 'labels'), labelSettings, { merge: true });
       clearModifiedStatus(product.id);
       addToast('제품이 저장되었습니다!');
     } catch (error) {
@@ -818,6 +865,42 @@ const AdminProductManage: React.FC = () => {
   // 줄바꿈을 HTML br 태그로 변환하는 함수
   const convertNewlinesToBr = (text: string): string => {
     return text.replace(/\n/g, '<br>');
+  };
+
+  const renderLabelInput = (field: LabelField) => (
+    <AdminInput
+      value={labelSettings[field][adminLang] || ''}
+      onChange={e => handleLabelChange(field, e.target.value)}
+      placeholder={`${defaultLabels[field][adminLang] || defaultLabels[field].en} 라벨`}
+      style={{
+        width: '260px',
+        marginBottom: '8px',
+        padding: '8px 12px',
+        fontWeight: 600,
+        fontSize: '1rem',
+        borderColor: colors.grayBorder,
+        background: colors.grayLight
+      }}
+    />
+  );
+
+  const handleLabelChange = (field: LabelField, value: string) => {
+    setLabelSettings(prev => ({
+      ...prev,
+      [field]: {
+        ...prev[field],
+        [adminLang]: value
+      }
+    }));
+  };
+
+  const handleSaveLabels = async () => {
+    try {
+      await setDoc(doc(db, 'productPage', 'labels'), labelSettings, { merge: true });
+      addToast('라벨이 저장되었습니다!');
+    } catch (error) {
+      addToast('라벨 저장 중 오류가 발생했습니다.', 'error');
+    }
   };
 
   // 페이지 데이터 저장
@@ -1044,7 +1127,7 @@ const AdminProductManage: React.FC = () => {
                   </AdminButton>
                 </div>
                 <div>
-                  <AdminLabel>Allergens</AdminLabel>
+                  {renderLabelInput('allergens')}
                   <AdminQuill
                     value={newProduct.allergens?.[adminLang] || ''}
                     onChange={value => setNewProduct({ 
@@ -1056,7 +1139,7 @@ const AdminProductManage: React.FC = () => {
                     theme="snow"
                     placeholder="알레르기 정보"
                   />
-                  <AdminLabel>Ingredients</AdminLabel>
+                  {renderLabelInput('ingredients')}
                   <AdminQuill
                     value={newProduct.ingredients?.[adminLang] || ''}
                     onChange={value => setNewProduct({ 
@@ -1068,7 +1151,7 @@ const AdminProductManage: React.FC = () => {
                     theme="snow"
                     placeholder="성분 정보"
                   />
-                  <AdminLabel>Nutrition Facts</AdminLabel>
+                  {renderLabelInput('nutrition')}
                   <AdminQuill
                     value={newProduct.nutrition?.[adminLang] || ''}
                     onChange={value => setNewProduct({ 
@@ -1185,7 +1268,7 @@ const AdminProductManage: React.FC = () => {
                                 <ProgressBar $progress={uploadProgress} />
                               </div>
                             )}
-                            <AdminLabel>Allergens</AdminLabel>
+                            {renderLabelInput('allergens')}
                             <AdminQuill
                               value={product.allergens?.[adminLang] || ''}
                               onChange={value => {
@@ -1200,7 +1283,7 @@ const AdminProductManage: React.FC = () => {
                               theme="snow"
                               placeholder="알레르기 정보"
                             />
-                            <AdminLabel>Ingredients</AdminLabel>
+                            {renderLabelInput('ingredients')}
                             <AdminQuill
                               value={product.ingredients?.[adminLang] || ''}
                               onChange={value => {
@@ -1215,7 +1298,7 @@ const AdminProductManage: React.FC = () => {
                               theme="snow"
                               placeholder="성분 정보"
                             />
-                            <AdminLabel>Nutrition Facts</AdminLabel>
+                            {renderLabelInput('nutrition')}
                             <AdminQuill
                               value={product.nutrition?.[adminLang] || ''}
                               onChange={value => {
@@ -1319,6 +1402,44 @@ const AdminProductManage: React.FC = () => {
                 dangerouslySetInnerHTML={{ __html: convertNewlinesToBr(pageData.subSlogan[adminLang]) }}
                 />
               </div>
+            </AdminCard>
+            <AdminCard>
+              <AdminLabel>제품 정보 라벨 설정</AdminLabel>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '24px', marginTop: '16px' }}>
+                <div>
+                  <span style={{ fontWeight: 600, color: colors.grayDark, fontSize: '0.95rem', display: 'block', marginBottom: 4 }}>
+                    Allergens
+                  </span>
+                  <AdminInput
+                    value={labelSettings.allergens[adminLang] || ''}
+                    onChange={e => handleLabelChange('allergens', e.target.value)}
+                    placeholder="Allergens 라벨"
+                  />
+                </div>
+                <div>
+                  <span style={{ fontWeight: 600, color: colors.grayDark, fontSize: '0.95rem', display: 'block', marginBottom: 4 }}>
+                    Ingredients
+                  </span>
+                  <AdminInput
+                    value={labelSettings.ingredients[adminLang] || ''}
+                    onChange={e => handleLabelChange('ingredients', e.target.value)}
+                    placeholder="Ingredients 라벨"
+                  />
+                </div>
+                <div>
+                  <span style={{ fontWeight: 600, color: colors.grayDark, fontSize: '0.95rem', display: 'block', marginBottom: 4 }}>
+                    Nutrition Facts
+                  </span>
+                    <AdminInput
+                      value={labelSettings.nutrition[adminLang] || ''}
+                      onChange={e => handleLabelChange('nutrition', e.target.value)}
+                      placeholder="Nutrition Facts 라벨"
+                    />
+                </div>
+              </div>
+              <AdminButton onClick={handleSaveLabels} $primary style={{ width: '220px', marginTop: 24 }}>
+                라벨 저장
+              </AdminButton>
             </AdminCard>
           </>
         )}
