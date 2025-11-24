@@ -266,6 +266,11 @@ const StoreList = styled.div`
   @media (max-width: 1024px) {
     grid-template-columns: 1fr;
   }
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding: 0 16px;
+  }
 `;
 
 const StoreCard = styled.div<{ $visible?: boolean; $delay?: number }>`
@@ -377,6 +382,13 @@ const BrandSection = styled.section`
     flex-direction: column;
     gap: 32px;
     padding: 32px 0;
+    align-items: center;
+    min-height: unset;
+  }
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 24px;
+    padding: 24px 0;
     align-items: center;
     min-height: unset;
   }
@@ -860,6 +872,11 @@ const SloganBannerImage = styled.img`
   max-height: 100vh;
   object-fit: cover;
   display: block;
+  @media (max-width: 768px) {
+    min-height: 600px;
+    height: auto;
+    object-fit: cover;
+  }
 `;
 
 const SloganTextOverlay = styled.div<{ $x: number; $y: number }>`
@@ -874,6 +891,9 @@ const SloganTextOverlay = styled.div<{ $x: number; $y: number }>`
   text-align: center;
   width: 90%;
   max-width: 1400px;
+  @media (max-width: 768px) {
+    width: 95%;
+  }
 `;
 
 const SloganMainTextOverlay = styled.div<{ $color?: string; $fontSize?: string }>`
@@ -885,6 +905,10 @@ const SloganMainTextOverlay = styled.div<{ $color?: string; $fontSize?: string }
   width: 100%;
   white-space: pre-wrap;
   word-break: keep-all;
+  @media (max-width: 768px) {
+    font-size: 1.8rem !important;
+    margin-bottom: 16px !important;
+  }
 `;
 
 const SloganSubTextOverlay = styled.div<{ $color?: string; $fontSize?: string }>`
@@ -918,6 +942,15 @@ const SloganSubTextOverlay = styled.div<{ $color?: string; $fontSize?: string }>
   /* <br> 에 의한 여백이 과하게 느껴지지 않도록 */
   & br {
     line-height: 0 !important;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 0.95rem !important;
+    line-height: 1.4 !important;
+    width: 95% !important;
+    & > * {
+      line-height: 1.4 !important;
+    }
   }
 `;
 

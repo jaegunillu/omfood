@@ -8,6 +8,14 @@ const VideoContainer = styled.div`
   width: 100%;
   height: 100vh;
   overflow-x: hidden;
+  @media (max-width: 768px) {
+    height: auto !important;
+    min-height: 0 !important;
+    padding-top: 120px;
+    padding-bottom: 0 !important;
+    margin-bottom: 0 !important;
+    line-height: 0;
+  }
 `;
 
 const VideoBg = styled.video`
@@ -15,9 +23,22 @@ const VideoBg = styled.video`
   top: 0;
   left: 0;
   width: 100%;
-  height: 100vh;
+  height: 100%;
+  min-height: 100vh;
   object-fit: cover;
+  object-position: center;
   z-index: -1;
+  @media (max-width: 768px) {
+    position: relative;
+    width: 100%;
+    height: auto !important;
+    min-height: 0 !important;
+    object-fit: contain;
+    object-position: center;
+    display: block;
+    padding-bottom: 0 !important;
+    margin-bottom: 0 !important;
+  }
 `;
 
 const MainTextOverlay = styled.div`
@@ -32,6 +53,16 @@ const MainTextOverlay = styled.div`
   align-items: center;
   background: transparent;
   pointer-events: none;
+  @media (max-width: 768px) {
+    position: relative;
+    top: 0;
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 40px 20px;
+    margin-top: -120px;
+    padding-bottom: 0 !important;
+    margin-bottom: 0 !important;
+  }
 `;
 
 const MainText = styled.h1`

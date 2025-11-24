@@ -59,6 +59,10 @@ const LogoWrapper = styled.div`
     transform: translateX(-50%);
     justify-content: center;
   }
+  @media (max-width: 768px) {
+    width: 90px;
+    height: 75px;
+  }
 `;
 
 const LogoImg = styled.img<{
@@ -151,22 +155,32 @@ const MobileMenuButton = styled.button<{
   $isHeaderHover: boolean;
   $navHover: boolean;
   $logoHover: boolean;
+  $isMobile: boolean;
 }>`
   display: none;
   @media (max-width: 1162px) {
     display: flex;
     position: absolute;
-    left: 24px;
-    top: 32px;
+    left: 20px;
+    top: 28px;
     background: none;
     border: none;
     z-index: 10;
-    font-size: 2rem;
-    color: ${({ $isMainPage, $isHeaderHover, $navHover, $logoHover }) =>
-      $isMainPage && !($isHeaderHover || $navHover || $logoHover) ? '#fff' : '#222'};
+    font-size: 1.8rem;
+    color: ${({ $isMainPage, $isHeaderHover, $navHover, $logoHover, $isMobile }) =>
+      $isMobile ? '#222' : ($isMainPage && !($isHeaderHover || $navHover || $logoHover) ? '#fff' : '#222')};
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    width: 44px;
+    height: 44px;
+    @media (max-width: 768px) {
+      left: 16px;
+      top: 24px;
+      font-size: 1.6rem;
+      width: 40px;
+      height: 40px;
+    }
   }
 `;
 
@@ -187,6 +201,10 @@ const MobileNav = styled.nav<{ $open: boolean }>`
     transition: transform 0.3s ease-in-out;
     transform: ${({ $open }) => $open ? 'translateX(0)' : 'translateX(-100vw)'};
     visibility: ${({ $open }) => $open ? 'visible' : 'hidden'};
+    @media (max-width: 768px) {
+      padding-top: 100px;
+      gap: 8px;
+    }
   }
 `;
 
@@ -204,6 +222,13 @@ const MobileCloseButton = styled.button`
   cursor: pointer;
   display: flex;
   box-shadow: none;
+  @media (max-width: 768px) {
+    top: 20px;
+    right: 20px;
+    font-size: 2rem;
+    width: 40px;
+    height: 40px;
+  }
   @media (min-width: 769px) {
     display: none;
   }
@@ -475,6 +500,7 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
         $isHeaderHover={isHeaderHover}
         $navHover={navHover}
         $logoHover={logoHover}
+        $isMobile={isMobile}
         onClick={handleMobileMenuToggle}
       >
         {mobileMenuOpen ? '×' : '≡'}
@@ -486,7 +512,9 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
         <a href="/" style={{ width: '100%', height: '100%', display: 'block', position: 'relative' }}>
           <LogoImg
             src={
-              isMainPage
+              isMobile
+                ? logoBlack || undefined
+                : isMainPage
                 ? (isHeaderHover || navHover || logoHover
                     ? logoBlack || undefined
                     : logoWhite || undefined)
@@ -587,7 +615,7 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
               $isHeaderHover={isHeaderHover}
               $navHover={navHover}
               $logoHover={logoHover}
-              style={{ fontSize: '1.5rem', margin: '24px 0', color: '#fff', fontWeight: 700, textShadow: '0 1px 8px rgba(0,0,0,0.18)' }}
+              style={{ fontSize: '1.2rem', margin: '20px 0', color: '#fff', fontWeight: 700, textShadow: '0 1px 8px rgba(0,0,0,0.18)' }}
               onClick={e => {
                 e.preventDefault();
                 setMobileMenuOpen(false);
