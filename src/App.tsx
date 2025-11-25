@@ -2,7 +2,8 @@ import React, { useState, useRef, useLayoutEffect, useEffect, createContext, use
 import styled, { keyframes, css, createGlobalStyle } from 'styled-components';
 import Header from './components/Header';
 import VideoSection from './components/VideoSection';
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import ReactGA from 'react-ga4';
 import { db, storage, auth } from './firebase';
 import { doc, setDoc, getDoc, onSnapshot, collection, addDoc, updateDoc, deleteDoc, getDocs } from 'firebase/firestore';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -864,6 +865,18 @@ const SloganImageWrapper = styled.div`
   overflow: hidden;
   line-height: 0;
   position: relative;
+  @media (max-width: 768px) {
+    margin-top: -30px !important;
+    margin-bottom: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    display: block !important;
+    line-height: 0 !important;
+    font-size: 0 !important;
+    vertical-align: top !important;
+    border: none !important;
+    outline: none !important;
+  }
 `;
 
 const SloganBannerImage = styled.img`
@@ -873,9 +886,17 @@ const SloganBannerImage = styled.img`
   object-fit: cover;
   display: block;
   @media (max-width: 768px) {
-    min-height: 600px;
-    height: auto;
-    object-fit: cover;
+    height: auto !important;
+    min-height: 500px !important;
+    max-height: none !important;
+    object-fit: cover !important;
+    object-position: center;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    vertical-align: top !important;
+    line-height: 0 !important;
   }
 `;
 
@@ -906,7 +927,7 @@ const SloganMainTextOverlay = styled.div<{ $color?: string; $fontSize?: string }
   white-space: pre-wrap;
   word-break: keep-all;
   @media (max-width: 768px) {
-    font-size: 1.8rem !important;
+    font-size: 1.5rem !important;
     margin-bottom: 16px !important;
   }
 `;
@@ -945,11 +966,11 @@ const SloganSubTextOverlay = styled.div<{ $color?: string; $fontSize?: string }>
   }
 
   @media (max-width: 768px) {
-    font-size: 0.95rem !important;
-    line-height: 1.4 !important;
+    font-size: 0.85rem !important;
+    line-height: 1.35 !important;
     width: 95% !important;
     & > * {
-      line-height: 1.4 !important;
+      line-height: 1.35 !important;
     }
   }
 `;
@@ -4627,7 +4648,29 @@ function AdminBrandPageManage() {
   );
 }
 
+// Google Analytics 페이지뷰 추적 컴포넌트
+function PageViewTracker() {
+  const location = useLocation();
+
+  useEffect(() => {
+    // 관리자 페이지는 통계에서 제외
+    if (location.pathname.startsWith('/admin')) {
+      return;
+    }
+
+    // 페이지뷰 전송
+    ReactGA.send({ hitType: 'pageview', page: location.pathname + location.search });
+  }, [location]);
+
+  return null;
+}
+
 function App() {
+  // Google Analytics 초기화
+  useEffect(() => {
+    ReactGA.initialize('G-8ZMLB6ZDB5');
+  }, []);
+
   // Firestore 실시간 stores 데이터
   const [storeList, setStoreList] = useState<Array<{ name: string; image: string; address: string; mapUrl: string; order?: number }>>(initialStores);
   const siteLang = localStorage.getItem('siteLang') === 'en' ? 'en' : 'ko';
@@ -4656,6 +4699,7 @@ function App() {
   return (
     <ToastProvider>
       <Router>
+        <PageViewTracker />
         <Routes>
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />

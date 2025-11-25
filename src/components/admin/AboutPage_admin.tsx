@@ -12,6 +12,11 @@ interface ImagePosition {
   y: number;
 }
 
+interface HistoryEntry {
+  year: string;
+  contents: string[];
+}
+
 interface AboutContent {
   // 헤더 섹션
   headerImage: string;
@@ -44,7 +49,163 @@ interface AboutContent {
   representativeName: string;
   messageImage: string;
   messageImagePos?: ImagePosition;
+  historyItems: HistoryEntry[];
+  historyTitle: string;
+  historySubtitle: string;
 }
+
+const defaultHistoryItems: HistoryEntry[] = [
+  {
+    year: '2025',
+    contents: [
+      'Selected for the Global Market Expansion Capability Strengthening Voucher Program (KOTRA)',
+      'Acquired MAINBiz (Management Innovation SME) Certification',
+      'Acquired Venture Company Certification (Korea)',
+      'Launched the Grilled Barbecue Series & Spicy Cream Mayo Series'
+    ]
+  },
+  {
+    year: '2024',
+    contents: [
+      'Established an Industry–Academia Cooperation Framework with the Kwangwoon University Industry-Academic Cooperation Foundation',
+      'Founded the Ovenmaru Chicken R&D Center'
+    ]
+  },
+  {
+    year: '2023',
+    contents: ['Ovenmaru Mongolia – First Store Grand Opening']
+  },
+  {
+    year: '2022',
+    contents: [
+      'Selected as a Promising Franchise Growth-Stage Support Company (Ministry of SMEs and Startups / Korea SME & Startups Agency)',
+      'Selected for the Overseas Certification Registration Support Program (Korea Food Research Institute)',
+      'Selected for the Overseas Expansion Voucher Program for Food Service Companies (aT – Korea Agro-Fisheries & Food Trade Corporation)'
+    ]
+  },
+  {
+    year: '2021',
+    contents: [
+      'Selected for the Overseas Expansion Voucher Program for Food Service Companies (aT – Korea Agro-Fisheries & Food Trade Corporation)',
+      'Introduced the Welfare Club Service',
+      'Launched the Ovenmaru Core Care System (Franchise-focused management system)',
+      'Launched 3 new pizza menu items'
+    ]
+  },
+  {
+    year: '2020',
+    contents: [
+      'Selected for the Overseas Expansion Voucher Program for Food Service Companies (aT – Korea Agro-Fisheries & Food Trade Corporation)',
+      'Selected for the Win-Win Franchise Cooperation Support Program (Ministry of SMEs and Startups / KOSMES)',
+      'Signed a Financial Support MOU with Shinhan Bank',
+      'Sponsored advertisement on SBS “Animal Farm” (TV Show)'
+    ]
+  },
+  {
+    year: '2019',
+    contents: [
+      'Selected for the Profit-Sharing Franchise Development Support Program (Ministry of SMEs and Startups)',
+      'Selected for the 2019 Data Voucher Program (Ministry of Science and ICT)',
+      'Selected for the 2019 Employee Vacation Support Program (Ministry of Culture, Sports and Tourism)',
+      'Launched new menu items (Hanoi Chicken Bun Cha, Chicken & Bread Platter, Chicken Mapo Tofu Soup)',
+      'Acquired ISO 22000:2018 (Food Safety Management System)',
+      'Selected as a Next-Generation World-Class Product (2019)'
+    ]
+  },
+  {
+    year: '2018',
+    contents: [
+      'Reached 150 Ovenmaru Chicken Stores Nationwide',
+      'Launched new menu items (Bulgogi Roast, Maru Tteokbokki, Cheese Tteokbokki, Boneless Chicken Feet, Stir-fried Garlic Gizzard)',
+      'Won No.1 Excellence Brand Award (JungAng Ilbo, 2018)'
+    ]
+  },
+  {
+    year: '2017',
+    contents: [
+      'Acquired ISO 9001:2015',
+      'Launched Ovenmaru Chicken Wing & Stick Menu',
+      'Reached 140 Stores Nationwide'
+    ]
+  },
+  {
+    year: '2016',
+    contents: [
+      'Signed Food Bank Support Agreement with Gireum Social Welfare Center',
+      'Sponsored advertisement on SBS K-POP Star',
+      'Launched Oppane Baked Chicken',
+      'Changed chicken size standard from No.8 → No.9',
+      'Won Korea First Class Brand Award',
+      'Signed contract for First Ho Chi Minh Branch (Vietnam)',
+      'Launched new menu items (Jackson Chicken, Spicy Chicken Feet)',
+      'Reached 120 Stores Nationwide',
+      'Grand Opening of 1st Ho Chi Minh Store (Vietnam)'
+    ]
+  },
+  {
+    year: '2015',
+    contents: [
+      'Company name changed to OM Food Co., Ltd.',
+      'Launched new menu items (Honey Butter Bake, Bburings Bake, Garlic Roast, Cheese Chicken Stir-fry, Maru Mulbaeng-i)',
+      'Opened Daegu Branch Office',
+      'Selected as one of Korea’s Good Companies',
+      'Won No.1 Consumer Preference Brand Award',
+      'Sponsored tvN Drama “Bubblegum”',
+      'Sponsored SBS “Running Man”',
+      'Sponsored MBC “Surprise”',
+      'Opened 90th Ovenmaru Store'
+    ]
+  },
+  {
+    year: '2014',
+    contents: [
+      'Launched new menu items (Guobaorou Bake, Garlic-holic Bake, Salad Boneless Roast & Bake)',
+      'Signed Taiwan Branch Agreement',
+      'Opened Gwangju / Jeonnam Branch',
+      'Opened 1st Taipei Store (Taiwan)',
+      'Opened Daejeon / Chungcheong Branch',
+      'Reached 60 Stores Nationwide'
+    ]
+  },
+  {
+    year: '2013',
+    contents: [
+      'Launched new menu items (Carbonara Boneless Bake, Kkanpung Roast, Spicy Chicken Roast)',
+      'Reached 20 Stores Nationwide'
+    ]
+  },
+  {
+    year: '2012',
+    contents: [
+      'Established chain headquarters Good F&C',
+      'Started franchise business',
+      'Opened Busan Branch Office',
+      'Applied for Ovenmaru Chicken Trademark Registration'
+    ]
+  },
+  {
+    year: '2010',
+    contents: ['Began Brand R&D']
+  }
+];
+
+const cloneHistoryItems = (): HistoryEntry[] =>
+  defaultHistoryItems.map(item => ({
+    year: item.year,
+    contents: [...item.contents]
+  }));
+
+const mergeContent = (base: AboutContent, incoming?: Partial<AboutContent>): AboutContent => {
+  if (!incoming) return base;
+  return {
+    ...base,
+    ...incoming,
+    historyItems:
+      incoming.historyItems && incoming.historyItems.length
+        ? incoming.historyItems
+        : base.historyItems
+  };
+};
 
 const AboutPageAdmin: React.FC = () => {
   const { adminLang } = useAdminLang();
@@ -87,7 +248,10 @@ const AboutPageAdmin: React.FC = () => {
 
 OM FOOD는 앞으로도 건강한 재료, 정직한 조리, 감동 있는 서비스로 고객의 신뢰를 쌓아가며 K-푸드를 대표하는 글로벌 외식 브랜드로 성장하겠습니다.`,
     representativeName: '대표이사 박성우',
-    messageImage: ''
+    messageImage: '',
+    historyItems: cloneHistoryItems(),
+    historyTitle: '기업 연혁',
+    historySubtitle: '2010년부터 현재까지 OM FOOD가 걸어온 길입니다.'
   });
 
   // 영어 콘텐츠 상태
@@ -128,7 +292,10 @@ By researching the food cultures and tastes of various countries around the worl
 
 OM FOOD will continue to grow as a global dining brand representing K-Food, building customer trust with healthy ingredients, honest cooking, and impressive service.`,
     representativeName: 'CEO Park Sung-woo',
-    messageImage: ''
+    messageImage: '',
+    historyItems: cloneHistoryItems(),
+    historyTitle: 'Company History',
+    historySubtitle: 'Milestones that shaped OM FOOD from 2010 to today.'
   });
 
   const currentContent = adminLang === 'ko' ? koContent : enContent;
@@ -191,6 +358,70 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
     }));
   };
 
+  const addHistoryYear = () => {
+    setCurrentContent(prev => ({
+      ...prev,
+      historyItems: [{ year: '', contents: [''] }, ...(prev.historyItems || [])]
+    }));
+  };
+
+  const removeHistoryYear = (index: number) => {
+    setCurrentContent(prev => ({
+      ...prev,
+      historyItems: prev.historyItems.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateHistoryYear = (index: number, value: string) => {
+    setCurrentContent(prev => ({
+      ...prev,
+      historyItems: prev.historyItems.map((entry, i) =>
+        i === index ? { ...entry, year: value } : entry
+      )
+    }));
+  };
+
+  const addHistoryContentLine = (index: number) => {
+    setCurrentContent(prev => ({
+      ...prev,
+      historyItems: prev.historyItems.map((entry, i) =>
+        i === index ? { ...entry, contents: [...entry.contents, ''] } : entry
+      )
+    }));
+  };
+
+  const updateHistoryContentLine = (index: number, contentIndex: number, value: string) => {
+    setCurrentContent(prev => ({
+      ...prev,
+      historyItems: prev.historyItems.map((entry, i) =>
+        i === index
+          ? {
+              ...entry,
+              contents: entry.contents.map((content, ci) =>
+                ci === contentIndex ? value : content
+              )
+            }
+          : entry
+      )
+    }));
+  };
+
+  const removeHistoryContentLine = (index: number, contentIndex: number) => {
+    setCurrentContent(prev => ({
+      ...prev,
+      historyItems: prev.historyItems.map((entry, i) =>
+        i === index
+          ? {
+              ...entry,
+              contents: entry.contents.filter((_, ci) => ci !== contentIndex).length
+                ? entry.contents.filter((_, ci) => ci !== contentIndex)
+                : ['']
+            }
+          : entry
+      )
+    }));
+  };
+
   // Firebase에서 데이터 로드
   useEffect(() => {
     const loadData = async () => {
@@ -199,10 +430,10 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
         const enDoc = await getDoc(doc(db, 'about', 'en'));
         
         if (koDoc.exists()) {
-          setKoContent(koDoc.data() as AboutContent);
+          setKoContent(prev => mergeContent(prev, koDoc.data() as Partial<AboutContent>));
         }
         if (enDoc.exists()) {
-          setEnContent(enDoc.data() as AboutContent);
+          setEnContent(prev => mergeContent(prev, enDoc.data() as Partial<AboutContent>));
         }
       } catch (error) {
         console.error('데이터 로드 실패:', error);
@@ -441,6 +672,107 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
                     </div>
                   )}
                 </div>
+              </div>
+            </div>
+
+            {/* 기업 연혁 관리 */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold mb-4">기업 연혁 관리</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      섹션 제목
+                    </label>
+                    <input
+                      type="text"
+                      value={currentContent.historyTitle}
+                      onChange={(e) => setCurrentContent(prev => ({ ...prev, historyTitle: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="예: 기업 연혁"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      섹션 설명
+                    </label>
+                    <textarea
+                      value={currentContent.historySubtitle}
+                      onChange={(e) => setCurrentContent(prev => ({ ...prev, historySubtitle: e.target.value }))}
+                      rows={2}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="예: 2010년부터 현재까지..."
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">연도별 히스토리</h3>
+                <button
+                  onClick={addHistoryYear}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium"
+                >
+                  연도 추가
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {(currentContent.historyItems || []).map((entry, index) => (
+                  <div key={`${entry.year}-${index}`} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="flex-1">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          연도
+                        </label>
+                        <input
+                          type="text"
+                          value={entry.year}
+                          onChange={(e) => updateHistoryYear(index, e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="예: 2025"
+                        />
+                      </div>
+                      <button
+                        onClick={() => removeHistoryYear(index)}
+                        className="px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm"
+                      >
+                        연도 삭제
+                      </button>
+                    </div>
+
+                    <div className="space-y-3">
+                      <label className="block text-sm font-medium text-gray-700">
+                        연혁 내용
+                      </label>
+                      {entry.contents.map((content, contentIndex) => (
+                        <div key={`${entry.year}-content-${contentIndex}`} className="flex gap-2">
+                          <input
+                            type="text"
+                            value={content}
+                            onChange={(e) =>
+                              updateHistoryContentLine(index, contentIndex, e.target.value)
+                            }
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="내용을 입력하세요"
+                          />
+                          <button
+                            onClick={() => removeHistoryContentLine(index, contentIndex)}
+                            className="px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 text-sm"
+                          >
+                            삭제
+                          </button>
+                        </div>
+                      ))}
+                      <button
+                        onClick={() => addHistoryContentLine(index)}
+                        className="w-full px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 text-sm"
+                      >
+                        내용 추가
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -698,6 +1030,37 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
                         </li>
                       ))}
                     </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* 기업 연혁 프리뷰 */}
+              <div className="mb-8">
+                <div className="rounded-lg p-6" style={{ backgroundColor: '#FFF9F4', border: '1px solid #FDE4D0' }}>
+                  <p className="text-sm font-semibold tracking-widest uppercase" style={{ color: '#F88D2A' }}>
+                    {currentContent.historyTitle || 'COMPANY HISTORY'}
+                  </p>
+                  <h3 className="text-2xl font-bold text-gray-900 mt-2 mb-6">
+                    {currentContent.historySubtitle || 'Milestones that shaped OM FOOD from 2010 to today.'}
+                  </h3>
+                  <div className="space-y-4">
+                    {(currentContent.historyItems || []).map((entry, index) => (
+                      <div
+                        key={`preview-history-${entry.year}-${index}`}
+                        className="grid grid-cols-1 md:grid-cols-3 gap-4 py-3 border-t border-orange-100"
+                      >
+                        <div className="text-3xl font-bold text-gray-800">
+                          {entry.year || '----'}
+                        </div>
+                        <div className="md:col-span-2 space-y-2">
+                          {entry.contents.map((content, contentIndex) => (
+                            <p key={`${entry.year}-content-preview-${contentIndex}`} className="text-base text-gray-700 leading-relaxed">
+                              {content || '내용을 입력하세요.'}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>

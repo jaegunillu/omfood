@@ -107,10 +107,22 @@ const ContactUsAdminPage: React.FC = () => {
   // 문의 리스트 Firestore 연동
   const [inquiries, setInquiries] = useState<any[]>([]);
   useEffect(() => {
-    const q = query(collection(db, "contact_us"), orderBy("createdAt", "desc"));
+    const q = query(collection(db, "contact_messages"), orderBy("createdAt", "desc"));
     const unsub = onSnapshot(q, (snap) => {
       setInquiries(
-        snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+        snap.docs.map((d) => {
+          const data = d.data();
+          // Firestore Timestamp를 Date로 변환
+          let createdAt = data.createdAt;
+          if (createdAt && typeof createdAt.toDate === 'function') {
+            createdAt = createdAt.toDate();
+          } else if (createdAt && createdAt.seconds) {
+            createdAt = new Date(createdAt.seconds * 1000);
+          } else if (!(createdAt instanceof Date)) {
+            createdAt = createdAt ? new Date(createdAt) : new Date();
+          }
+          return { id: d.id, ...data, createdAt };
+        })
       );
     });
     return () => unsub();
@@ -189,7 +201,8 @@ const ContactUsAdminPage: React.FC = () => {
         <PageHeader 
           title="CONTACT US 문의 관리"
           subtitle="문의 리스트와 하단 정보를 관리합니다"
-          onLogout={handleLogout}
+          showBackButton={false}
+          showLogout={false}
         />
         
         <ToastContainer>
@@ -220,7 +233,17 @@ const ContactUsAdminPage: React.FC = () => {
                     <td style={{ padding: '12px 16px', borderBottom: '1px solid #e0e0e0' }}>{inq.productName}</td>
                     <td style={{ padding: '12px 16px', borderBottom: '1px solid #e0e0e0' }}>{inq.country}</td>
                     <td style={{ padding: '12px 16px', borderBottom: '1px solid #e0e0e0' }}>{inq.email}</td>
-                    <td style={{ padding: '12px 16px', borderBottom: '1px solid #e0e0e0', textAlign: 'center' }}>{new Date(inq.createdAt).toLocaleString()}</td>
+                    <td style={{ padding: '12px 16px', borderBottom: '1px solid #e0e0e0', textAlign: 'center' }}>
+                      {inq.createdAt && inq.createdAt instanceof Date 
+                        ? inq.createdAt.toLocaleString() 
+                        : inq.createdAt && typeof inq.createdAt.toDate === 'function'
+                        ? inq.createdAt.toDate().toLocaleString()
+                        : inq.createdAt && inq.createdAt.seconds
+                        ? new Date(inq.createdAt.seconds * 1000).toLocaleString()
+                        : inq.createdAt
+                        ? new Date(inq.createdAt).toLocaleString()
+                        : '-'}
+                    </td>
                   </tr>
                 ))}
               </tbody>

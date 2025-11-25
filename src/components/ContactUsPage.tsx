@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { LocationOn, Phone, Fax, Email } from "@mui/icons-material";
 import axios from "axios";
 import { db } from "../firebase";
-import { doc, onSnapshot } from "firebase/firestore";
+import { doc, onSnapshot, collection, addDoc } from "firebase/firestore";
 import privacyPolicy from "../assets/privacyPolicy.json";
 import { useToast } from './common/ToastContext';
 import Header from './Header';
@@ -75,18 +75,16 @@ const ContactUsPage: React.FC = () => {
 
   const onSubmit = async (data: FormValues) => {
     try {
-      // Contact Us API 호출 경로를 항상 배포된 Cloud Function URL로 고정
-      const endpoint = 'https://us-central1-omfood-a621d.cloudfunctions.net/sendContactUs';
-      
-      await axios.post(endpoint, {
+      // Firestore에 직접 저장
+      await addDoc(collection(db, 'contact_messages'), {
         ...data,
-        createdAt: new Date().toISOString(),
+        createdAt: new Date(),
       });
       success('문의가 성공적으로 접수되었습니다.');
       reset(); // 폼 초기화
     } catch (err: any) {
       console.error('Contact form submission error:', err);
-      const errorMessage = err?.response?.data?.error || "Submission failed. Please try again later.";
+      const errorMessage = "Submission failed. Please try again later.";
       error(errorMessage);
     }
   };

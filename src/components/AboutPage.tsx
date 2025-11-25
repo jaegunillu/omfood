@@ -1,8 +1,154 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useTypewriter, Cursor } from 'react-simple-typewriter';
 import { db } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
+
+type HistoryItem = {
+  year: string;
+  contents: string[];
+};
+
+const defaultHistoryItems: HistoryItem[] = [
+  {
+    year: '2025',
+    contents: [
+      'Selected for the Global Market Expansion Capability Strengthening Voucher Program (KOTRA)',
+      'Acquired MAINBiz (Management Innovation SME) Certification',
+      'Acquired Venture Company Certification (Korea)',
+      'Launched the Grilled Barbecue Series & Spicy Cream Mayo Series'
+    ]
+  },
+  {
+    year: '2024',
+    contents: [
+      'Established an Industry–Academia Cooperation Framework with the Kwangwoon University Industry-Academic Cooperation Foundation',
+      'Founded the Ovenmaru Chicken R&D Center'
+    ]
+  },
+  {
+    year: '2023',
+    contents: ['Ovenmaru Mongolia – First Store Grand Opening']
+  },
+  {
+    year: '2022',
+    contents: [
+      'Selected as a Promising Franchise Growth-Stage Support Company (Ministry of SMEs and Startups / Korea SME & Startups Agency)',
+      'Selected for the Overseas Certification Registration Support Program (Korea Food Research Institute)',
+      'Selected for the Overseas Expansion Voucher Program for Food Service Companies (aT – Korea Agro-Fisheries & Food Trade Corporation)'
+    ]
+  },
+  {
+    year: '2021',
+    contents: [
+      'Selected for the Overseas Expansion Voucher Program for Food Service Companies (aT – Korea Agro-Fisheries & Food Trade Corporation)',
+      'Introduced the Welfare Club Service',
+      'Launched the Ovenmaru Core Care System (Franchise-focused management system)',
+      'Launched 3 new pizza menu items'
+    ]
+  },
+  {
+    year: '2020',
+    contents: [
+      'Selected for the Overseas Expansion Voucher Program for Food Service Companies (aT – Korea Agro-Fisheries & Food Trade Corporation)',
+      'Selected for the Win-Win Franchise Cooperation Support Program (Ministry of SMEs and Startups / KOSMES)',
+      'Signed a Financial Support MOU with Shinhan Bank',
+      'Sponsored advertisement on SBS “Animal Farm” (TV Show)'
+    ]
+  },
+  {
+    year: '2019',
+    contents: [
+      'Selected for the Profit-Sharing Franchise Development Support Program (Ministry of SMEs and Startups)',
+      'Selected for the 2019 Data Voucher Program (Ministry of Science and ICT)',
+      'Selected for the 2019 Employee Vacation Support Program (Ministry of Culture, Sports and Tourism)',
+      'Launched new menu items (Hanoi Chicken Bun Cha, Chicken & Bread Platter, Chicken Mapo Tofu Soup)',
+      'Acquired ISO 22000:2018 (Food Safety Management System)',
+      'Selected as a Next-Generation World-Class Product (2019)'
+    ]
+  },
+  {
+    year: '2018',
+    contents: [
+      'Reached 150 Ovenmaru Chicken Stores Nationwide',
+      'Launched new menu items (Bulgogi Roast, Maru Tteokbokki, Cheese Tteokbokki, Boneless Chicken Feet, Stir-fried Garlic Gizzard)',
+      'Won No.1 Excellence Brand Award (JungAng Ilbo, 2018)'
+    ]
+  },
+  {
+    year: '2017',
+    contents: [
+      'Acquired ISO 9001:2015',
+      'Launched Ovenmaru Chicken Wing & Stick Menu',
+      'Reached 140 Stores Nationwide'
+    ]
+  },
+  {
+    year: '2016',
+    contents: [
+      'Signed Food Bank Support Agreement with Gireum Social Welfare Center',
+      'Sponsored advertisement on SBS K-POP Star',
+      'Launched Oppane Baked Chicken',
+      'Changed chicken size standard from No.8 → No.9',
+      'Won Korea First Class Brand Award',
+      'Signed contract for First Ho Chi Minh Branch (Vietnam)',
+      'Launched new menu items (Jackson Chicken, Spicy Chicken Feet)',
+      'Reached 120 Stores Nationwide',
+      'Grand Opening of 1st Ho Chi Minh Store (Vietnam)'
+    ]
+  },
+  {
+    year: '2015',
+    contents: [
+      'Company name changed to OM Food Co., Ltd.',
+      'Launched new menu items (Honey Butter Bake, Bburings Bake, Garlic Roast, Cheese Chicken Stir-fry, Maru Mulbaeng-i)',
+      'Opened Daegu Branch Office',
+      'Selected as one of Korea’s Good Companies',
+      'Won No.1 Consumer Preference Brand Award',
+      'Sponsored tvN Drama “Bubblegum”',
+      'Sponsored SBS “Running Man”',
+      'Sponsored MBC “Surprise”',
+      'Opened 90th Ovenmaru Store'
+    ]
+  },
+  {
+    year: '2014',
+    contents: [
+      'Launched new menu items (Guobaorou Bake, Garlic-holic Bake, Salad Boneless Roast & Bake)',
+      'Signed Taiwan Branch Agreement',
+      'Opened Gwangju / Jeonnam Branch',
+      'Opened 1st Taipei Store (Taiwan)',
+      'Opened Daejeon / Chungcheong Branch',
+      'Reached 60 Stores Nationwide'
+    ]
+  },
+  {
+    year: '2013',
+    contents: [
+      'Launched new menu items (Carbonara Boneless Bake, Kkanpung Roast, Spicy Chicken Roast)',
+      'Reached 20 Stores Nationwide'
+    ]
+  },
+  {
+    year: '2012',
+    contents: [
+      'Established chain headquarters Good F&C',
+      'Started franchise business',
+      'Opened Busan Branch Office',
+      'Applied for Ovenmaru Chicken Trademark Registration'
+    ]
+  },
+  {
+    year: '2010',
+    contents: ['Began Brand R&D']
+  }
+];
+
+const cloneHistoryItems = () =>
+  defaultHistoryItems.map(item => ({
+    year: item.year,
+    contents: [...item.contents]
+  }));
 
 const AboutPage: React.FC = () => {
   const [isMobile, setIsMobile] = useState(false);
@@ -50,7 +196,10 @@ OM FOOD는 앞으로도 건강한 재료, 정직한 조리, 감동 있는 서비
       philosophyImagePos: { x: 50, y: 50 },
       spiritImagePos: { x: 50, y: 50 },
       sloganImagePos: { x: 50, y: 50 },
-      messageImagePos: { x: 50, y: 50 }
+      messageImagePos: { x: 50, y: 50 },
+      historyItems: cloneHistoryItems(),
+      historyTitle: '기업 연혁',
+      historySubtitle: '2010년부터 현재까지 OM FOOD가 걸어온 길입니다.'
     },
     en: {
       headerImage: '',
@@ -94,9 +243,24 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
       philosophyImagePos: { x: 50, y: 50 },
       spiritImagePos: { x: 50, y: 50 },
       sloganImagePos: { x: 50, y: 50 },
-      messageImagePos: { x: 50, y: 50 }
+      messageImagePos: { x: 50, y: 50 },
+      historyItems: cloneHistoryItems(),
+      historyTitle: 'Company History',
+      historySubtitle: 'Milestones that shaped OM FOOD from 2010 to today.'
     }
   });
+
+  // 이미지 경로를 안전하게 처리
+  const getImagePath = (imageName: string) => {
+    return `${process.env.PUBLIC_URL}/ABOUT_IMG/${imageName}`;
+  };
+
+  const headerImageSrc = aboutData[currentLang].headerImage || getImagePath('OM_E1.jpg');
+  const philosophyImageSrc = aboutData[currentLang].philosophyImage || getImagePath('OM_E2.jpg');
+  const spiritImageSrc = aboutData[currentLang].spiritImage || getImagePath('OM_E3.jpg');
+  const sloganImageSrc = aboutData[currentLang].sloganImage || getImagePath('OM_E4.jpg');
+  const messageImageSrc = aboutData[currentLang].messageImage || getImagePath('OM_E5.jpg');
+  const historyItems = aboutData[currentLang].historyItems || [];
 
   useEffect(() => {
     const checkMobile = () => {
@@ -117,15 +281,31 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
         const enDoc = await getDoc(doc(db, 'about', 'en'));
         
         if (koDoc.exists()) {
+          const data = koDoc.data();
           setAboutData(prev => ({
             ...prev,
-            ko: { ...prev.ko, ...koDoc.data() }
+            ko: {
+              ...prev.ko,
+              ...data,
+              historyItems:
+                (data as any).historyItems && (data as any).historyItems.length
+                  ? (data as any).historyItems
+                  : prev.ko.historyItems
+            }
           }));
         }
         if (enDoc.exists()) {
+          const data = enDoc.data();
           setAboutData(prev => ({
             ...prev,
-            en: { ...prev.en, ...enDoc.data() }
+            en: {
+              ...prev.en,
+              ...data,
+              historyItems:
+                (data as any).historyItems && (data as any).historyItems.length
+                  ? (data as any).historyItems
+                  : prev.en.historyItems
+            }
           }));
         }
       } catch (error) {
@@ -166,6 +346,43 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
     };
   }, []);
 
+  useEffect(() => {
+    historyItemRefs.current = [];
+    setActiveHistoryIndex(0);
+  }, [currentLang]);
+
+  useEffect(() => {
+    if (!historyItems.length) return;
+
+    const handleScroll = () => {
+      const viewportCenter = window.innerHeight / 2;
+      let closestIndex = 0;
+      let minDistance = Number.POSITIVE_INFINITY;
+
+      historyItemRefs.current.forEach((el, index) => {
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        const elementCenter = rect.top + rect.height / 2;
+        const distance = Math.abs(elementCenter - viewportCenter);
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestIndex = index;
+        }
+      });
+
+      setActiveHistoryIndex(prev => (prev === closestIndex ? prev : closestIndex));
+    };
+
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleScroll);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+    };
+  }, [historyItems]);
+
   const [text] = useTypewriter({
     words: ['먹는 사람도', '파는 사람도'],
     loop: 1,
@@ -173,6 +390,8 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
     deleteSpeed: 50,
     delaySpeed: 1000,
   });
+  const [activeHistoryIndex, setActiveHistoryIndex] = useState(0);
+  const historyItemRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const fadeInUp = {
     initial: { opacity: 0, y: 30 },
@@ -230,16 +449,6 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
     }
   };
 
-  // 이미지 경로를 안전하게 처리
-  const getImagePath = (imageName: string) => {
-    return `${process.env.PUBLIC_URL}/ABOUT_IMG/${imageName}`;
-  };
-
-  const headerImageSrc = aboutData[currentLang].headerImage || getImagePath('OM_E1.jpg');
-  const philosophyImageSrc = aboutData[currentLang].philosophyImage || getImagePath('OM_E2.jpg');
-  const spiritImageSrc = aboutData[currentLang].spiritImage || getImagePath('OM_E3.jpg');
-  const sloganImageSrc = aboutData[currentLang].sloganImage || getImagePath('OM_E4.jpg');
-  const messageImageSrc = aboutData[currentLang].messageImage || getImagePath('OM_E5.jpg');
 
   // 이미지 포커스 포인트 위치 정보
   const headerImagePos = aboutData[currentLang].headerImagePos || { x: 50, y: 50 };
@@ -247,6 +456,15 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
   const spiritImagePos = aboutData[currentLang].spiritImagePos || { x: 50, y: 50 };
   const sloganImagePos = aboutData[currentLang].sloganImagePos || { x: 50, y: 50 };
   const messageImagePos = aboutData[currentLang].messageImagePos || { x: 50, y: 50 };
+
+  const historyTitle =
+    aboutData[currentLang].historyTitle ||
+    (currentLang === 'ko' ? '기업 연혁' : 'Company History');
+  const historyDescription =
+    aboutData[currentLang].historySubtitle ||
+    (currentLang === 'ko'
+      ? '2010년부터 현재까지 OM FOOD가 걸어온 길입니다.'
+      : 'Milestones that shaped OM FOOD from 2010 to today.');
 
   return (
     <div className="about-page" style={{ minHeight: '800px', backgroundColor: 'white' }}>
@@ -685,43 +903,140 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
         </div>
       </motion.section>
 
+      {/* 기업 연혁 Section */}
+      <motion.section
+        className="history-section"
+        style={{ padding: '18rem 10rem 0 10rem', background: '#FFF9F4' }}
+        {...fadeInUp}
+      >
+        <div style={{ maxWidth: '76rem', margin: '0 auto' }}>
+          <div style={{ marginBottom: '4rem' }}>
+            <motion.p
+              style={{
+                fontSize: '1.1rem',
+                fontWeight: 600,
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                color: '#F88D2A',
+                marginBottom: '0.75rem'
+              }}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+            >
+              {historyTitle}
+            </motion.p>
+            <motion.h2
+              style={{
+                fontSize: '3.5rem',
+                fontWeight: 700,
+                color: '#111',
+                margin: 0,
+                lineHeight: 1.2
+              }}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              viewport={{ once: true }}
+            >
+              {historyDescription}
+            </motion.h2>
+          </div>
+
+          <div>
+            {historyItems.map((item, index) => {
+              const isActive = index === activeHistoryIndex;
+              return (
+                <div
+                  key={`${item.year}-${index}`}
+                  className="history-row"
+                  ref={el => {
+                    historyItemRefs.current[index] = el;
+                  }}
+                  data-history-index={index}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 3fr',
+                    gap: '2.5rem',
+                    padding: '2.5rem 0',
+                    borderTop: index === 0 ? '1px solid #f0e4d9' : '1px solid #efe1d4'
+                  }}
+                >
+                  <div
+                    className={`history-year ${isActive ? 'active' : ''}`}
+                    style={{
+                      fontSize: '3rem',
+                      fontWeight: 700,
+                      color: isActive ? '#111111' : '#C9C9C9',
+                      transition: 'color 0.3s ease',
+                      letterSpacing: '-0.02em'
+                    }}
+                  >
+                    {item.year}
+                  </div>
+                  <div
+                    className="history-content"
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.85rem',
+                      color: isActive ? '#333333' : '#E0E0E0',
+                      transition: 'color 0.5s ease'
+                    }}
+                  >
+                    {item.contents.map((content, contentIndex) => (
+                      <p
+                        key={`${item.year}-${contentIndex}`}
+                        style={{
+                          margin: 0,
+                          fontSize: '1.25rem',
+                          lineHeight: 1.5,
+                          color: 'inherit',
+                          fontWeight: 400
+                        }}
+                      >
+                        {content}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </motion.section>
+
       {/* "음식은 먹는 사람도 파는 사람도 건강해야 한다" Section */}
       <motion.section 
+        className="slogan-section"
         style={{ 
           position: 'relative', 
-          padding: '8rem 2rem', 
+          padding: '0', 
           overflow: 'hidden',
-          minHeight: '100vh',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center'
         }}
         {...fadeInUp}
       >
-      {/* 배경 이미지 */}
-      <div style={{ position: 'absolute', inset: 0 }}>
-        <img 
-          src={sloganImageSrc}
-          alt="Kitchen background" 
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            objectPosition: `${sloganImagePos.x}% ${sloganImagePos.y}%`
-          }}
-        />
-      </div> 
-        {/* 어두운 오버레이 */}
-        <div style={{ 
-          position: 'absolute', 
-          inset: 0, 
-          backgroundColor: 'rgba(0, 0, 0, 0.02)' 
-        }}></div>
+        <div className="slogan-image-wrapper">
+          <img 
+            className="slogan-image"
+            src={sloganImageSrc}
+            alt="Kitchen background" 
+            style={{
+              width: '100%',
+              objectPosition: `${sloganImagePos.x}% ${sloganImagePos.y}%`
+            }}
+          />
+          <div className="slogan-overlay" />
+        </div>
         
         {/* 텍스트 */}
         <motion.div 
           style={{ 
-            position: 'relative', 
+            position: 'absolute', 
             zIndex: 10, 
             textAlign: 'center', 
             color: 'white' 
@@ -732,6 +1047,7 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
           viewport={{ once: true }}
         >
           <motion.div 
+            className="slogan-text"
             style={{ 
               fontSize: '8rem', 
               fontWeight: 'bold', 
@@ -782,7 +1098,7 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
   className="om-global-kfood"
   style={{
     position: 'relative',
-    padding: '20rem 2rem',              // 20rem → 6rem (원본 여백감에 맞춤)
+    padding: '0 2rem 20rem 2rem',              // 상단 padding 제거
     backgroundColor: '#F6EFE8',        // 연베이지
     overflow: 'hidden'
   }}
@@ -901,12 +1217,82 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
        </motion.section>
        
        <style>{`
+.about-page .history-section {
+  background: #FFF9F4;
+}
+.about-page .history-row {
+  border-bottom: 1px solid #f0e4d9;
+}
+.about-page .history-row:last-child {
+  border-bottom: none;
+}
+.about-page .history-year {
+  color: #C9C9C9;
+  transition: color 0.3s ease;
+}
+.about-page .history-year.active {
+  color: #111111;
+}
+.about-page .history-content p {
+  color: #333333;
+  font-size: 1.25rem;
+  line-height: 1.6;
+}
+.about-page .slogan-section {
+  height: auto !important;
+  min-height: auto !important;
+}
+.about-page .slogan-image-wrapper {
+  width: 100%;
+  position: relative;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.about-page .slogan-image {
+  width: 100%;
+  height: auto !important;
+  object-fit: contain !important;
+  position: relative !important;
+  display: block;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.about-page .slogan-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+}
+
 /* PC (1801px 이상)에는 기존 스타일 유지 */
 
 /* 중간 해상도 (769px ~ 1800px) 스타일 */
 @media (max-width: 1800px) {
   .about-page section {
     padding: clamp(4rem, 5vw, 6rem) clamp(1rem, 2vw, 4rem) !important;
+  }
+  .about-page .history-section {
+    padding: clamp(6rem, 8vw, 12rem) clamp(1.5rem, 3vw, 4rem) 0 clamp(1.5rem, 3vw, 4rem) !important;
+  }
+  .about-page .slogan-section {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .about-page .om-global-kfood {
+    padding-top: 0 !important;
+  }
+  .about-page .history-row {
+    grid-template-columns: 1fr 2fr !important;
+    gap: clamp(1.5rem, 2.5vw, 3rem) !important;
+  }
+  .about-page .history-year {
+    font-size: clamp(2.2rem, 3vw, 3rem) !important;
+  }
+  .about-page .history-content p {
+    font-size: clamp(1rem, 1.4vw, 1.2rem) !important;
+  }
+  .about-page .slogan-image {
+    object-fit: contain !important;
   }
   .about-page section:nth-of-type(2) > div,
   .about-page section:nth-of-type(3) > div {
@@ -969,8 +1355,8 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
   }
   
   /* 3. 슬로건 섹션 */
-  .about-page section:nth-of-type(4) > div > div {
-    font-size: clamp(2.5rem, 5vw, 8rem) !important;
+  .about-page .slogan-text {
+    font-size: clamp(2.5rem, 6vw, 6rem) !important;
     line-height: 1.2 !important;
   }
 
@@ -988,7 +1374,17 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
 /* 모바일 (768px 이하) 스타일 */
 @media (max-width: 768px) {
   .about-page section {
-    padding: 4rem 1rem !important;
+    padding: 3rem 1rem !important;
+  }
+  .about-page .history-section {
+    padding: 3rem 1.25rem 0 1.25rem !important;
+  }
+  .about-page .slogan-section {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .about-page .om-global-kfood {
+    padding-top: 0 !important;
   }
   .about-page section h2,
   .about-page section h3,
@@ -1002,17 +1398,29 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
     grid-template-columns: 1fr !important;
     gap: 2rem !important;
   }
+  .about-page section:nth-of-type(2) > div > div > div:last-child,
+  .about-page section:nth-of-type(3) > div > div > div:last-child {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    width: 100% !important;
+  }
   .about-page section:nth-of-type(2) h2,
   .about-page section:nth-of-type(3) h2 {
-    font-size: 2.5rem !important;
+    font-size: 1.8rem !important;
     margin-bottom: 1rem !important;
+    text-align: center !important;
+    width: 100% !important;
   }
   .about-page section:nth-of-type(2) h3,
   .about-page section:nth-of-type(3) h3 {
-    font-size: 1.8rem !important;
+    font-size: 1.5rem !important;
     height: auto !important;
-    width: auto !important;
+    width: 100% !important;
     margin-bottom: 1.5rem !important;
+    text-align: center !important;
+    line-height: 1.4 !important;
   }
   .about-page section:nth-of-type(2) ul,
   .about-page section:nth-of-type(3) ul {
@@ -1020,15 +1428,20 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
     padding: 0 !important;
     width: 100% !important;
     text-align: center !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
   }
   .about-page section:nth-of-type(2) ul li,
   .about-page section:nth-of-type(3) ul li {
-    font-size: 1.1rem !important;
+    font-size: 1rem !important;
     word-break: keep-all;
-    margin-bottom: 0.5rem !important;
-    padding-left: 0;
+    margin-bottom: 0 !important;
+    padding-left: 0 !important;
     text-align: center !important;
     width: 100% !important;
+    line-height: 1.5 !important;
   }
   .about-page section:nth-of-type(2) ul li > span:first-child,
   .about-page section:nth-of-type(3) ul li > span:first-child {
@@ -1042,36 +1455,60 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
   }
   .about-page section:first-of-type {
     padding: 0 !important;
+    height: auto !important;
+    min-height: unset !important;
+    position: relative !important;
+    z-index: 1 !important;
   }
   .about-page section:first-of-type img {
+    position: relative !important;
     width: 100% !important;
     height: auto !important;
-    object-fit: cover !important;
+    min-height: unset !important;
+    object-fit: contain !important;
+    display: block !important;
+    z-index: 1 !important;
   }
   .about-page section:first-of-type > div {
     position: absolute !important;
     top: auto !important;
     left: auto !important;
-    right: 1rem !important;
-    bottom: 2rem !important;
+    right: 20px !important;
+    bottom: 20px !important;
     transform: none !important;
+    flex-direction: row !important;
+    align-items: flex-end !important;
+    text-align: right !important;
+    width: auto !important;
+    gap: 1rem !important;
+    z-index: 1 !important;
+  }
+  .about-page section:first-of-type > div > div:first-child {
+    display: flex !important;
     flex-direction: column !important;
     align-items: flex-end !important;
-    width: auto !important;
   }
   .about-page section:first-of-type p {
-    font-size: 24px !important;
-    margin-bottom: 0 !important;
+    font-size: 1.5rem !important;
+    margin-bottom: 0.5rem !important;
     text-align: right !important;
     color: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1.2 !important;
   }
   .about-page section:first-of-type span {
-    font-size: 40px !important;
+    font-size: 2.5rem !important;
     text-align: right !important;
     color: white !important;
+    line-height: 1.2 !important;
   }
   .about-page section:first-of-type > div > div:last-of-type {
-    display: none !important;
+    align-self: stretch !important;
+    height: auto !important;
+    min-height: 60px !important;
+    margin-top: 0 !important;
+    flex-shrink: 0 !important;
   }
   .about-page section:nth-of-type(2) > div > div > div:first-child,
   .about-page section:nth-of-type(3) > div > div > div:first-child {
@@ -1084,15 +1521,32 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
   .about-page img.card-img {
     width: 100% !important;
     height: auto !important;
+    max-height: 400px !important;
     object-fit: cover !important;
     object-position: center !important;
   }
-  .about-page section:nth-of-type(4) > div > div {
-    font-size: 3rem !important;
-    line-height: 1.2 !important;
+  .about-page .slogan-text {
+    font-size: 2.2rem !important;
+    line-height: 1.3 !important;
+  }
+  .about-page .history-row {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+    padding: 1.5rem 0 !important;
+  }
+  .about-page .history-year {
+    font-size: 2rem !important;
+    text-align: left !important;
+  }
+  .about-page .history-content p {
+    font-size: 1rem !important;
+    text-align: left !important;
+  }
+  .about-page .slogan-image {
+    object-fit: contain !important;
   }
   .about-page .om-global-kfood {
-    padding: 4rem 1rem !important;
+    padding: 4rem 1.5rem !important;
   }
   .om-global-kfood > div {
     grid-template-columns: 1fr !important;
@@ -1103,14 +1557,31 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
   .om-global-kfood h2 {
     font-size: 2.2rem !important;
     margin-bottom: 1rem !important;
+    text-align: left !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  .om-global-kfood > div > div > div:first-child {
+    text-align: left !important;
+    align-items: flex-start !important;
+    width: 100% !important;
+  }
+  .om-global-kfood > div > div > div:first-child > div {
+    text-align: left !important;
+    width: 100% !important;
+    max-width: 100% !important;
   }
   .om-global-kfood p {
     font-size: 1rem !important;
     margin-bottom: 0.8rem !important;
-    text-align: center !important;
+    text-align: left !important;
+    width: 100% !important;
+    line-height: 1.6 !important;
   }
   .om-global-kfood p:last-of-type {
     margin-bottom: 0 !important;
+    text-align: right !important;
+    width: 100% !important;
   }
   .om-global-kfood > div[aria-hidden="true"] {
     height: 300px;
@@ -1118,6 +1589,7 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
     background-size: cover !important;
     background-repeat: no-repeat !important;
     margin-top: 2rem;
+    opacity: 0.4 !important;
   }
 }
 `}</style>

@@ -9,6 +9,7 @@ interface PageHeaderProps {
   backTo?: string;
   backLabel?: string;
   onLogout?: () => void;
+  showLogout?: boolean;
 }
 
 // 디자인 시스템 - 컬러 팔레트
@@ -44,6 +45,7 @@ const HeaderContent = styled.div`
   display: flex;
   align-items: center;
   gap: 16px;
+  justify-content: flex-start;
   
   @media (max-width: 768px) {
     width: 100%;
@@ -138,7 +140,8 @@ const PageHeader: React.FC<PageHeaderProps> = ({
   showBackButton = true,
   backTo = '/admin/dashboard',
   backLabel = '대시보드로',
-  onLogout
+  onLogout,
+  showLogout = true
 }) => {
   const navigate = useNavigate();
 
@@ -165,9 +168,11 @@ const PageHeader: React.FC<PageHeaderProps> = ({
           {subtitle && <PageSubtitle>{subtitle}</PageSubtitle>}
         </TitleSection>
       </HeaderContent>
-      <LogoutButton onClick={handleLogout}>
-        로그아웃
-      </LogoutButton>
+      {showLogout && (
+        <LogoutButton onClick={handleLogout}>
+          로그아웃
+        </LogoutButton>
+      )}
     </HeaderContainer>
   );
 };

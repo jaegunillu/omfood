@@ -367,10 +367,8 @@ const FooterManagePage: React.FC = () => {
         <PageHeader 
           title="푸터 영역 관리"
           subtitle="푸터의 링크, SNS, 카피라이트 정보를 관리합니다"
-          onLogout={() => {
-              localStorage.removeItem('admin_login');
-              window.location.href = '/admin/login';
-          }}
+          showBackButton={false}
+          showLogout={false}
         />
 
         {/* 홈페이지 링크 관리 */}

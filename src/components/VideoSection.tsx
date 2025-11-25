@@ -9,12 +9,20 @@ const VideoContainer = styled.div`
   height: 100vh;
   overflow-x: hidden;
   @media (max-width: 768px) {
+    position: relative !important;
     height: auto !important;
     min-height: 0 !important;
-    padding-top: 120px;
+    padding-top: 0 !important;
+    margin-top: 0 !important;
     padding-bottom: 0 !important;
-    margin-bottom: 0 !important;
-    line-height: 0;
+    margin-bottom: -30px !important;
+    line-height: 0 !important;
+    overflow: hidden !important;
+    display: block !important;
+    font-size: 0 !important;
+    vertical-align: bottom !important;
+    border: none !important;
+    outline: none !important;
   }
 `;
 
@@ -25,19 +33,25 @@ const VideoBg = styled.video`
   width: 100%;
   height: 100%;
   min-height: 100vh;
-  object-fit: cover;
+  object-fit: cover !important;
   object-position: center;
   z-index: -1;
+  @media (min-width: 769px) {
+    object-fit: cover !important;
+  }
   @media (max-width: 768px) {
-    position: relative;
-    width: 100%;
+    position: relative !important;
+    width: 100% !important;
     height: auto !important;
     min-height: 0 !important;
-    object-fit: contain;
+    object-fit: contain !important;
     object-position: center;
-    display: block;
+    display: block !important;
+    vertical-align: bottom !important;
     padding-bottom: 0 !important;
     margin-bottom: 0 !important;
+    line-height: 0 !important;
+    font-size: 0 !important;
   }
 `;
 
@@ -54,14 +68,18 @@ const MainTextOverlay = styled.div`
   background: transparent;
   pointer-events: none;
   @media (max-width: 768px) {
-    position: relative;
-    top: 0;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
     height: auto !important;
     min-height: 0 !important;
-    padding: 40px 20px;
-    margin-top: -120px;
+    padding: 40px 20px !important;
+    margin-top: 0 !important;
     padding-bottom: 0 !important;
     margin-bottom: 0 !important;
+    line-height: 0 !important;
+    pointer-events: none !important;
   }
 `;
 
@@ -152,11 +170,21 @@ const VideoSection: React.FC = () => {
   return (
     <VideoContainer>
       {main.mediaType === 'video' ? (
-        <VideoBg autoPlay muted loop playsInline key={main.mediaUrl}>
+        <VideoBg 
+          autoPlay 
+          muted 
+          loop 
+          playsInline 
+          key={main.mediaUrl}
+        >
           <source src={main.mediaUrl} type="video/mp4" />
         </VideoBg>
       ) : (
-        <VideoBg as="img" src={main.mediaUrl} alt="main" />
+        <VideoBg 
+          as="img" 
+          src={main.mediaUrl} 
+          alt="main"
+        />
       )}
       <MainTextOverlay>
         <MainText dangerouslySetInnerHTML={{ __html: (main.mainText?.[currentLang] ?? main.mainText?.en ?? '') }} />

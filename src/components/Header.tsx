@@ -34,6 +34,8 @@ const HeaderContainer = styled.header<{ $hover: boolean; $isMobile: boolean; $br
   }
 
   @media (max-width: 768px) {
+    height: 75px;
+    padding-top: 10px !important;
     &::before {
       opacity: ${({ $hover }) => ($hover ? 1 : 0)};
       transform: translateY(${({ $hover }) => ($hover ? '0' : '-100%')});
@@ -62,6 +64,7 @@ const LogoWrapper = styled.div`
   @media (max-width: 768px) {
     width: 90px;
     height: 75px;
+    top: 0 !important;
   }
 `;
 
