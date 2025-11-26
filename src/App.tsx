@@ -766,7 +766,7 @@ const BrandSubText = styled.div<{ $visible: boolean }>`
 `;
 
 function Brands() {
-  const [brands, setBrands] = useState<Array<{ name: { en: string; ko: string }; desc: { en: string; ko: string }; subText?: { en: string; ko: string }; image: string; order?: number }>>([]);
+  const [brands, setBrands] = useState<Array<{ name: { en: string; ko: string }; desc: { en: string; ko: string }; subText?: { en: string; ko: string }; image: string; order?: number; nameSize?: string; descSize?: string; subTextSize?: string }>>([]);
   const refs = useRef<Array<HTMLDivElement | null>>([]);
   const [visibleArr, setVisibleArr] = useState<boolean[]>([]);
   const siteLang = localStorage.getItem('siteLang') === 'en' ? 'en' : 'ko';
@@ -782,6 +782,9 @@ function Brands() {
           subText: typeof data.subText === 'string' ? { en: data.subText, ko: '' } : { en: data.subText?.en || '', ko: data.subText?.ko || '' },
           image: data.image || '',
           order: data.order ?? 0,
+          nameSize: data.nameSize || '1rem',
+          descSize: data.descSize || '3.2rem',
+          subTextSize: data.subTextSize || '0.98rem'
         };
       });
       arr.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
@@ -828,9 +831,9 @@ function Brands() {
       {brands.map((brand, idx) => (
         <BrandSection ref={el => { refs.current[idx] = el as HTMLDivElement; }} key={brand.name[siteLang] + idx}>
           <BrandTextBlock>
-            <BrandTopText $visible={visibleArr[idx]} dangerouslySetInnerHTML={{ __html: brand.name[siteLang] || '' }} />
-            <BrandMainText $visible={visibleArr[idx]} dangerouslySetInnerHTML={{ __html: brand.desc[siteLang] || '' }} />
-            <BrandSubText $visible={visibleArr[idx]} dangerouslySetInnerHTML={{ __html: brand.subText?.[siteLang] || '' }} />
+            <BrandTopText $visible={visibleArr[idx]} style={{ fontSize: brand.nameSize || '1rem' }} dangerouslySetInnerHTML={{ __html: brand.name[siteLang] || '' }} />
+            <BrandMainText $visible={visibleArr[idx]} style={brand.descSize ? { fontSize: brand.descSize } : undefined} dangerouslySetInnerHTML={{ __html: brand.desc[siteLang] || '' }} />
+            <BrandSubText $visible={visibleArr[idx]} style={{ fontSize: brand.subTextSize || '0.98rem' }} dangerouslySetInnerHTML={{ __html: brand.subText?.[siteLang] || '' }} />
           </BrandTextBlock>
           {brand.image && <BrandImage src={brand.image} alt={brand.name[siteLang]} />}
         </BrandSection>
@@ -3953,11 +3956,11 @@ const BrandQuill = styled(ReactQuill)`
 
 function AdminBrandManage() {
   const { success } = useToast();
-  const [brands, setBrands] = useState<Array<{ id: string; name: { en: string; ko: string }; desc: { en: string; ko: string }; subText?: { en: string; ko: string }; image: string; order?: number }>>([]);
+  const [brands, setBrands] = useState<Array<{ id: string; name: { en: string; ko: string }; desc: { en: string; ko: string }; subText?: { en: string; ko: string }; image: string; order?: number; nameSize?: string; descSize?: string; subTextSize?: string }>>([]);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState('');
   const [uploading, setUploading] = useState(false);
-  const [newBrand, setNewBrand] = useState<{ name: { en: string; ko: string }; desc: { en: string; ko: string }; subText?: { en: string; ko: string }; image: string }>({ name: { en: '', ko: '' }, desc: { en: '', ko: '' }, subText: { en: '', ko: '' }, image: '' });
+  const [newBrand, setNewBrand] = useState<{ name: { en: string; ko: string }; desc: { en: string; ko: string }; subText?: { en: string; ko: string }; image: string; nameSize?: string; descSize?: string; subTextSize?: string }>({ name: { en: '', ko: '' }, desc: { en: '', ko: '' }, subText: { en: '', ko: '' }, image: '', nameSize: '1rem', descSize: '3.2rem', subTextSize: '0.98rem' });
   const [expandedBrands, setExpandedBrands] = useState<Set<string>>(new Set());
   const { adminLang } = useAdminLang();
 
@@ -3972,7 +3975,10 @@ function AdminBrandManage() {
           desc: typeof data.desc === 'string' ? { en: data.desc, ko: data.desc } : { en: data.desc?.en ?? '', ko: data.desc?.ko ?? '' },
           subText: typeof data.subText === 'string' ? { en: data.subText, ko: data.subText } : { en: data.subText?.en ?? '', ko: data.subText?.ko ?? '' },
           image: data.image || '',
-          order: data.order ?? 0
+          order: data.order ?? 0,
+          nameSize: data.nameSize || '1rem',
+          descSize: data.descSize || '3.2rem',
+          subTextSize: data.subTextSize || '0.98rem'
         };
       });
       arr.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
@@ -4005,7 +4011,7 @@ function AdminBrandManage() {
     try {
       const order = brands.length;
       await addDoc(collection(db, 'brands'), { ...newBrand, order });
-      setNewBrand({ name: { en: '', ko: '' }, desc: { en: '', ko: '' }, subText: { en: '', ko: '' }, image: '' });
+      setNewBrand({ name: { en: '', ko: '' }, desc: { en: '', ko: '' }, subText: { en: '', ko: '' }, image: '', nameSize: '1rem', descSize: '3.2rem', subTextSize: '0.98rem' });
       success('브랜드가 추가되었습니다!');
     } catch (error) {
       success('추가 중 오류가 발생했습니다.');
@@ -4038,7 +4044,7 @@ function AdminBrandManage() {
     }
   };
 
-  const handleReorder = async (newBrands: Array<{ id: string; name: { en: string; ko: string }; desc: { en: string; ko: string }; subText?: { en: string; ko: string }; image: string; order?: number }>) => {
+  const handleReorder = async (newBrands: Array<{ id: string; name: { en: string; ko: string }; desc: { en: string; ko: string }; subText?: { en: string; ko: string }; image: string; order?: number; nameSize?: string; descSize?: string; subTextSize?: string }>) => {
     try {
       await Promise.all(newBrands.map((brand, idx) => 
         updateDoc(doc(db, 'brands', brand.id), { order: idx })
@@ -4061,7 +4067,7 @@ function AdminBrandManage() {
     });
   };
 
-  const renderBrandItem = (brand: { id: string; name: { en: string; ko: string }; desc: { en: string; ko: string }; subText?: { en: string; ko: string }; image: string; order?: number }, index: number) => {
+  const renderBrandItem = (brand: { id: string; name: { en: string; ko: string }; desc: { en: string; ko: string }; subText?: { en: string; ko: string }; image: string; order?: number; nameSize?: string; descSize?: string; subTextSize?: string }, index: number) => {
     const isExpanded = expandedBrands.has(brand.id);
     
     return (
@@ -4163,6 +4169,20 @@ function AdminBrandManage() {
               </div>
               <div>
                 <AdminLabel>브랜드명</AdminLabel>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
+                  <AdminInput
+                    type="text"
+                    value={brand.nameSize || '1rem'}
+                    onChange={e => setBrands(prev => {
+                      const next = [...prev];
+                      next[index] = { ...next[index], nameSize: e.target.value };
+                      return next;
+                    })}
+                    placeholder="1rem"
+                    style={{ width: '100px', marginBottom: 0, fontSize: '0.9rem', padding: '6px 8px' }}
+                  />
+                  <span style={{ fontSize: '0.85rem', color: '#666' }}>폰트 크기</span>
+                </div>
                 <ReactQuill
                   value={brand.name[adminLang]}
                   onChange={val => setBrands(prev => {
@@ -4176,6 +4196,20 @@ function AdminBrandManage() {
                   placeholder="Brand Name"
                 />
                 <AdminLabel>브랜드 설명</AdminLabel>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
+                  <AdminInput
+                    type="text"
+                    value={brand.descSize || '3.2rem'}
+                    onChange={e => setBrands(prev => {
+                      const next = [...prev];
+                      next[index] = { ...next[index], descSize: e.target.value };
+                      return next;
+                    })}
+                    placeholder="3.2rem"
+                    style={{ width: '100px', marginBottom: 0, fontSize: '0.9rem', padding: '6px 8px' }}
+                  />
+                  <span style={{ fontSize: '0.85rem', color: '#666' }}>폰트 크기</span>
+                </div>
                 <ReactQuill
                   value={brand.desc[adminLang]}
                   onChange={val => setBrands(prev => {
@@ -4189,6 +4223,20 @@ function AdminBrandManage() {
                   placeholder="Brand Description"
                 />
                 <AdminLabel>브랜드 서브텍스트</AdminLabel>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
+                  <AdminInput
+                    type="text"
+                    value={brand.subTextSize || '0.98rem'}
+                    onChange={e => setBrands(prev => {
+                      const next = [...prev];
+                      next[index] = { ...next[index], subTextSize: e.target.value };
+                      return next;
+                    })}
+                    placeholder="0.98rem"
+                    style={{ width: '100px', marginBottom: 0, fontSize: '0.9rem', padding: '6px 8px' }}
+                  />
+                  <span style={{ fontSize: '0.85rem', color: '#666' }}>폰트 크기</span>
+                </div>
                 <ReactQuill
                   value={brand.subText?.[adminLang] || ''}
                   onChange={val => setBrands(prev => {
@@ -4224,6 +4272,16 @@ function AdminBrandManage() {
         <AdminGrid>
           <div>
             <AdminLabel>브랜드명</AdminLabel>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
+              <AdminInput
+                type="text"
+                value={newBrand.nameSize || '1rem'}
+                onChange={e => setNewBrand(prev => ({ ...prev, nameSize: e.target.value }))}
+                placeholder="1rem"
+                style={{ width: '100px', marginBottom: 0, fontSize: '0.9rem', padding: '6px 8px' }}
+              />
+              <span style={{ fontSize: '0.85rem', color: '#666' }}>폰트 크기</span>
+            </div>
             <ReactQuill
               value={newBrand.name[adminLang]}
               onChange={val => setNewBrand(prev => ({ ...prev, name: { ...prev.name, [adminLang]: val } }))}
@@ -4233,6 +4291,16 @@ function AdminBrandManage() {
               placeholder="Brand Name"
             />
             <AdminLabel>브랜드 설명</AdminLabel>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
+              <AdminInput
+                type="text"
+                value={newBrand.descSize || '3.2rem'}
+                onChange={e => setNewBrand(prev => ({ ...prev, descSize: e.target.value }))}
+                placeholder="3.2rem"
+                style={{ width: '100px', marginBottom: 0, fontSize: '0.9rem', padding: '6px 8px' }}
+              />
+              <span style={{ fontSize: '0.85rem', color: '#666' }}>폰트 크기</span>
+            </div>
             <ReactQuill
               value={newBrand.desc[adminLang]}
               onChange={val => setNewBrand(prev => ({ ...prev, desc: { ...prev.desc, [adminLang]: val } }))}
@@ -4242,6 +4310,16 @@ function AdminBrandManage() {
               placeholder="Brand Description"
             />
             <AdminLabel>브랜드 서브텍스트</AdminLabel>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
+              <AdminInput
+                type="text"
+                value={newBrand.subTextSize || '0.98rem'}
+                onChange={e => setNewBrand(prev => ({ ...prev, subTextSize: e.target.value }))}
+                placeholder="0.98rem"
+                style={{ width: '100px', marginBottom: 0, fontSize: '0.9rem', padding: '6px 8px' }}
+              />
+              <span style={{ fontSize: '0.85rem', color: '#666' }}>폰트 크기</span>
+            </div>
             <ReactQuill
               value={newBrand.subText?.[adminLang] || ''}
               onChange={val => setNewBrand(prev => ({ 

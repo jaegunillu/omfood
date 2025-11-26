@@ -54,7 +54,7 @@ const LogoWrapper = styled.div`
   height: 100px;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   transition: transform 0.4s ease-in-out;
   @media (max-width: 1162px) {
     left: 50%;
@@ -70,19 +70,22 @@ const LogoWrapper = styled.div`
 
 const LogoImg = styled.img<{
   $visible?: boolean;
+  $isLoaded: boolean;
   $isMainPage: boolean;
   $isHeaderHover: boolean;
   $navHover: boolean;
   $logoHover: boolean;
 }>`
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top: 50%;
+  left: 50%;
+  width: auto !important;
+  height: auto !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
   object-fit: contain;
-  opacity: ${props => (props.$visible ? 1 : 0)};
-  transform: scale(${props => (props.$visible ? 1 : 0.95)});
+  opacity: ${props => (props.$visible && props.$isLoaded ? 1 : 0)};
+  transform: translate(-50%, -50%) scale(${props => (props.$visible ? 1 : 0.95)});
   transition: opacity 0.4s cubic-bezier(0.4,0,0.2,1), transform 0.4s cubic-bezier(0.4,0,0.2,1);
   pointer-events: none;
   filter: none;
@@ -114,9 +117,10 @@ const MenuItem = styled.a<{
   $isHeaderHover: boolean;
   $navHover: boolean;
   $logoHover: boolean;
+  $languageHover?: boolean;
 }>`
-  color: ${({ $isMainPage, $isHeaderHover, $navHover, $logoHover }) =>
-    $isMainPage && !($isHeaderHover || $navHover || $logoHover) ? '#fff' : '#222'};
+  color: ${({ $isMainPage, $isHeaderHover, $navHover, $logoHover, $languageHover }) =>
+    $isMainPage && !($isHeaderHover || $navHover || $logoHover || $languageHover) ? '#fff' : '#222'};
   text-decoration: none;
   font-size: 16px;
   font-weight: 300;
@@ -158,6 +162,7 @@ const MobileMenuButton = styled.button<{
   $isHeaderHover: boolean;
   $navHover: boolean;
   $logoHover: boolean;
+  $languageHover?: boolean;
   $isMobile: boolean;
 }>`
   display: none;
@@ -170,8 +175,8 @@ const MobileMenuButton = styled.button<{
     border: none;
     z-index: 10;
     font-size: 1.8rem;
-    color: ${({ $isMainPage, $isHeaderHover, $navHover, $logoHover, $isMobile }) =>
-      $isMobile ? '#222' : ($isMainPage && !($isHeaderHover || $navHover || $logoHover) ? '#fff' : '#222')};
+    color: ${({ $isMainPage, $isHeaderHover, $navHover, $logoHover, $languageHover, $isMobile }) =>
+      $isMobile ? '#222' : ($isMainPage && !($isHeaderHover || $navHover || $logoHover || $languageHover) ? '#fff' : '#222')};
     align-items: center;
     justify-content: center;
     cursor: pointer;
@@ -289,19 +294,23 @@ const LangTextButton = styled.button<{
   $isHeaderHover: boolean;
   $navHover: boolean;
   $logoHover: boolean;
+  $languageHover?: boolean;
   $isActive: boolean;
   $isMobile?: boolean;
 }>`
   background: none;
   border: none;
-  color: ${({ $isMainPage, $isHeaderHover, $navHover, $logoHover, $isMobile }) =>
-    $isMobile ? '#fff' : ($isMainPage && !($isHeaderHover || $navHover || $logoHover) ? '#fff' : '#222')};
+  color: ${({ $isMainPage, $isHeaderHover, $navHover, $logoHover, $languageHover, $isMobile }) =>
+    $isMobile ? '#fff' : ($isMainPage && !($isHeaderHover || $navHover || $logoHover || $languageHover) ? '#fff' : '#222')};
   font-size: 1.125rem;
   font-weight: ${({ $isActive }) => ($isActive ? 700 : 400)};
   cursor: pointer;
-  padding: 8px 12px;
+  padding: 0;
+  line-height: 1;
   transition: color 0.4s ease-in-out, font-weight 0.2s ease;
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  display: inline-flex;
+  align-items: center;
   
   &:hover {
     font-weight: 600;
@@ -335,10 +344,12 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [logoHover, setLogoHover] = useState(false);
   const [navHover, setNavHover] = useState(false);
+  const [languageHover, setLanguageHover] = useState(false);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [language, setLanguage] = useState<'en' | 'ko'>(localStorage.getItem('siteLang') === 'en' ? 'en' : 'ko');
   const [logoWhite, setLogoWhite] = useState<string | null>(null);
   const [logoBlack, setLogoBlack] = useState<string | null>(null);
+  const [isLogoLoaded, setIsLogoLoaded] = useState(false);
   const [menuItems, setMenuItems] = useState<{ en: string[]; ko: string[] } | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -491,9 +502,23 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
     return arr.filter(v => typeof v === 'string' && v !== null && v !== undefined);
   })() as string[];
 
+  const logoSrc = isMobile
+    ? logoBlack || undefined
+    : isMainPage
+    ? (isHeaderHover || navHover || logoHover || languageHover
+        ? logoBlack || undefined
+        : logoWhite || undefined)
+    : logoBlack || undefined;
+
+  useEffect(() => {
+    if (logoSrc) {
+      setIsLogoLoaded(false);
+    }
+  }, [logoSrc]);
+
   return (
     <HeaderContainer
-      $hover={isMainPage ? (isHeaderHover || navHover || logoHover) : true}
+      $hover={isMainPage ? (isHeaderHover || navHover || logoHover || languageHover) : true}
       $isMobile={isMobile}
       $brand={false}
       style={isMainPage ? {} : {background: '#fff', boxShadow: '0 2px 20px rgba(0,0,0,0.08)'}}
@@ -503,6 +528,7 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
         $isHeaderHover={isHeaderHover}
         $navHover={navHover}
         $logoHover={logoHover}
+        $languageHover={languageHover}
         $isMobile={isMobile}
         onClick={handleMobileMenuToggle}
       >
@@ -513,23 +539,19 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
         onMouseLeave={() => setLogoHover(false)}
       >
         <a href="/" style={{ width: '100%', height: '100%', display: 'block', position: 'relative' }}>
-          <LogoImg
-            src={
-              isMobile
-                ? logoBlack || undefined
-                : isMainPage
-                ? (isHeaderHover || navHover || logoHover
-                    ? logoBlack || undefined
-                    : logoWhite || undefined)
-                : logoBlack || undefined
-            }
-            alt="logo"
-            $visible={true}
-            $isMainPage={isMainPage}
-            $isHeaderHover={isHeaderHover}
-            $navHover={navHover}
-            $logoHover={logoHover}
-          />
+          {logoSrc && (
+            <LogoImg
+              src={logoSrc}
+              alt="logo"
+              $visible={true}
+              $isLoaded={isLogoLoaded}
+              $isMainPage={isMainPage}
+              $isHeaderHover={isHeaderHover}
+              $navHover={navHover}
+              $logoHover={logoHover}
+              onLoad={() => setIsLogoLoaded(true)}
+            />
+          )}
         </a>
       </LogoWrapper>
       <NavWrapper>
@@ -552,6 +574,7 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
                   $isHeaderHover={isHeaderHover}
                   $navHover={navHover}
                   $logoHover={logoHover}
+                  $languageHover={languageHover}
                   onMouseEnter={() => setHoveredItem(item)}
                   onMouseLeave={() => setHoveredItem(null)}
                   onClick={e => {
@@ -574,15 +597,18 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
           ) : null}
         </Nav>
       </NavWrapper>
-      {/* PC 버전 언어 선택 버튼 숨김 처리 */}
-      {/* {!location.pathname.includes('/admin') && (
-        <LanguageSelector>
+      {!location.pathname.includes('/admin') && (
+        <LanguageSelector
+          onMouseEnter={() => setLanguageHover(true)}
+          onMouseLeave={() => setLanguageHover(false)}
+        >
           <LangTextButton
             onClick={() => handleLanguageChange('en')}
             $isMainPage={isMainPage}
             $isHeaderHover={isHeaderHover}
             $navHover={navHover}
             $logoHover={logoHover}
+            $languageHover={languageHover}
             $isActive={language === 'en'}
             title="English"
           >
@@ -594,13 +620,14 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
             $isHeaderHover={isHeaderHover}
             $navHover={navHover}
             $logoHover={logoHover}
+            $languageHover={languageHover}
             $isActive={language === 'ko'}
             title="한국어"
           >
             [KOR]
           </LangTextButton>
         </LanguageSelector>
-      )} */}
+      )}
       <MobileNav $open={mobileMenuOpen}>
         {mobileMenuOpen && (
           <MobileCloseButton onClick={handleMobileMenuClose} title="닫기" style={{color:'#fff', zIndex:10001, background:'none'}}>
@@ -618,6 +645,7 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
               $isHeaderHover={isHeaderHover}
               $navHover={navHover}
               $logoHover={logoHover}
+              $languageHover={languageHover}
               style={{ fontSize: '1.2rem', margin: '20px 0', color: '#fff', fontWeight: 700, textShadow: '0 1px 8px rgba(0,0,0,0.18)' }}
               onClick={e => {
                 e.preventDefault();
@@ -629,8 +657,7 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
             </MenuItem>
           ))
         ) : null}
-        {/* 모바일 버전 언어 선택 버튼 숨김 처리 */}
-        {/* {!location.pathname.includes('/admin') && (
+        {!location.pathname.includes('/admin') && (
           <MobileLanguageSelector>
             <LangTextButton
               onClick={() => handleLanguageChange('en')}
@@ -657,7 +684,7 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
               [KOR]
             </LangTextButton>
           </MobileLanguageSelector>
-        )} */}
+        )}
       </MobileNav>
     </HeaderContainer>
   );

@@ -3,6 +3,8 @@ import { db, storage } from '../../firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useAdminLang } from '../../App';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
 // File: /src/components/admin/AboutPage_admin.tsx
 // [주의] 오직 이 파일만 수정하고, 다른 파일은 절대 건드리지 마세요.
@@ -49,9 +51,33 @@ interface AboutContent {
   representativeName: string;
   messageImage: string;
   messageImagePos?: ImagePosition;
+  introMainSlogan: string;
+  section1Label: string;
+  section1LabelSize: string;
+  section1Title: string;
+  section1TitleSize: string;
+  section1Content: string;
+  section1ContentSize: string;
+  section1Image: string;
+  section2Label: string;
+  section2LabelSize: string;
+  section2Title: string;
+  section2TitleSize: string;
+  section2Content: string;
+  section2ContentSize: string;
+  section2Image: string;
+  section3Label: string;
+  section3LabelSize: string;
+  section3Title: string;
+  section3TitleSize: string;
+  section3Content: string;
+  section3ContentSize: string;
+  section3Image: string;
+  visionMessage: string;
   historyItems: HistoryEntry[];
   historyTitle: string;
   historySubtitle: string;
+  certificates: Array<{ id: string; image: string; caption: string }>;
 }
 
 const defaultHistoryItems: HistoryEntry[] = [
@@ -203,7 +229,11 @@ const mergeContent = (base: AboutContent, incoming?: Partial<AboutContent>): Abo
     historyItems:
       incoming.historyItems && incoming.historyItems.length
         ? incoming.historyItems
-        : base.historyItems
+        : base.historyItems,
+    certificates:
+      incoming.certificates && incoming.certificates.length
+        ? incoming.certificates
+        : (base.certificates || [])
   };
 };
 
@@ -249,9 +279,33 @@ const AboutPageAdmin: React.FC = () => {
 OM FOOD는 앞으로도 건강한 재료, 정직한 조리, 감동 있는 서비스로 고객의 신뢰를 쌓아가며 K-푸드를 대표하는 글로벌 외식 브랜드로 성장하겠습니다.`,
     representativeName: '대표이사 박성우',
     messageImage: '',
+    introMainSlogan: '건강과 맛, 그리고 즐거움\n오엠푸드가 만드는 새로운 식문화',
+    section1Label: '우리의 철학',
+    section1LabelSize: '1rem',
+    section1Title: '우리의 철학',
+    section1TitleSize: '2.5rem',
+    section1Content: '음식은 먹는 사람도, 파는 사람도 건강해야 합니다. 오엠푸드는 재료 선정부터 조리, 배송 과정까지 모든 단계에서 건강과 안전을 최우선 가치로 둡니다. 오랜 시간 축적한 노하우와 위생 시스템을 통해 고객이 믿고 먹을 수 있는 한 끼를 만들며, 진심이 담긴 맛으로 일상의 휴식을 선물합니다.',
+    section1ContentSize: '1.1rem',
+    section1Image: '',
+    section2Label: '우리의 브랜드',
+    section2LabelSize: '1rem',
+    section2Title: '우리의 브랜드',
+    section2TitleSize: '2.5rem',
+    section2Content: '다양한 맛과 즐거움을 전하는 푸드 브랜드를 지향합니다. 한국의 정체성을 담되 세계 어디서나 사랑받을 수 있는 메뉴를 고민하며, 감각적인 비주얼과 스토리를 더해 브랜드 경험의 깊이를 확장합니다. 한 끼의 만족이 고객의 일상 에너지가 되도록 지속적인 실험을 이어갑니다.',
+    section2ContentSize: '1.1rem',
+    section2Image: '',
+    section3Label: '우리의 도전',
+    section3LabelSize: '1rem',
+    section3Title: '우리의 도전',
+    section3TitleSize: '2.5rem',
+    section3Content: '변화하는 식문화 속에서 끊임없는 혁신으로 한계를 넘어섭니다. 데이터 기반의 연구와 글로벌 파트너십을 통해 새로운 시장을 개척하고, 현지화 전략으로 더 넓은 고객과 만납니다. 건강한 음식, 행복한 식탁이라는 비전을 향해 오늘도 더 나은 맛과 가치를 만듭니다.',
+    section3ContentSize: '1.1rem',
+    section3Image: '',
+    visionMessage: '건강한 음식, 행복한 식탁\n오엠푸드는 오늘도 더 나은 맛과 가치를 만듭니다.',
     historyItems: cloneHistoryItems(),
     historyTitle: '기업 연혁',
-    historySubtitle: '2010년부터 현재까지 OM FOOD가 걸어온 길입니다.'
+    historySubtitle: '2010년부터 현재까지 OM FOOD가 걸어온 길입니다.',
+    certificates: []
   });
 
   // 영어 콘텐츠 상태
@@ -293,9 +347,33 @@ By researching the food cultures and tastes of various countries around the worl
 OM FOOD will continue to grow as a global dining brand representing K-Food, building customer trust with healthy ingredients, honest cooking, and impressive service.`,
     representativeName: 'CEO Park Sung-woo',
     messageImage: '',
+    introMainSlogan: 'Health, Flavor, and Joy\nA New Dining Culture by OM FOOD',
+    section1Label: 'Our Philosophy',
+    section1LabelSize: '1rem',
+    section1Title: 'Our Philosophy',
+    section1TitleSize: '2.5rem',
+    section1Content: 'Food should keep both the diner and the maker healthy. OM FOOD prioritizes safety from sourcing to cooking and delivery, combining proven know-how with strict hygiene systems. Every bite is prepared with sincerity so customers can trust what they eat and feel comfort in every meal.',
+    section1ContentSize: '1.1rem',
+    section1Image: '',
+    section2Label: 'Our Brand',
+    section2LabelSize: '1rem',
+    section2Title: 'Our Brand',
+    section2TitleSize: '2.5rem',
+    section2Content: 'We are a food brand that delivers diverse flavors and delightful experiences. While rooted in Korean identity, we design menus that resonate globally, pairing modern storytelling with distinctive presentation to deepen the brand experience. Each menu aims to energize daily life and inspire curiosity.',
+    section2ContentSize: '1.1rem',
+    section2Image: '',
+    section3Label: 'Our Challenge',
+    section3LabelSize: '1rem',
+    section3Title: 'Our Challenge',
+    section3TitleSize: '2.5rem',
+    section3Content: 'We continue to innovate within the ever-changing culinary landscape. Data-driven research and global partnerships open new markets, while tailored localization helps us connect with more customers. Guided by the vision of healthy food and happy tables, we relentlessly pursue better taste and value.',
+    section3ContentSize: '1.1rem',
+    section3Image: '',
+    visionMessage: 'Healthy Food, Happy Tables\nOM FOOD keeps creating better flavors and values.',
     historyItems: cloneHistoryItems(),
     historyTitle: 'Company History',
-    historySubtitle: 'Milestones that shaped OM FOOD from 2010 to today.'
+    historySubtitle: 'Milestones that shaped OM FOOD from 2010 to today.',
+    certificates: []
   });
 
   const currentContent = adminLang === 'ko' ? koContent : enContent;
@@ -514,6 +592,143 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
                     value={currentContent.headerSubtitle}
                     onChange={(e) => setCurrentContent(prev => ({ ...prev, headerSubtitle: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 소개글 관리 (지그재그 섹션) */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold mb-4">소개글 관리 (지그재그 섹션)</h2>
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">메인 슬로건</label>
+                  <textarea
+                    value={currentContent.introMainSlogan}
+                    onChange={(e) => setCurrentContent(prev => ({ ...prev, introMainSlogan: e.target.value }))}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="줄바꿈으로 문장을 구분하세요"
+                  />
+                </div>
+
+                {[1, 2, 3].map((num) => {
+                  const labelKey = `section${num}Label` as 'section1Label' | 'section2Label' | 'section3Label';
+                  const labelSizeKey = `section${num}LabelSize` as 'section1LabelSize' | 'section2LabelSize' | 'section3LabelSize';
+                  const titleKey = `section${num}Title` as 'section1Title' | 'section2Title' | 'section3Title';
+                  const titleSizeKey = `section${num}TitleSize` as 'section1TitleSize' | 'section2TitleSize' | 'section3TitleSize';
+                  const contentKey = `section${num}Content` as 'section1Content' | 'section2Content' | 'section3Content';
+                  const contentSizeKey = `section${num}ContentSize` as 'section1ContentSize' | 'section2ContentSize' | 'section3ContentSize';
+                  const imageKey = `section${num}Image` as 'section1Image' | 'section2Image' | 'section3Image';
+                  return (
+                    <div key={`intro-section-${num}`} className="border border-gray-200 rounded-lg p-4 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold">
+                        {`섹션 ${num}`} ({num === 1 ? '철학' : num === 2 ? '브랜드' : '도전/비전'})
+                      </h3>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">라벨(태그)</label>
+                        <input
+                          type="text"
+                          value={currentContent[labelKey]}
+                          onChange={(e) => setCurrentContent(prev => ({ ...prev, [labelKey]: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder={num === 1 ? '우리의 철학' : num === 2 ? '우리의 브랜드' : '우리의 도전'}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">라벨 폰트 크기</label>
+                        <input
+                          type="text"
+                          value={currentContent[labelSizeKey]}
+                          onChange={(e) => setCurrentContent(prev => ({ ...prev, [labelSizeKey]: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="예: 1rem"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">제목</label>
+                        <input
+                          type="text"
+                          value={currentContent[titleKey]}
+                          onChange={(e) => setCurrentContent(prev => ({ ...prev, [titleKey]: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">제목 폰트 크기</label>
+                        <input
+                          type="text"
+                          value={currentContent[titleSizeKey]}
+                          onChange={(e) => setCurrentContent(prev => ({ ...prev, [titleSizeKey]: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="예: 2.5rem"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">본문 폰트 크기</label>
+                      <input
+                        type="text"
+                        value={currentContent[contentSizeKey]}
+                        onChange={(e) => setCurrentContent(prev => ({ ...prev, [contentSizeKey]: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
+                        placeholder="예: 1.1rem"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">본문</label>
+                      <ReactQuill
+                        value={currentContent[contentKey]}
+                        onChange={(value) => setCurrentContent(prev => ({ ...prev, [contentKey]: value }))}
+                        theme="snow"
+                        modules={{
+                          toolbar: [
+                            [{ 'header': [1, 2, 3, false] }],
+                            ['bold', 'italic', 'underline', 'strike'],
+                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                            [{ 'color': [] }, { 'background': [] }],
+                            ['link'],
+                            ['clean']
+                          ]
+                        }}
+                        style={{ minHeight: '200px' }}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">이미지</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => e.target.files?.[0] && handleImageUpload(imageKey, e.target.files[0])}
+                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                      />
+                      {currentContent[imageKey] && (
+                        <div className="mt-2">
+                          <img
+                            src={currentContent[imageKey]}
+                            alt={`섹션 ${num} 이미지 미리보기`}
+                            className="w-40 h-32 object-cover rounded"
+                          />
+                        </div>
+                      )}
+                    </div>
+                    </div>
+                  );
+                })}
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">비전 메시지</label>
+                  <textarea
+                    value={currentContent.visionMessage}
+                    onChange={(e) => setCurrentContent(prev => ({ ...prev, visionMessage: e.target.value }))}
+                    rows={2}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="예: 건강한 음식, 행복한 식탁..."
                   />
                 </div>
               </div>
@@ -776,6 +991,102 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
               </div>
             </div>
 
+            {/* 인증서 관리 섹션 */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold">인증서 관리</h2>
+                <button
+                  onClick={() => {
+                    const newId = Math.random().toString(36).substr(2, 9);
+                    setCurrentContent(prev => ({
+                      ...prev,
+                      certificates: [...(prev.certificates || []), { id: newId, image: '', caption: '' }]
+                    }));
+                  }}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium"
+                >
+                  + 인증서 추가
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {(currentContent.certificates || []).map((cert, index) => (
+                  <div key={cert.id} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-1">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          인증서 이미지
+                        </label>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            try {
+                              const timestamp = Date.now();
+                              const extension = file.name.split('.').pop();
+                              const fileRef = storageRef(storage, `about/certificate_${timestamp}.${extension || 'jpg'}`);
+                              await uploadBytes(fileRef, file);
+                              const downloadUrl = await getDownloadURL(fileRef);
+                              setCurrentContent(prev => ({
+                                ...prev,
+                                certificates: prev.certificates.map((c, i) =>
+                                  i === index ? { ...c, image: downloadUrl } : c
+                                )
+                              }));
+                            } catch (error) {
+                              console.error('이미지 업로드 실패:', error);
+                              alert('이미지 업로드 중 오류가 발생했습니다.');
+                            }
+                          }}
+                          className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 mb-2"
+                        />
+                        {cert.image && (
+                          <div className="mt-2">
+                            <img src={cert.image} alt="Certificate preview" className="w-32 h-40 object-contain rounded border border-gray-200" />
+                          </div>
+                        )}
+                        <label className="block text-sm font-medium text-gray-700 mb-2 mt-4">
+                          캡션 (설명)
+                        </label>
+                        <input
+                          type="text"
+                          value={cert.caption}
+                          onChange={(e) => {
+                            setCurrentContent(prev => ({
+                              ...prev,
+                              certificates: prev.certificates.map((c, i) =>
+                                i === index ? { ...c, caption: e.target.value } : c
+                              )
+                            }));
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="인증서 설명을 입력하세요"
+                        />
+                      </div>
+                      <button
+                        onClick={() => {
+                          setCurrentContent(prev => ({
+                            ...prev,
+                            certificates: prev.certificates.filter((_, i) => i !== index)
+                          }));
+                        }}
+                        className="px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm"
+                      >
+                        삭제
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {(!currentContent.certificates || currentContent.certificates.length === 0) && (
+                  <div className="text-center text-gray-500 py-8">
+                    인증서가 없습니다. [+ 인증서 추가] 버튼을 눌러 추가하세요.
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* 핵심 슬로건 섹션 */}
             <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-xl font-semibold mb-4">핵심 슬로건</h2>
@@ -932,6 +1243,70 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
                 </div>
               </div>
 
+              {/* 소개 지그재그 프리뷰 */}
+              <div className="mb-8">
+                <h3 className="text-xl font-semibold mb-4">소개 섹션 프리뷰</h3>
+                <div className="space-y-8">
+                  <div className="text-center text-3xl font-bold leading-snug whitespace-pre-line">
+                    {currentContent.introMainSlogan || '메인 슬로건을 입력하세요.'}
+                  </div>
+                  {[1, 2, 3].map((num) => {
+                    const labelKey = `section${num}Label` as 'section1Label' | 'section2Label' | 'section3Label';
+                    const labelSizeKey = `section${num}LabelSize` as 'section1LabelSize' | 'section2LabelSize' | 'section3LabelSize';
+                    const titleKey = `section${num}Title` as 'section1Title' | 'section2Title' | 'section3Title';
+                    const titleSizeKey = `section${num}TitleSize` as 'section1TitleSize' | 'section2TitleSize' | 'section3TitleSize';
+                    const contentKey = `section${num}Content` as 'section1Content' | 'section2Content' | 'section3Content';
+                    const contentSizeKey = `section${num}ContentSize` as 'section1ContentSize' | 'section2ContentSize' | 'section3ContentSize';
+                    const imageKey = `section${num}Image` as 'section1Image' | 'section2Image' | 'section3Image';
+                    const isReverse = num === 2;
+                    return (
+                      <div
+                        key={`intro-preview-${num}`}
+                        className={`flex flex-col md:flex-row ${isReverse ? 'md:flex-row-reverse' : ''} items-center gap-6`}
+                      >
+                        <div className="flex-1">
+                          <p 
+                            className="tracking-[0.3em] text-orange-400 uppercase mb-2"
+                            style={{ fontSize: currentContent[labelSizeKey] || '1rem' }}
+                          >
+                            {currentContent[labelKey] || (num === 1 ? 'Philosophy' : num === 2 ? 'Brand' : 'Challenge')}
+                          </p>
+                          <h4 
+                            className="font-bold text-gray-900 mb-3"
+                            style={{ fontSize: currentContent[titleSizeKey] || '2.5rem' }}
+                          >
+                            {currentContent[titleKey] || `섹션 ${num} 제목`}
+                          </h4>
+                          <div 
+                            className="text-gray-600 leading-relaxed"
+                            style={{ fontSize: currentContent[contentSizeKey] || '1.1rem' }}
+                            dangerouslySetInnerHTML={{ __html: currentContent[contentKey] || '내용을 입력하세요.' }}
+                          />
+                          {num === 3 && currentContent.visionMessage && (
+                            <p className="mt-3 font-semibold text-gray-800 whitespace-pre-line">
+                              {currentContent.visionMessage}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex-1 w-full">
+                          {currentContent[imageKey] ? (
+                            <img
+                              src={currentContent[imageKey]}
+                              alt={`소개 섹션 ${num}`}
+                              className="w-full h-64 object-cover rounded-xl shadow"
+                            />
+                          ) : (
+                            <div className="w-full h-64 bg-gray-200 rounded-xl flex items-center justify-center text-gray-500">
+                              이미지 업로드
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* 경영 이념 프리뷰 */}
               <div className="mb-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1064,6 +1439,31 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
                   </div>
                 </div>
               </div>
+
+              {/* 인증서 프리뷰 */}
+              {(currentContent.certificates && currentContent.certificates.length > 0) && (
+                <div className="mb-8">
+                  <div className="bg-white rounded-lg p-6">
+                    <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">CERTIFICATES & AWARDS</h3>
+                    <div className="flex flex-wrap justify-center gap-10">
+                      {currentContent.certificates.map((cert) => (
+                        <div key={cert.id} className="flex flex-col items-center">
+                          {cert.image && (
+                            <img
+                              src={cert.image}
+                              alt={cert.caption || 'Certificate'}
+                              className="h-96 object-contain mb-3"
+                            />
+                          )}
+                          {cert.caption && (
+                            <p className="text-sm text-gray-700 text-center max-w-xs">{cert.caption}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* 슬로건 프리뷰 */}
               <div className="mb-8">

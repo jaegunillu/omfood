@@ -9,6 +9,12 @@ type HistoryItem = {
   contents: string[];
 };
 
+type Certificate = {
+  id: string;
+  image: string;
+  caption: string;
+};
+
 const defaultHistoryItems: HistoryItem[] = [
   {
     year: '2025',
@@ -152,6 +158,7 @@ const cloneHistoryItems = () =>
 
 const AboutPage: React.FC = () => {
   const [isMobile, setIsMobile] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [currentLang, setCurrentLang] = useState<'ko' | 'en'>('ko');
   const [aboutData, setAboutData] = useState({
     ko: {
@@ -197,9 +204,33 @@ OM FOOD는 앞으로도 건강한 재료, 정직한 조리, 감동 있는 서비
       spiritImagePos: { x: 50, y: 50 },
       sloganImagePos: { x: 50, y: 50 },
       messageImagePos: { x: 50, y: 50 },
+      introMainSlogan: '건강과 맛, 그리고 즐거움\n오엠푸드가 만드는 새로운 식문화',
+      section1Label: '우리의 철학',
+      section1LabelSize: '1rem',
+      section1Title: '우리의 철학',
+      section1TitleSize: '2.5rem',
+      section1Content: '음식은 먹는 사람도, 파는 사람도 건강해야 합니다. 오엠푸드는 재료 선정부터 조리, 배송 과정까지 모든 단계에서 건강과 안전을 최우선 가치로 둡니다. 오랜 시간 축적한 노하우와 위생 시스템을 통해 고객이 믿고 먹을 수 있는 한 끼를 만들며, 진심이 담긴 맛으로 일상의 휴식을 선물합니다.',
+      section1ContentSize: '1.1rem',
+      section1Image: '',
+      section2Label: '우리의 브랜드',
+      section2LabelSize: '1rem',
+      section2Title: '우리의 브랜드',
+      section2TitleSize: '2.5rem',
+      section2Content: '다양한 맛과 즐거움을 전하는 푸드 브랜드를 지향합니다. 한국의 정체성을 담되 세계 어디서나 사랑받을 수 있는 메뉴를 고민하며, 감각적인 비주얼과 스토리를 더해 브랜드 경험의 깊이를 확장합니다. 한 끼의 만족이 고객의 일상 에너지가 되도록 지속적인 실험을 이어갑니다.',
+      section2ContentSize: '1.1rem',
+      section2Image: '',
+      section3Label: '우리의 도전',
+      section3LabelSize: '1rem',
+      section3Title: '우리의 도전',
+      section3TitleSize: '2.5rem',
+      section3Content: '변화하는 식문화 속에서 끊임없는 혁신으로 한계를 넘어섭니다. 데이터 기반의 연구와 글로벌 파트너십을 통해 새로운 시장을 개척하고, 현지화 전략으로 더 넓은 고객과 만납니다. 건강한 음식, 행복한 식탁이라는 비전을 향해 오늘도 더 나은 맛과 가치를 만듭니다.',
+      section3ContentSize: '1.1rem',
+      section3Image: '',
+      visionMessage: '건강한 음식, 행복한 식탁\n오엠푸드는 오늘도 더 나은 맛과 가치를 만듭니다.',
       historyItems: cloneHistoryItems(),
       historyTitle: '기업 연혁',
-      historySubtitle: '2010년부터 현재까지 OM FOOD가 걸어온 길입니다.'
+      historySubtitle: '2010년부터 현재까지 OM FOOD가 걸어온 길입니다.',
+      certificates: [] as Certificate[]
     },
     en: {
       headerImage: '',
@@ -244,23 +275,108 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
       spiritImagePos: { x: 50, y: 50 },
       sloganImagePos: { x: 50, y: 50 },
       messageImagePos: { x: 50, y: 50 },
+      introMainSlogan: 'Health, Flavor, and Joy\nA New Dining Culture by OM FOOD',
+      section1Label: 'Our Philosophy',
+      section1LabelSize: '1rem',
+      section1Title: 'Our Philosophy',
+      section1TitleSize: '2.5rem',
+      section1Content: 'Food should keep both the diner and the maker healthy. OM FOOD prioritizes safety from sourcing to cooking and delivery, combining proven know-how with strict hygiene systems. Every bite is prepared with sincerity so customers can trust what they eat and feel comfort in every meal.',
+      section1ContentSize: '1.1rem',
+      section1Image: '',
+      section2Label: 'Our Brand',
+      section2LabelSize: '1rem',
+      section2Title: 'Our Brand',
+      section2TitleSize: '2.5rem',
+      section2Content: 'We are a food brand that delivers diverse flavors and delightful experiences. While rooted in Korean identity, we design menus that resonate globally, pairing modern storytelling with distinctive presentation to deepen the brand experience. Each menu aims to energize daily life and inspire curiosity.',
+      section2ContentSize: '1.1rem',
+      section2Image: '',
+      section3Label: 'Our Challenge',
+      section3LabelSize: '1rem',
+      section3Title: 'Our Challenge',
+      section3TitleSize: '2.5rem',
+      section3Content: 'We continue to innovate within the ever-changing culinary landscape. Data-driven research and global partnerships open new markets, while tailored localization helps us connect with more customers. Guided by the vision of healthy food and happy tables, we relentlessly pursue better taste and value.',
+      section3ContentSize: '1.1rem',
+      section3Image: '',
+      visionMessage: 'Healthy Food, Happy Tables\nOM FOOD keeps creating better flavors and values.',
       historyItems: cloneHistoryItems(),
       historyTitle: 'Company History',
-      historySubtitle: 'Milestones that shaped OM FOOD from 2010 to today.'
+      historySubtitle: 'Milestones that shaped OM FOOD from 2010 to today.',
+      certificates: [] as Certificate[]
     }
   });
 
   // 이미지 경로를 안전하게 처리
   const getImagePath = (imageName: string) => {
-    return `${process.env.PUBLIC_URL}/ABOUT_IMG/${imageName}`;
+    const publicUrl = process.env.PUBLIC_URL || '';
+    return `${publicUrl}/ABOUT_IMG/${imageName}`;
   };
 
-  const headerImageSrc = aboutData[currentLang].headerImage || getImagePath('OM_E1.jpg');
-  const philosophyImageSrc = aboutData[currentLang].philosophyImage || getImagePath('OM_E2.jpg');
-  const spiritImageSrc = aboutData[currentLang].spiritImage || getImagePath('OM_E3.jpg');
-  const sloganImageSrc = aboutData[currentLang].sloganImage || getImagePath('OM_E4.jpg');
-  const messageImageSrc = aboutData[currentLang].messageImage || getImagePath('OM_E5.jpg');
+  // 유효한 이미지 URL인지 확인하는 함수
+  const isValidImageUrl = (url: string | null | undefined): boolean => {
+    if (!url || typeof url !== 'string' || url.trim() === '') {
+      return false;
+    }
+    // http:// 또는 https://로 시작하거나, /로 시작하는 경로 형식인지 확인
+    return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/') || url.startsWith('./');
+  };
+
+  const headerImageSrc = isValidImageUrl(aboutData[currentLang].headerImage) 
+    ? aboutData[currentLang].headerImage 
+    : getImagePath('OM_E1.jpg');
+  const philosophyImageSrc = isValidImageUrl(aboutData[currentLang].philosophyImage)
+    ? aboutData[currentLang].philosophyImage
+    : getImagePath('OM_E2.jpg');
+  const spiritImageSrc = isValidImageUrl(aboutData[currentLang].spiritImage)
+    ? aboutData[currentLang].spiritImage
+    : getImagePath('OM_E3.jpg');
+  const sloganImageSrc = isValidImageUrl(aboutData[currentLang].sloganImage)
+    ? aboutData[currentLang].sloganImage
+    : getImagePath('OM_E4.jpg');
+  const messageImageSrc = isValidImageUrl(aboutData[currentLang].messageImage)
+    ? aboutData[currentLang].messageImage
+    : getImagePath('OM_E5.jpg');
+  const section1ImageSrc = isValidImageUrl(aboutData[currentLang].section1Image)
+    ? aboutData[currentLang].section1Image
+    : getImagePath('OM_E2.jpg');
+  const section2ImageSrc = isValidImageUrl(aboutData[currentLang].section2Image)
+    ? aboutData[currentLang].section2Image
+    : getImagePath('OM_E3.jpg');
+  const section3ImageSrc = isValidImageUrl(aboutData[currentLang].section3Image)
+    ? aboutData[currentLang].section3Image
+    : getImagePath('OM_E4.jpg');
   const historyItems = aboutData[currentLang].historyItems || [];
+  const introSections = [
+    {
+      label: aboutData[currentLang].section1Label || (currentLang === 'ko' ? '우리의 철학' : 'Our Philosophy'),
+      labelSize: (aboutData[currentLang] as any).section1LabelSize || '1rem',
+      title: aboutData[currentLang].section1Title,
+      titleSize: (aboutData[currentLang] as any).section1TitleSize || '2.5rem',
+      content: aboutData[currentLang].section1Content,
+      contentSize: (aboutData[currentLang] as any).section1ContentSize || '1.1rem',
+      image: section1ImageSrc,
+      reverse: false
+    },
+    {
+      label: aboutData[currentLang].section2Label || (currentLang === 'ko' ? '우리의 브랜드' : 'Our Brand'),
+      labelSize: (aboutData[currentLang] as any).section2LabelSize || '1rem',
+      title: aboutData[currentLang].section2Title,
+      titleSize: (aboutData[currentLang] as any).section2TitleSize || '2.5rem',
+      content: aboutData[currentLang].section2Content,
+      contentSize: (aboutData[currentLang] as any).section2ContentSize || '1.1rem',
+      image: section2ImageSrc,
+      reverse: true
+    },
+    {
+      label: aboutData[currentLang].section3Label || (currentLang === 'ko' ? '우리의 도전' : 'Our Challenge'),
+      labelSize: (aboutData[currentLang] as any).section3LabelSize || '1rem',
+      title: aboutData[currentLang].section3Title,
+      titleSize: (aboutData[currentLang] as any).section3TitleSize || '2.5rem',
+      content: `${aboutData[currentLang].section3Content}${aboutData[currentLang].visionMessage ? '<br/><br/>' + aboutData[currentLang].visionMessage : ''}`,
+      contentSize: (aboutData[currentLang] as any).section3ContentSize || '1.1rem',
+      image: section3ImageSrc,
+      reverse: false
+    }
+  ];
 
   useEffect(() => {
     const checkMobile = () => {
@@ -290,7 +406,21 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
               historyItems:
                 (data as any).historyItems && (data as any).historyItems.length
                   ? (data as any).historyItems
-                  : prev.ko.historyItems
+                  : prev.ko.historyItems,
+              certificates:
+                (data as any).certificates && Array.isArray((data as any).certificates)
+                  ? (data as any).certificates
+                  : (prev.ko.certificates || []),
+              // 폰트 사이즈 필드 기본값 설정
+              section1LabelSize: (data as any).section1LabelSize || prev.ko.section1LabelSize || '1rem',
+              section1TitleSize: (data as any).section1TitleSize || prev.ko.section1TitleSize || '2.5rem',
+              section1ContentSize: (data as any).section1ContentSize || prev.ko.section1ContentSize || '1.1rem',
+              section2LabelSize: (data as any).section2LabelSize || prev.ko.section2LabelSize || '1rem',
+              section2TitleSize: (data as any).section2TitleSize || prev.ko.section2TitleSize || '2.5rem',
+              section2ContentSize: (data as any).section2ContentSize || prev.ko.section2ContentSize || '1.1rem',
+              section3LabelSize: (data as any).section3LabelSize || prev.ko.section3LabelSize || '1rem',
+              section3TitleSize: (data as any).section3TitleSize || prev.ko.section3TitleSize || '2.5rem',
+              section3ContentSize: (data as any).section3ContentSize || prev.ko.section3ContentSize || '1.1rem'
             }
           }));
         }
@@ -304,12 +434,28 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
               historyItems:
                 (data as any).historyItems && (data as any).historyItems.length
                   ? (data as any).historyItems
-                  : prev.en.historyItems
+                  : prev.en.historyItems,
+              certificates:
+                (data as any).certificates && Array.isArray((data as any).certificates)
+                  ? (data as any).certificates
+                  : (prev.en.certificates || []),
+              // 폰트 사이즈 필드 기본값 설정
+              section1LabelSize: (data as any).section1LabelSize || prev.en.section1LabelSize || '1rem',
+              section1TitleSize: (data as any).section1TitleSize || prev.en.section1TitleSize || '2.5rem',
+              section1ContentSize: (data as any).section1ContentSize || prev.en.section1ContentSize || '1.1rem',
+              section2LabelSize: (data as any).section2LabelSize || prev.en.section2LabelSize || '1rem',
+              section2TitleSize: (data as any).section2TitleSize || prev.en.section2TitleSize || '2.5rem',
+              section2ContentSize: (data as any).section2ContentSize || prev.en.section2ContentSize || '1.1rem',
+              section3LabelSize: (data as any).section3LabelSize || prev.en.section3LabelSize || '1rem',
+              section3TitleSize: (data as any).section3TitleSize || prev.en.section3TitleSize || '2.5rem',
+              section3ContentSize: (data as any).section3ContentSize || prev.en.section3ContentSize || '1.1rem'
             }
           }));
         }
       } catch (error) {
         console.error('About 데이터 로드 실패:', error);
+      } finally {
+        setLoading(false);
       }
     };
     
@@ -466,6 +612,10 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
       ? '2010년부터 현재까지 OM FOOD가 걸어온 길입니다.'
       : 'Milestones that shaped OM FOOD from 2010 to today.');
 
+  if (loading) {
+    return <div style={{ height: '100vh', background: '#fff' }}></div>;
+  }
+
   return (
     <div className="about-page" style={{ minHeight: '800px', backgroundColor: 'white' }}>
       {/* 메인 히어로 섹션 */}
@@ -595,6 +745,60 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
           />
         </motion.div>
       </section>
+
+      {/* 소개 지그재그 섹션 */}
+      <motion.section
+        className="intro-zigzag-section"
+        style={{ padding: '10rem 10rem 6rem', backgroundColor: '#fff' }}
+        {...fadeInUp}
+      >
+        <div className="intro-zigzag-container">
+          <motion.div
+            className="intro-main-slogan"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+          >
+            {aboutData[currentLang].introMainSlogan.split('\n').map((line, idx) => (
+              <span key={idx}>
+                {line}
+                {idx < aboutData[currentLang].introMainSlogan.split('\n').length - 1 && <br />}
+              </span>
+            ))}
+          </motion.div>
+          {introSections.map((section, idx) => (
+            <motion.div
+              key={`${section.title}-${idx}`}
+              className={`intro-row ${section.reverse ? 'reverse' : ''}`}
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: idx * 0.1 }}
+              viewport={{ once: true }}
+            >
+              <div className="intro-text">
+                <p 
+                  className="intro-label"
+                  style={{ fontSize: section.labelSize }}
+                >
+                  {section.label}
+                </p>
+                <h3 style={{ fontSize: section.titleSize }}>
+                  {section.title}
+                </h3>
+                <div
+                  className="intro-content"
+                  style={{ fontSize: section.contentSize }}
+                  dangerouslySetInnerHTML={{ __html: section.content }}
+                />
+              </div>
+              <div className="intro-image">
+                <img src={section.image} alt={section.title} />
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </motion.section>
 
       {/* 경영 이념 Section - 레퍼런스(2번)와 픽셀매칭 */}
       <motion.section
@@ -1007,6 +1211,92 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
         </div>
       </motion.section>
 
+      {/* 인증서 섹션 */}
+      {aboutData[currentLang].certificates && aboutData[currentLang].certificates.length > 0 && (
+        <motion.section
+          className="certificates-section"
+          style={{
+            padding: '8rem 10rem',
+            background: '#fff',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center'
+          }}
+          {...fadeInUp}
+        >
+          <motion.h2
+            style={{
+              fontSize: '3.5rem',
+              fontWeight: 700,
+              color: '#111',
+              marginBottom: '4rem',
+              textAlign: 'center'
+            }}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+          >
+            CERTIFICATES & AWARDS
+          </motion.h2>
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+              gap: '40px',
+              width: '100%',
+              maxWidth: '1400px'
+            }}
+          >
+            {aboutData[currentLang].certificates.map((cert) => (
+              <motion.div
+                key={cert.id}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  maxWidth: '600px'
+                }}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                viewport={{ once: true }}
+              >
+                {cert.image && (
+                  <img
+                    src={cert.image}
+                    alt={cert.caption || 'Certificate'}
+                    style={{
+                      width: '100%',
+                      height: 'auto',
+                      maxWidth: '100%',
+                      objectFit: 'contain',
+                      marginBottom: '1rem',
+                      imageRendering: 'auto' as any
+                    }}
+                  />
+                )}
+                {cert.caption && (
+                  <p
+                    style={{
+                      fontSize: '1rem',
+                      color: '#333',
+                      textAlign: 'center',
+                      margin: 0,
+                      maxWidth: '280px',
+                      lineHeight: 1.5
+                    }}
+                  >
+                    {cert.caption}
+                  </p>
+                )}
+              </motion.div>
+            ))}
+          </div>
+        </motion.section>
+      )}
+
       {/* "음식은 먹는 사람도 파는 사람도 건강해야 한다" Section */}
       <motion.section 
         className="slogan-section"
@@ -1121,7 +1411,7 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
     }}
   />
 
-  <div style={{ maxWidth: '100rem', margin: '0 auto' }}>
+  <div style={{ maxWidth: '100rem', margin: '0 auto', paddingTop: '150px' }}>
     <div
       style={{
         display: 'grid',
@@ -1216,7 +1506,66 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
   </div>
        </motion.section>
        
-       <style>{`
+      <style>{`
+.intro-zigzag-section {
+  background: #fff;
+}
+.intro-zigzag-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4rem;
+}
+.intro-main-slogan {
+  font-size: 3.5rem;
+  font-weight: 800;
+  text-align: center;
+  line-height: 1.3;
+  color: #111;
+}
+.intro-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4rem;
+}
+.intro-row.reverse {
+  flex-direction: row-reverse;
+}
+.intro-text {
+  flex: 1;
+  max-width: 45%;
+}
+.intro-text .intro-label {
+  font-size: 0.95rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #e36e6e;
+  margin-bottom: 1rem;
+}
+.intro-text h3 {
+  font-size: 2.8rem;
+  margin-bottom: 1.5rem;
+  color: #111;
+  line-height: 1.2;
+}
+.intro-text p {
+  font-size: 1.2rem;
+  line-height: 1.7;
+  color: #374151;
+}
+.intro-image {
+  flex: 1;
+  max-width: 50%;
+}
+.intro-image img {
+  width: 100%;
+  height: auto;
+  border-radius: 24px;
+  object-fit: cover;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.12);
+}
 .about-page .history-section {
   background: #FFF9F4;
 }
@@ -1263,11 +1612,29 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
   background: rgba(0, 0, 0, 0.15);
   pointer-events: none;
 }
+.about-page .certificates-section img {
+  image-rendering: auto;
+}
 
 /* PC (1801px 이상)에는 기존 스타일 유지 */
 
 /* 중간 해상도 (769px ~ 1800px) 스타일 */
 @media (max-width: 1800px) {
+  .intro-main-slogan {
+    font-size: clamp(2rem, 4vw, 3rem);
+  }
+  .intro-row {
+    gap: 2rem;
+  }
+  .intro-text {
+    max-width: 50%;
+  }
+  .intro-text h3 {
+    font-size: clamp(1.8rem, 3vw, 2.2rem);
+  }
+  .intro-text p {
+    font-size: clamp(1rem, 1.6vw, 1.1rem);
+  }
   .about-page section {
     padding: clamp(4rem, 5vw, 6rem) clamp(1rem, 2vw, 4rem) !important;
   }
@@ -1369,10 +1736,51 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
     font-size: clamp(0.9rem, 1.5vw, 1rem) !important;
     text-align: left !important;
   }
+  .about-page .certificates-section {
+    padding: clamp(4rem, 6vw, 8rem) clamp(1.5rem, 3vw, 10rem) !important;
+  }
+  .about-page .certificates-section h2 {
+    font-size: clamp(2rem, 4vw, 3.5rem) !important;
+    margin-bottom: clamp(2rem, 4vw, 4rem) !important;
+  }
+  .about-page .certificates-section > div {
+    gap: clamp(2rem, 4vw, 40px) !important;
+  }
+  .about-page .certificates-section > div > div {
+    max-width: clamp(400px, 40vw, 600px) !important;
+  }
+  .about-page .certificates-section img {
+    width: 100% !important;
+    height: auto !important;
+    max-width: 100% !important;
+    image-rendering: auto !important;
+  }
 }
 
 /* 모바일 (768px 이하) 스타일 */
 @media (max-width: 768px) {
+  .intro-zigzag-section {
+    padding: 4rem 1.5rem !important;
+  }
+  .intro-main-slogan {
+    font-size: 2rem;
+  }
+  .intro-row,
+  .intro-row.reverse {
+    flex-direction: column;
+  }
+  .intro-text,
+  .intro-image {
+    max-width: 100%;
+  }
+  .intro-text h3 {
+    font-size: 1.8rem;
+    text-align: center;
+  }
+  .intro-text p {
+    font-size: 1rem;
+    text-align: center;
+  }
   .about-page section {
     padding: 3rem 1rem !important;
   }
@@ -1385,6 +1793,9 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
   }
   .about-page .om-global-kfood {
     padding-top: 0 !important;
+  }
+  .about-page .om-global-kfood > div {
+    padding-top: 80px !important;
   }
   .about-page section h2,
   .about-page section h3,
@@ -1590,6 +2001,26 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
     background-repeat: no-repeat !important;
     margin-top: 2rem;
     opacity: 0.4 !important;
+  }
+  .about-page .certificates-section {
+    padding: 4rem 1.5rem !important;
+  }
+  .about-page .certificates-section h2 {
+    font-size: 2rem !important;
+    margin-bottom: 2rem !important;
+  }
+  .about-page .certificates-section > div {
+    flex-direction: column !important;
+    gap: 2rem !important;
+  }
+  .about-page .certificates-section > div > div {
+    max-width: 90vw !important;
+  }
+  .about-page .certificates-section img {
+    width: 100% !important;
+    height: auto !important;
+    max-width: 100% !important;
+    image-rendering: auto !important;
   }
 }
 `}</style>

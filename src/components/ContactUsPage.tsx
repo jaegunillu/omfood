@@ -264,32 +264,35 @@ const ContactUsPage: React.FC = () => {
               </span>
             )}
           </div>
-          <div className="mb-8 flex items-start">
+        <div className="mb-8 flex items-start gap-3 flex-wrap">
             <input
               type="checkbox"
               {...register("agreedPrivacy", { required: true })}
               id="privacy"
               className="mr-3 mt-1 w-5 h-5 text-[#E5002B] border-gray-300 rounded focus:ring-[#E5002B] focus:ring-2"
             />
-            <div className="flex-1">
-              <label htmlFor="privacy" className="text-sm text-gray-700 leading-relaxed cursor-pointer">
-                {currentLang === 'ko' 
-                  ? '개인정보처리방침을 읽고 동의합니다'
-                  : 'I\'ve read and agree to the terms of the '
-                }
-                {currentLang === 'ko' ? null : (
+          <div className="flex-1 flex items-center gap-2 flex-wrap">
+            <label
+              htmlFor="privacy"
+              className="text-sm text-gray-700 leading-relaxed cursor-pointer inline-flex items-center gap-1 flex-wrap"
+            >
+              {currentLang === 'ko'
+                ? '개인정보처리방침을 읽고 동의합니다'
+                : (
                   <>
+                    I&apos;ve read and agree to the terms of the&nbsp;
                     <span className="font-bold text-[#E5002B]">privacy policy</span>
                   </>
-                )}
-              </label>
-              <button
-                type="button"
-                className="ml-2 text-sm text-[#E5002B] underline hover:text-[#C4002B] transition-colors"
-                onClick={() => setShowPrivacy((v) => !v)}
-              >
-                {showPrivacy ? "▲" : "▼"}
-              </button>
+                )
+              }
+            </label>
+            <button
+              type="button"
+              className="text-sm text-[#E5002B] underline hover:text-[#C4002B] transition-colors"
+              onClick={() => setShowPrivacy((v) => !v)}
+            >
+              {showPrivacy ? "▲" : "▼"}
+            </button>
             </div>
           </div>
           {showPrivacy && (

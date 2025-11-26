@@ -115,7 +115,7 @@ const SubText = styled.p`
 const VideoSection: React.FC = () => {
   const [main, setMain] = useState({
     mediaType: 'video',
-    mediaUrl: process.env.PUBLIC_URL + '/main1.mp4',
+    mediaUrl: '',
     mainText: { en: 'Global Taste, Local Touch', ko: '글로벌 맛, 로컬 터치' },
     subText: { 
       en: 'From sauces to stores, we blend Korean flavor with local culture for every market we serve.',
@@ -166,6 +166,10 @@ const VideoSection: React.FC = () => {
       window.removeEventListener('storage', onLangChange);
     };
   }, []);
+
+  if (!main.mediaUrl) {
+    return <VideoContainer style={{ background: 'transparent' }}></VideoContainer>;
+  }
 
   return (
     <VideoContainer>
