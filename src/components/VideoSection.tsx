@@ -123,7 +123,7 @@ const VideoSection: React.FC = () => {
     }
   });
   const [currentLang, setCurrentLang] = useState<'en' | 'ko'>(
-    localStorage.getItem('siteLang') === 'en' ? 'en' : 'ko'
+    localStorage.getItem('siteLang') === 'ko' ? 'ko' : 'en'
   );
 
   useEffect(() => {
@@ -149,12 +149,12 @@ const VideoSection: React.FC = () => {
   // 언어 변경 감지
   useEffect(() => {
     const onLangChange = (event: any) => {
-      const lang = event?.detail?.language ?? (localStorage.getItem('siteLang') === 'en' ? 'en' : 'ko');
+      const lang = event?.detail?.language ?? (localStorage.getItem('siteLang') === 'ko' ? 'ko' : 'en');
       setCurrentLang(lang);
     };
 
     // 초기 언어 설정
-    const initialLang = localStorage.getItem('siteLang') === 'en' ? 'en' : 'ko';
+    const initialLang = localStorage.getItem('siteLang') === 'ko' ? 'ko' : 'en';
     setCurrentLang(initialLang);
 
     // 커스텀 이벤트 리스너 (Header에서 발생하는 이벤트)

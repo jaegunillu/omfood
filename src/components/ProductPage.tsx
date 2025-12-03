@@ -155,7 +155,8 @@ const ProductPage: React.FC = () => {
   });
   const [modalProduct, setModalProduct] = useState<any>(null);
   const navigate = useNavigate();
-  const [language, setLanguage] = useState<'en' | 'ko'>(localStorage.getItem('siteLang') === 'en' ? 'en' : 'ko');
+  // localStorage가 'ko'일 때만 한국어, 그 외(null 포함)는 항상 영어가 기본값
+  const [language, setLanguage] = useState<'en' | 'ko'>(localStorage.getItem('siteLang') === 'ko' ? 'ko' : 'en');
   const [labelSettings, setLabelSettings] = useState<LabelSettings>(defaultLabels);
 
   useEffect(() => {

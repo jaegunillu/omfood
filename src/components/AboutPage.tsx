@@ -159,7 +159,7 @@ const cloneHistoryItems = () =>
 const AboutPage: React.FC = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [currentLang, setCurrentLang] = useState<'ko' | 'en'>('ko');
+  const [currentLang, setCurrentLang] = useState<'ko' | 'en'>('en');
   const [aboutData, setAboutData] = useState({
     ko: {
       headerImage: '',
@@ -472,6 +472,9 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
       setCurrentLang(lang);
     } else if (savedLang && (savedLang === 'ko' || savedLang === 'en')) {
       setCurrentLang(savedLang);
+    } else {
+      // 기본값: 영어
+      setCurrentLang('en');
     }
   }, []);
 
@@ -957,6 +960,7 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
 
       {/* 기업 정신 Section — 경영 이념 섹션과 동일 규격/레이아웃 */}
       <motion.section
+        className="spirit-section"
         style={{ padding: '13rem 10rem 26rem', backgroundColor: 'white' }}
         {...fadeInUp}
       >
@@ -1220,7 +1224,9 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
             background: '#fff',
             display: 'flex',
             flexDirection: 'column',
-            alignItems: 'center'
+            alignItems: 'center',
+            width: '100%',
+            boxSizing: 'border-box'
           }}
           {...fadeInUp}
         >
@@ -1244,9 +1250,12 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
               display: 'flex',
               flexWrap: 'wrap',
               justifyContent: 'center',
+              alignItems: 'center',
               gap: '40px',
               width: '100%',
-              maxWidth: '1400px'
+              maxWidth: '1400px',
+              margin: '0 auto',
+              padding: 0
             }}
           >
             {aboutData[currentLang].certificates.map((cert) => (
@@ -1256,7 +1265,9 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  maxWidth: '600px'
+                  maxWidth: '600px',
+                  width: '100%',
+                  margin: '0 auto'
                 }}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -1273,6 +1284,9 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
                       maxWidth: '100%',
                       objectFit: 'contain',
                       marginBottom: '1rem',
+                      marginLeft: 'auto',
+                      marginRight: 'auto',
+                      display: 'block',
                       imageRendering: 'auto' as any
                     }}
                   />
@@ -1809,6 +1823,10 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
     grid-template-columns: 1fr !important;
     gap: 2rem !important;
   }
+  .about-page section:nth-of-type(3) > div > div {
+    grid-template-columns: 1fr !important;
+    gap: 2rem !important;
+  }
   .about-page section:nth-of-type(2) > div > div > div:last-child,
   .about-page section:nth-of-type(3) > div > div > div:last-child {
     display: flex !important;
@@ -1824,6 +1842,10 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
     text-align: center !important;
     width: 100% !important;
   }
+  .about-page section:nth-of-type(3) h2 {
+    font-size: 1.8rem !important;
+    text-align: center !important;
+  }
   .about-page section:nth-of-type(2) h3,
   .about-page section:nth-of-type(3) h3 {
     font-size: 1.5rem !important;
@@ -1832,6 +1854,10 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
     margin-bottom: 1.5rem !important;
     text-align: center !important;
     line-height: 1.4 !important;
+  }
+  .about-page section:nth-of-type(3) h3 {
+    font-size: 1.5rem !important;
+    text-align: center !important;
   }
   .about-page section:nth-of-type(2) ul,
   .about-page section:nth-of-type(3) ul {
@@ -1853,6 +1879,10 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
     text-align: center !important;
     width: 100% !important;
     line-height: 1.5 !important;
+  }
+  .about-page section:nth-of-type(3) ul li {
+    font-size: 1rem !important;
+    padding-left: 0 !important;
   }
   .about-page section:nth-of-type(2) ul li > span:first-child,
   .about-page section:nth-of-type(3) ul li > span:first-child {
@@ -1936,6 +1966,10 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
     object-fit: cover !important;
     object-position: center !important;
   }
+  .about-page section:nth-of-type(3) img {
+    width: 100% !important;
+    height: auto !important;
+  }
   .about-page .slogan-text {
     font-size: 2.2rem !important;
     line-height: 1.3 !important;
@@ -2004,6 +2038,12 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
   }
   .about-page .certificates-section {
     padding: 4rem 1.5rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    box-sizing: border-box !important;
   }
   .about-page .certificates-section h2 {
     font-size: 2rem !important;
@@ -2011,16 +2051,81 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
   }
   .about-page .certificates-section > div {
     flex-direction: column !important;
+    align-items: center !important;
     gap: 2rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
   }
   .about-page .certificates-section > div > div {
     max-width: 90vw !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
   .about-page .certificates-section img {
     width: 100% !important;
     height: auto !important;
     max-width: 100% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    display: block !important;
     image-rendering: auto !important;
+  }
+  /* 기업 정신 섹션 전용 모바일 스타일 */
+  .spirit-section > div > div {
+    grid-template-columns: 1fr !important;
+    gap: 3rem !important;
+  }
+  .spirit-section img.card-img {
+    width: 100% !important;
+    height: auto !important;
+    max-height: 400px !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    border-radius: 1rem !important;
+  }
+  .spirit-section h2 {
+    font-size: 1.8rem !important;
+    text-align: center !important;
+    margin-bottom: 1rem !important;
+  }
+  .spirit-section h3 {
+    font-size: 1.5rem !important;
+    text-align: center !important;
+    line-height: 1.4 !important;
+    width: 100% !important;
+    height: auto !important;
+    margin-bottom: 2rem !important;
+  }
+  .spirit-section ul {
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1rem !important;
+    align-items: center !important;
+  }
+  .spirit-section ul li {
+    font-size: 1rem !important;
+    text-align: center !important;
+    padding-left: 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+    width: 100% !important;
+  }
+  .spirit-section ul li > span:first-child {
+    display: none !important;
+  }
+  .spirit-section ul li > span:last-child {
+    display: block !important;
+    width: 100% !important;
+    text-align: center !important;
   }
 }
 `}</style>

@@ -32,7 +32,8 @@ type FormValues = {
 
 const ContactUsPage: React.FC = () => {
   const [showPrivacy, setShowPrivacy] = useState(false);
-  const [currentLang, setCurrentLang] = useState<'en'|'ko'>(localStorage.getItem('siteLang') === 'en' ? 'en' : 'ko');
+  // localStorage가 'ko'일 때만 한국어, 그 외(null 포함)는 항상 영어
+  const [currentLang, setCurrentLang] = useState<'en'|'ko'>(localStorage.getItem('siteLang') === 'ko' ? 'ko' : 'en');
 
   const { success, error } = useToast();
   const {
@@ -50,7 +51,7 @@ const ContactUsPage: React.FC = () => {
   // 언어 변경 이벤트 리스너
   useEffect(() => {
     const onLang = (e: any) => {
-      const lang = e?.detail?.language || (localStorage.getItem('siteLang') === 'en' ? 'en' : 'ko');
+      const lang = e?.detail?.language || (localStorage.getItem('siteLang') === 'ko' ? 'ko' : 'en');
       setCurrentLang(lang);
     };
     window.addEventListener('languageChange', onLang);
@@ -80,7 +81,7 @@ const ContactUsPage: React.FC = () => {
         ...data,
         createdAt: new Date(),
       });
-      success('문의가 성공적으로 접수되었습니다.');
+      success('Your inquiry has been successfully submitted.');
       reset(); // 폼 초기화
     } catch (err: any) {
       console.error('Contact form submission error:', err);
@@ -130,13 +131,13 @@ const ContactUsPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#FAF6F0] flex flex-col">
       <Header />
-      <main className="flex-1 flex flex-col items-center justify-start py-12 mt-[120px] bg-[#fdf8f3] contact-fallback-page">
+      <main className="flex-1 flex flex-col items-center justify-start py-12 mt-[120px] bg-[#fdf8f3] contact-fallback-page px-4">
         <h1 className="text-5xl font-extrabold text-[#5a3723] mb-6 font-pretendard tracking-tight text-center contact-fallback-title">
           {currentLang === 'ko' ? '문의하기' : 'CONTACT US'}
         </h1>
         <form
-          className="bg-white rounded-2xl shadow-lg p-16 w-full max-w-4xl border border-gray-200 mt-8 mb-12 text-[1.15rem] font-pretendard contact-fallback-card"
-          style={{ minWidth: 480, fontSize: '1.15rem' }}
+          className="bg-white rounded-2xl shadow-lg md:p-16 p-4 w-full max-w-4xl border border-gray-200 mt-8 mb-12 text-[1.15rem] font-pretendard contact-fallback-card"
+          style={{ fontSize: '1.15rem', minWidth: 'unset' }}
           onSubmit={handleSubmit(onSubmit)}
         >
           <div className="mb-10 text-center">
@@ -152,7 +153,7 @@ const ContactUsPage: React.FC = () => {
           </div>
 
           {/* Left Column */}
-          <div className="grid grid-cols-2 gap-6 mb-6">
+          <div className="grid md:grid-cols-2 grid-cols-1 gap-6 mb-6">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 {currentLang === 'ko' ? '문의 주제를 선택해 주세요' : 'Please select the subject of your inquiry'}
@@ -203,7 +204,7 @@ const ContactUsPage: React.FC = () => {
           </div>
           
           {/* Right Column */}
-          <div className="grid grid-cols-2 gap-6 mb-6">
+          <div className="grid md:grid-cols-2 grid-cols-1 gap-6 mb-6">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 {currentLang === 'ko' ? '국가 / 도시' : 'Country / City'}
@@ -264,35 +265,43 @@ const ContactUsPage: React.FC = () => {
               </span>
             )}
           </div>
-        <div className="mb-8 flex items-start gap-3 flex-wrap">
+        <div className="mb-8 flex items-start gap-3" style={{ flexWrap: 'nowrap' }}>
             <input
               type="checkbox"
               {...register("agreedPrivacy", { required: true })}
               id="privacy"
-              className="mr-3 mt-1 w-5 h-5 text-[#E5002B] border-gray-300 rounded focus:ring-[#E5002B] focus:ring-2"
+              className="mr-3 mt-1 w-5 h-5 text-[#E5002B] border-gray-300 rounded focus:ring-[#E5002B] focus:ring-2 flex-shrink-0"
             />
-          <div className="flex-1 flex items-center gap-2 flex-wrap">
+          <div className="flex-1 flex items-center gap-2" style={{ flexWrap: 'nowrap' }}>
             <label
               htmlFor="privacy"
-              className="text-sm text-gray-700 leading-relaxed cursor-pointer inline-flex items-center gap-1 flex-wrap"
+              className="text-sm text-gray-700 leading-relaxed cursor-pointer inline-flex items-center"
+              style={{ flexWrap: 'wrap' }}
             >
               {currentLang === 'ko'
                 ? '개인정보처리방침을 읽고 동의합니다'
                 : (
                   <>
                     I&apos;ve read and agree to the terms of the&nbsp;
-                    <span className="font-bold text-[#E5002B]">privacy policy</span>
+                    <span className="font-bold text-[#E5002B] inline-flex items-center">
+                      privacy policy
+                      <button
+                        type="button"
+                        className="text-sm text-[#E5002B] underline hover:text-[#C4002B] transition-colors"
+                        style={{ flexShrink: 0, padding: 0, margin: 0, marginLeft: 0, border: 'none', background: 'none', cursor: 'pointer' }}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setShowPrivacy((v) => !v);
+                        }}
+                      >
+                        {showPrivacy ? "▲" : "▼"}
+                      </button>
+                    </span>
                   </>
                 )
               }
             </label>
-            <button
-              type="button"
-              className="text-sm text-[#E5002B] underline hover:text-[#C4002B] transition-colors"
-              onClick={() => setShowPrivacy((v) => !v)}
-            >
-              {showPrivacy ? "▲" : "▼"}
-            </button>
             </div>
           </div>
           {showPrivacy && (
@@ -315,7 +324,7 @@ const ContactUsPage: React.FC = () => {
           </button>
         </form>
         {/* 하단 정보 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-16 w-full max-w-6xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-16 w-full max-w-6xl px-4">
           <div className="h-48 flex flex-col items-center justify-center border border-gray-200 rounded-2xl p-6 bg-white shadow font-pretendard">
             <LocationOn fontSize="large" className="text-[#E5002B]" />
             <div className="font-bold mt-2 text-base text-center">

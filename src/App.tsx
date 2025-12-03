@@ -269,7 +269,7 @@ const StoreList = styled.div`
   }
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
-    gap: 24px;
+    gap: 16px;
     padding: 0 16px;
   }
 `;
@@ -288,9 +288,12 @@ const StoreCard = styled.div<{ $visible?: boolean; $delay?: number }>`
   transform: ${({ $visible }) => ($visible ? 'translateY(0)' : 'translateY(40px)')};
   transition: opacity 0.7s cubic-bezier(0.4,0,0.2,1) ${({ $delay }) => $delay || 0}ms,
               transform 0.7s cubic-bezier(0.4,0,0.2,1) ${({ $delay }) => $delay || 0}ms;
-  @media (max-width: 400px) {
-    width: 95vw;
+  @media (max-width: 480px) {
+    width: 100% !important;
+    max-width: 360px;
     min-width: 0;
+    margin: 0 auto;
+    padding: 16px;
   }
 `;
 
@@ -769,7 +772,7 @@ function Brands() {
   const [brands, setBrands] = useState<Array<{ name: { en: string; ko: string }; desc: { en: string; ko: string }; subText?: { en: string; ko: string }; image: string; order?: number; nameSize?: string; descSize?: string; subTextSize?: string }>>([]);
   const refs = useRef<Array<HTMLDivElement | null>>([]);
   const [visibleArr, setVisibleArr] = useState<boolean[]>([]);
-  const siteLang = localStorage.getItem('siteLang') === 'en' ? 'en' : 'ko';
+  const siteLang = localStorage.getItem('siteLang') === 'ko' ? 'ko' : 'en';
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'brands'), (snapshot) => {
@@ -906,13 +909,13 @@ const SloganBannerImage = styled.img`
 const SloganTextOverlay = styled.div<{ $x: number; $y: number }>`
   position: absolute;
   top: ${({ $y }) => $y}%;
-  left: ${({ $x }) => $x}%;
-  transform: translate(-50%, -50%);
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
   z-index: 2;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
+  align-items: center !important;
+  text-align: center !important;
   width: 90%;
   max-width: 1400px;
   @media (max-width: 768px) {
@@ -925,8 +928,10 @@ const SloganMainTextOverlay = styled.div<{ $color?: string; $fontSize?: string }
   font-weight: 700;
   color: ${({ $color }) => $color || '#fff'};
   margin-bottom: 56px;
-  text-align: center;
+  text-align: center !important;
   width: 100%;
+  margin-left: auto;
+  margin-right: auto;
   white-space: pre-wrap;
   word-break: keep-all;
   @media (max-width: 768px) {
@@ -940,7 +945,7 @@ const SloganSubTextOverlay = styled.div<{ $color?: string; $fontSize?: string }>
   color: ${({ $color }) => $color || '#fff'};
   width: 90% !important;
   max-width: 1200px !important;
-  text-align: center;
+  text-align: center !important;
   opacity: 0.95;
   display: block !important;
   margin: 0 auto !important;
@@ -1001,7 +1006,7 @@ function SloganSection() {
   const [show, setShow] = useState(false);
   const [visibleChars, setVisibleChars] = useState<{ main: number; sub: number }>({ main: 0, sub: 0 });
   const ref = useRef<HTMLDivElement>(null);
-  const siteLang = localStorage.getItem('siteLang') === 'en' ? 'en' : 'ko';
+  const siteLang = localStorage.getItem('siteLang') === 'ko' ? 'ko' : 'en';
 
   useEffect(() => {
     const docRef = doc(db, 'slogan', 'main');
@@ -4751,7 +4756,7 @@ function App() {
 
   // Firestore 실시간 stores 데이터
   const [storeList, setStoreList] = useState<Array<{ name: string; image: string; address: string; mapUrl: string; order?: number }>>(initialStores);
-  const siteLang = localStorage.getItem('siteLang') === 'en' ? 'en' : 'ko';
+  const siteLang = localStorage.getItem('siteLang') === 'ko' ? 'ko' : 'en';
   
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, STORES_COLLECTION), (snapshot: QuerySnapshot<DocumentData>) => {

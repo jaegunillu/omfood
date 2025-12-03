@@ -346,7 +346,7 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
   const [navHover, setNavHover] = useState(false);
   const [languageHover, setLanguageHover] = useState(false);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
-  const [language, setLanguage] = useState<'en' | 'ko'>(localStorage.getItem('siteLang') === 'en' ? 'en' : 'ko');
+  const [language, setLanguage] = useState<'en' | 'ko'>(localStorage.getItem('siteLang') === 'ko' ? 'ko' : 'en');
   const [logoWhite, setLogoWhite] = useState<string | null>(null);
   const [logoBlack, setLogoBlack] = useState<string | null>(null);
   const [isLogoLoaded, setIsLogoLoaded] = useState(false);
@@ -597,7 +597,8 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
           ) : null}
         </Nav>
       </NavWrapper>
-      {!location.pathname.includes('/admin') && (
+      {/* 언어 변경 버튼 숨김 처리 */}
+      {/* {!location.pathname.includes('/admin') && (
         <LanguageSelector
           onMouseEnter={() => setLanguageHover(true)}
           onMouseLeave={() => setLanguageHover(false)}
@@ -627,7 +628,7 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
             [KOR]
           </LangTextButton>
         </LanguageSelector>
-      )}
+      )} */}
       <MobileNav $open={mobileMenuOpen}>
         {mobileMenuOpen && (
           <MobileCloseButton onClick={handleMobileMenuClose} title="닫기" style={{color:'#fff', zIndex:10001, background:'none'}}>
@@ -657,7 +658,8 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
             </MenuItem>
           ))
         ) : null}
-        {!location.pathname.includes('/admin') && (
+        {/* 모바일 언어 변경 버튼 숨김 처리 */}
+        {/* {!location.pathname.includes('/admin') && (
           <MobileLanguageSelector>
             <LangTextButton
               onClick={() => handleLanguageChange('en')}
@@ -684,7 +686,7 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
               [KOR]
             </LangTextButton>
           </MobileLanguageSelector>
-        )}
+        )} */}
       </MobileNav>
     </HeaderContainer>
   );
