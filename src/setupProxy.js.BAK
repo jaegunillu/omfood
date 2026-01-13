@@ -1,0 +1,15 @@
+const { createProxyMiddleware } = require('http-proxy-middleware');
+
+module.exports = function(app) {
+  app.use(
+    '/sendContactUs',
+    createProxyMiddleware({
+      target: 'http://127.0.0.1:5001/omfood-a621d/us-central1',
+      changeOrigin: true,
+      pathRewrite: { '^/sendContactUs': '/sendContactUs' },
+      onProxyReq: (proxyReq, req, res) => {
+        console.log('[PROXY] 실제 프록시 동작:', req.method, req.url);
+      }
+    })
+  );
+}; 
