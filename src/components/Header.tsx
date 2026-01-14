@@ -328,7 +328,7 @@ const MobileLanguageSelector = styled.div`
     gap: 24px;
     width: 100%;
     margin-top: auto;
-    margin-bottom: 40px;
+    margin-bottom: 150px;
   }
 `;
 
