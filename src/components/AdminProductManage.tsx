@@ -8,7 +8,7 @@ import 'react-quill-new/dist/quill.snow.css';
 import { useToast } from './common/ToastContext';
 import Toast from './common/Toast';
 import ToastContainer from './common/ToastContainer';
-import { useAdminLang, LangKey } from '../hooks/useAdminLang';
+import { LangKey } from '../hooks/useAdminLang';
 
 // 디자인 시스템 - 컬러 팔레트
 const colors = {
@@ -556,7 +556,11 @@ const defaultLabels: LabelSettings = {
   nutrition: { en: 'Nutrition Facts', ko: '영양 정보' }
 };
 
-const AdminProductManage: React.FC = () => {
+interface AdminProductManageProps {
+  adminLang: LangKey;
+}
+
+const AdminProductManage: React.FC<AdminProductManageProps> = ({ adminLang }) => {
   const [activeTab, setActiveTab] = useState<'categories' | 'products' | 'page' | 'bottomText'>('categories');
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -573,7 +577,6 @@ const AdminProductManage: React.FC = () => {
   const [expandedProducts, setExpandedProducts] = useState<Set<string>>(new Set());
   const [modifiedProducts, setModifiedProducts] = useState<Set<string>>(new Set());
   const [toasts, setToasts] = useState<Toast[]>([]);
-  const [adminLang] = useAdminLang(); // adminLang: LangKey ('en' | 'ko')
 
   // 새 카테고리/제품 상태
   const [newCategory, setNewCategory] = useState<Category>({ id: '', name: { en: '', ko: '' }, description: { en: '', ko: '' }, order: 0 });
@@ -677,9 +680,9 @@ const AdminProductManage: React.FC = () => {
         const data = docSnap.data();
         // 마이그레이션: 기존 string이면 en으로 간주
         setPageData({
-          slogan: typeof data.slogan === 'string' ? { en: data.slogan, ko: '' } : { en: data.slogan?.[adminLang] || '', ko: data.slogan?.[adminLang === 'ko' ? 'en' : 'ko'] || '' },
-          subSlogan: typeof data.subSlogan === 'string' ? { en: data.subSlogan, ko: '' } : { en: data.subSlogan?.[adminLang] || '', ko: data.subSlogan?.[adminLang === 'ko' ? 'en' : 'ko'] || '' },
-          bottomText: typeof data.bottomText === 'string' ? { en: data.bottomText, ko: '' } : { en: data.bottomText?.[adminLang] || '', ko: data.bottomText?.[adminLang === 'ko' ? 'en' : 'ko'] || '' }
+          slogan: typeof data.slogan === 'string' ? { en: data.slogan, ko: '' } : { en: data.slogan?.en || '', ko: data.slogan?.ko || '' },
+          subSlogan: typeof data.subSlogan === 'string' ? { en: data.subSlogan, ko: '' } : { en: data.subSlogan?.en || '', ko: data.subSlogan?.ko || '' },
+          bottomText: typeof data.bottomText === 'string' ? { en: data.bottomText, ko: '' } : { en: data.bottomText?.en || '', ko: data.bottomText?.ko || '' }
         });
       }
     };
@@ -999,6 +1002,7 @@ const AdminProductManage: React.FC = () => {
                     placeholder="카테고리명"
                   />
                   <AdminQuill
+                    key={`new-category-${adminLang}`}
                     value={newCategory.description?.[adminLang] || ''}
                     onChange={value => setNewCategory({ 
                       ...newCategory, 
@@ -1053,6 +1057,7 @@ const AdminProductManage: React.FC = () => {
                       <div>
                         <AdminLabel>카테고리 설명</AdminLabel>
                         <AdminQuill
+                          key={`${category.id}-${adminLang}`}
                           value={category.description?.[adminLang] || ''}
                           onChange={value => setCategories(prev => prev.map((c, i) => i === index ? { 
                             ...c, 
@@ -1129,6 +1134,7 @@ const AdminProductManage: React.FC = () => {
                 <div>
                   {renderLabelInput('allergens')}
                   <AdminQuill
+                    key={`new-allergens-${adminLang}`}
                     value={newProduct.allergens?.[adminLang] || ''}
                     onChange={value => setNewProduct({ 
                       ...newProduct, 
@@ -1141,6 +1147,7 @@ const AdminProductManage: React.FC = () => {
                   />
                   {renderLabelInput('ingredients')}
                   <AdminQuill
+                    key={`new-ingredients-${adminLang}`}
                     value={newProduct.ingredients?.[adminLang] || ''}
                     onChange={value => setNewProduct({ 
                       ...newProduct, 
@@ -1153,6 +1160,7 @@ const AdminProductManage: React.FC = () => {
                   />
                   {renderLabelInput('nutrition')}
                   <AdminQuill
+                    key={`new-nutrition-${adminLang}`}
                     value={newProduct.nutrition?.[adminLang] || ''}
                     onChange={value => setNewProduct({ 
                       ...newProduct, 
@@ -1270,6 +1278,7 @@ const AdminProductManage: React.FC = () => {
                             )}
                             {renderLabelInput('allergens')}
                             <AdminQuill
+                              key={`allergens-${product.id}-${adminLang}`}
                               value={product.allergens?.[adminLang] || ''}
                               onChange={value => {
                                 setProducts(prev => prev.map((p, i) => i === index ? { 
@@ -1285,6 +1294,7 @@ const AdminProductManage: React.FC = () => {
                             />
                             {renderLabelInput('ingredients')}
                             <AdminQuill
+                              key={`ingredients-${product.id}-${adminLang}`}
                               value={product.ingredients?.[adminLang] || ''}
                               onChange={value => {
                                 setProducts(prev => prev.map((p, i) => i === index ? { 
@@ -1300,6 +1310,7 @@ const AdminProductManage: React.FC = () => {
                             />
                             {renderLabelInput('nutrition')}
                             <AdminQuill
+                              key={`nutrition-${product.id}-${adminLang}`}
                               value={product.nutrition?.[adminLang] || ''}
                               onChange={value => {
                                 setProducts(prev => prev.map((p, i) => i === index ? { 
@@ -1347,6 +1358,7 @@ const AdminProductManage: React.FC = () => {
                 <AdminLabel>페이지 슬로건</AdminLabel>
                 <div style={{ width: '100%' }}>
                   <AdminQuill
+                    key={`page-slogan-${adminLang}`}
                     value={pageData.slogan[adminLang]}
                     onChange={value => setPageData(prev => ({ ...prev, slogan: { ...prev.slogan, [adminLang]: value } }))}
                     modules={quillModules}
@@ -1359,6 +1371,7 @@ const AdminProductManage: React.FC = () => {
                 <AdminLabel>페이지 서브 슬로건</AdminLabel>
                 <div style={{ width: '100%' }}>
                   <AdminQuill
+                    key={`page-sub-slogan-${adminLang}`}
                     value={pageData.subSlogan[adminLang]}
                     onChange={value => setPageData(prev => ({ ...prev, subSlogan: { ...prev.subSlogan, [adminLang]: value } }))}
                     modules={quillModules}
@@ -1451,6 +1464,7 @@ const AdminProductManage: React.FC = () => {
                 <AdminLabel>하단 문구</AdminLabel>
                 <div style={{ width: '100%' }}>
                   <AdminQuill
+                    key={`bottom-${adminLang}`}
                     value={pageData.bottomText[adminLang]}
                     onChange={value => setPageData(prev => ({ ...prev, bottomText: { ...prev.bottomText, [adminLang]: value } }))}
                     modules={quillModules}

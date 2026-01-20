@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
-import { collection, onSnapshot, doc, getDoc } from 'firebase/firestore';
+import React, { useState, useEffect } from 'react';
+import { collection, onSnapshot, doc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
 import Header from './Header';
@@ -7,79 +7,74 @@ import Footer from './Footer';
 import ProductCard from './ProductCard';
 import styles from './ProductPage.module.css';
 
+// 타입 정의
 interface Category {
   id: string;
-  name: { en: string; ko: string };
+  name: { en: string; ko: string } | string;
   description: string;
   order: number;
 }
 
 interface Product {
   id: string;
-  name: { en: string; ko: string };
+  name: { en: string; ko: string } | string;
   category: string;
   image: string;
+  allergens?: any;
+  ingredients?: any;
+  nutrition?: any;
   order: number;
 }
 
 interface ProductPageData {
-  ko: {
-    slogan: string;
-    subSlogan: string;
-    bottomText: string;
-  };
-  en: {
-    slogan: string;
-    subSlogan: string;
-    bottomText: string;
-  };
+  ko: { slogan: string; subSlogan: string; bottomText: string };
+  en: { slogan: string; subSlogan: string; bottomText: string };
 }
 
-// 상세정보 모달 컴포넌트
+// [핵심] 언어 변환 헬퍼 함수
+const getLocalized = (data: any, lang: 'en' | 'ko'): string => {
+  if (!data) return '';
+  if (typeof data === 'string') return data;
+  
+  if (typeof data === 'object') {
+    if (data[lang]) return data[lang];
+    if (data.en) return data.en;
+    if (data.ko) return data.ko;
+    const vals = Object.values(data);
+    if (vals.length > 0) return String(vals[0]);
+  }
+  return '';
+};
+
+// [핵심] 비교를 위한 정규화 함수
+const normalize = (val: any): string => {
+  return String(val || '').trim().toLowerCase();
+};
+
 const removeInlineColor = (html: any) => {
   if (typeof html !== 'string') return '';
   return html.replace(/ style="color:[^"]*"/g, '');
 };
 
-interface LabelSettings {
-  allergens: { en: string; ko: string };
-  ingredients: { en: string; ko: string };
-  nutrition: { en: string; ko: string };
-}
-
-const defaultLabels: LabelSettings = {
+const defaultLabels = {
   allergens: { en: 'Allergens', ko: '알레르기' },
   ingredients: { en: 'Ingredients', ko: '성분' },
   nutrition: { en: 'Nutrition Facts', ko: '영양 정보' }
 };
 
-const ProductDetailModal = ({ product, onClose, language, labels }: { product: any, onClose: () => void, language: 'en' | 'ko', labels?: LabelSettings }) => {
+// 상세정보 모달
+const ProductDetailModal = ({ product, onClose, language, labels }: { product: any, onClose: () => void, language: 'en' | 'ko', labels?: any }) => {
   if (!product) return null;
-  const getLocalizedText = (data: any) => {
-    if (typeof data === 'string') return data;
-    if (data && typeof data === 'object') {
-      const localized = data[language] ?? data.en ?? data.ko;
-      if (typeof localized === 'string') return localized;
-    }
-    return '';
-  };
 
-  const productName = getLocalizedText(product.name) || '';
+  const productName = getLocalized(product.name, language);
+  const allergensText = removeInlineColor(getLocalized(product.allergens, language)) || 'None';
+  const ingredientsText = removeInlineColor(getLocalized(product.ingredients, language)) || '-';
+  const nutritionText = removeInlineColor(getLocalized(product.nutrition, language)) || '-';
   
-  // getLocalizedText로 다국어 데이터를 문자열로 변환한 후 removeInlineColor 적용
-  const allergensRaw = getLocalizedText(product.allergens);
-  const ingredientsRaw = getLocalizedText(product.ingredients);
-  const nutritionRaw = getLocalizedText(product.nutrition);
-  
-  const allergensText = allergensRaw ? removeInlineColor(allergensRaw) : 'None';
-  const ingredientsText = ingredientsRaw ? removeInlineColor(ingredientsRaw) : '-';
-  const nutritionText = nutritionRaw ? removeInlineColor(nutritionRaw) : '-';
-  
-  // 라벨 텍스트 가져오기 (전달받은 labels가 있으면 사용, 없으면 기본값)
   const currentLabels = labels || defaultLabels;
-  const allergensLabel = currentLabels?.allergens?.[language] || currentLabels?.allergens?.en || defaultLabels.allergens[language] || defaultLabels.allergens.en;
-  const ingredientsLabel = currentLabels?.ingredients?.[language] || currentLabels?.ingredients?.en || defaultLabels.ingredients[language] || defaultLabels.ingredients.en;
-  const nutritionLabel = currentLabels?.nutrition?.[language] || currentLabels?.nutrition?.en || defaultLabels.nutrition[language] || defaultLabels.nutrition.en;
+  const allergensLabel = getLocalized(currentLabels.allergens, language);
+  const ingredientsLabel = getLocalized(currentLabels.ingredients, language);
+  const nutritionLabel = getLocalized(currentLabels.nutrition, language);
 
   return (
     <div style={{
@@ -91,44 +86,20 @@ const ProductDetailModal = ({ product, onClose, language, labels }: { product: a
         display: 'flex', flexDirection: 'column', alignItems: 'center',
       }}>
         <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, background: 'none', border: 'none', fontSize: 28, cursor: 'pointer', color: '#888', zIndex: 2 }}>×</button>
-        <style>{`
-          .ql-size-small { font-size: 0.75em; }
-          .ql-size-large { font-size: 1.5em; }
-          .ql-size-huge  { font-size: 2.5em; }
-          .product-modal-content strong { font-weight: bold; margin-bottom: 6px; display: inline-block; }
-          .product-modal-content ul { padding-left: 22px; margin-bottom: 10px; }
-          .product-modal-content li { line-height: 1.5em; margin-bottom: 2px; }
-          .product-modal-content p { line-height: 1.6; margin-bottom: 10px; }
-          .product-modal-scroll {
-            max-height: calc(100vh - 48px);
-            overflow-y: auto;
-            padding: 40px 32px 40px 32px;
-            box-sizing: border-box;
-            width: 100%;
-          }
-          .product-modal-scroll::-webkit-scrollbar {
-            width: 8px;
-            background: transparent;
-          }
-          .product-modal-scroll::-webkit-scrollbar-thumb {
-            background: rgba(180,180,180,0.35);
-            border-radius: 4px;
-          }
-        `}</style>
-        <div className="product-modal-scroll">
+        <div style={{ maxHeight: 'calc(100vh - 48px)', overflowY: 'auto', padding: '40px 32px', boxSizing: 'border-box', width: '100%' }}>
           <div style={{ textAlign: 'center', marginBottom: 24, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <img src={product.image} alt={productName} style={{ width: '100%', minWidth: 240, maxWidth: 360, height: 'auto', objectFit: 'contain', margin: 0, marginBottom: -50, display: 'block' }} />
+            {product.image && <img src={product.image} alt={productName} style={{ width: '100%', minWidth: 240, maxWidth: 360, height: 'auto', objectFit: 'contain', marginBottom: -50, display: 'block' }} />}
             <div style={{ fontWeight: 700, fontSize: 22, marginTop: 0, marginBottom: 8 }}>{productName}</div>
           </div>
-          <div className="product-modal-content" style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 16 }}>
             <div style={{ fontWeight: 600, fontSize: 17, marginBottom: 4 }}>{allergensLabel}</div>
             <div dangerouslySetInnerHTML={{ __html: allergensText }} />
           </div>
-          <div className="product-modal-content" style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 16 }}>
             <div style={{ fontWeight: 600, fontSize: 17, marginBottom: 4 }}>{ingredientsLabel}</div>
             <div dangerouslySetInnerHTML={{ __html: ingredientsText }} />
           </div>
-          <div className="product-modal-content">
+          <div>
             <div style={{ fontWeight: 600, fontSize: 17, marginBottom: 4 }}>{nutritionLabel}</div>
             <div dangerouslySetInnerHTML={{ __html: nutritionText }} />
           </div>
@@ -142,199 +113,200 @@ const ProductPage: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [pageData, setPageData] = useState<ProductPageData>({
-    ko: {
-      slogan: '시그니처 플레이버\n글로벌 스탠다드',
-      subSlogan: 'OM FOOD는 대만, 베트남, 몽골의 해외 매장과 현지 한국 식당 및 해외 각지의 주방에 소스와 시즈닝 파우더를 공급합니다. 한국 음식의 풍부하고 진정한 맛을 포착하면서 현지 식문화에 자연스럽게 녹아들도록 제작된 이 제품들은 현지 입맛을 사로잡고 K-Food의 가치와 매력을 더욱 높입니다.',
-      bottomText: '인증된 국내 제조 전문성과 독점 레시피를 바탕으로\n바이어의 요구에 맞춘 맞춤형 제품을 생산할 수 있습니다.'
-    },
-    en: {
-      slogan: 'Signature Flavors\nGlobal Standards',
-      subSlogan: 'OM FOOD supplies sauces and seasoning powders to its overseas stores in Taiwan, Vietnam, and Mongolia,\nas well as to local Korean restaurants and various kitchens abroad. Crafted to capture the rich, authentic flavors of Korean cuisine while blending seamlessly into local food cultures, these products win over local palates and further enhance the value and appeal of K-Food.',
-      bottomText: 'With certified domestic manufacturing expertise and proprietary recipes,\nwe can produce customized products tailored to buyer needs.'
-    }
+    ko: { slogan: '', subSlogan: '', bottomText: '' },
+    en: { slogan: '', subSlogan: '', bottomText: '' }
   });
   const [modalProduct, setModalProduct] = useState<any>(null);
   const navigate = useNavigate();
-  // localStorage가 'ko'일 때만 한국어, 그 외(null 포함)는 항상 영어가 기본값
   const [language, setLanguage] = useState<'en' | 'ko'>(localStorage.getItem('siteLang') === 'ko' ? 'ko' : 'en');
-  const [labelSettings, setLabelSettings] = useState<LabelSettings>(defaultLabels);
+  const [labelSettings, setLabelSettings] = useState(defaultLabels);
 
+  // 데이터 구독
   useEffect(() => {
-    const unsubscribeCategories = onSnapshot(collection(db, 'productCategories'), (snapshot) => {
-      const cats = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Category));
-      cats.sort((a, b) => a.order - b.order);
-      setCategories(cats);
+    const unsubCats = onSnapshot(collection(db, 'productCategories'), (snap) => {
+      const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Category));
+      list.sort((a, b) => a.order - b.order);
+      setCategories(list);
     });
-    const unsubscribeProducts = onSnapshot(collection(db, 'products'), (snapshot) => {
-      const prods = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Product));
-      prods.sort((a, b) => a.order - b.order);
-      setProducts(prods);
+
+    const unsubProds = onSnapshot(collection(db, 'products'), (snap) => {
+      const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Product));
+      list.sort((a, b) => a.order - b.order);
+      setProducts(list);
     });
-    const loadPageData = async () => {
-      try {
-        const koDoc = await getDoc(doc(db, 'productPage', 'ko'));
-        const enDoc = await getDoc(doc(db, 'productPage', 'en'));
-        
-        if (koDoc.exists() || enDoc.exists()) {
-          setPageData(prev => ({
-            ...prev,
-            ko: koDoc.exists() ? { ...prev.ko, ...koDoc.data() } : prev.ko,
-            en: enDoc.exists() ? { ...prev.en, ...enDoc.data() } : prev.en
-          }));
-        }
-      } catch (error) {
-        console.error('ProductPage 데이터 로드 실패:', error);
+
+    const unsubPage = onSnapshot(doc(db, 'productPage', 'content'), (snap) => {
+      if (snap.exists()) {
+        const d = snap.data();
+        setPageData({
+          ko: { slogan: d.slogan?.ko || '', subSlogan: d.subSlogan?.ko || '', bottomText: d.bottomText?.ko || '' },
+          en: { slogan: d.slogan?.en || '', subSlogan: d.subSlogan?.en || '', bottomText: d.bottomText?.en || '' }
+        });
       }
-    };
-    loadPageData();
-    
-    // 라벨 설정 실시간 구독
-    const unsubscribeLabels = onSnapshot(doc(db, 'productPage', 'labels'), (labelSnap) => {
-      if (labelSnap.exists()) {
-        const data = labelSnap.data();
-        const newLabelSettings = {
-          allergens: {
-            en: data.allergens?.en || defaultLabels.allergens.en,
-            ko: data.allergens?.ko || defaultLabels.allergens.ko,
-          },
-          ingredients: {
-            en: data.ingredients?.en || defaultLabels.ingredients.en,
-            ko: data.ingredients?.ko || defaultLabels.ingredients.ko,
-          },
-          nutrition: {
-            en: data.nutrition?.en || defaultLabels.nutrition.en,
-            ko: data.nutrition?.ko || defaultLabels.nutrition.ko,
-          }
-        };
-        setLabelSettings(newLabelSettings);
-        console.log('라벨 설정 로드됨:', newLabelSettings);
-      } else {
-        // 문서가 없으면 기본값 사용
-        setLabelSettings(defaultLabels);
-        console.log('라벨 설정 문서 없음, 기본값 사용:', defaultLabels);
-      }
-    }, (error) => {
-      console.error('라벨 설정 로드 실패:', error);
-      // 에러 발생 시 기본값 사용
-      setLabelSettings(defaultLabels);
     });
-    
-    return () => {
-      unsubscribeCategories();
-      unsubscribeProducts();
-      unsubscribeLabels();
-    };
+
+    const unsubLabels = onSnapshot(doc(db, 'productPage', 'labels'), (snap) => {
+      if (snap.exists()) {
+        const d = snap.data();
+        setLabelSettings({
+          allergens: { en: d.allergens?.en || 'Allergens', ko: d.allergens?.ko || '알레르기' },
+          ingredients: { en: d.ingredients?.en || 'Ingredients', ko: d.ingredients?.ko || '성분' },
+          nutrition: { en: d.nutrition?.en || 'Nutrition Facts', ko: d.nutrition?.ko || '영양 정보' }
+        });
+      }
+    });
+
+    return () => { unsubCats(); unsubProds(); unsubPage(); unsubLabels(); };
   }, []);
 
-  // 언어 변경 이벤트 구독
+  // 언어 변경 감지
   useEffect(() => {
-    const handleLangChange = (event: any) => {
-      const lang = event.detail?.language as 'ko' | 'en';
-      if (lang && (lang === 'ko' || lang === 'en')) {
-        setLanguage(lang);
-      }
+    const handler = (e: any) => {
+      const lang = e.detail?.language as 'ko' | 'en';
+      if (lang) setLanguage(lang);
     };
-
-    // 언어 변경 이벤트 구독
-    window.addEventListener('languageChange', handleLangChange);
-    
-    return () => {
-      window.removeEventListener('languageChange', handleLangChange);
-    };
+    window.addEventListener('languageChange', handler);
+    return () => window.removeEventListener('languageChange', handler);
   }, []);
-
-  const subSloganRef = useRef<HTMLDivElement>(null);
-
-  useLayoutEffect(() => {
-    const el = subSloganRef.current;
-    if (el) {
-      el.style.fontSize = '1.13rem';
-      el.style.maxWidth = '1000px';
-      el.style.margin = '0 auto';
-      el.style.color = '#8c6450';
-      el.style.textAlign = 'center';
-      el.style.lineHeight = '1.45';
-      el.style.fontFamily = "'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif";
-      el.style.padding = '0 10px';
-      el.style.whiteSpace = 'pre-line';
-    }
-  }, [pageData[language].subSlogan, language]);
-
-  useEffect(() => {
-    // 이미 삽입된 style 태그가 있으면 제거
-    const prev = document.getElementById('force-productPageSloganSub-style');
-    if (prev) prev.remove();
-
-    // 새로운 style 태그 삽입
-    const style = document.createElement('style');
-    style.id = 'force-productPageSloganSub-style';
-    style.innerHTML = `
-      .${styles.productPageSloganSub} {
-        font-size: 1.13rem !important;
-        color: #8c6450 !important;
-        text-align: center !important;
-        margin: 0 auto !important;
-        line-height: 1.45 !important;
-        font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif !important;
-        max-width: 1000px !important;
-        padding: 0 10px !important;
-        white-space: pre-line !important;
-      }
-    `;
-    document.head.appendChild(style);
-  }, [pageData[language].subSlogan, language, styles.productPageSloganSub]);
 
   return (
     <>
       <Header isBrandPage />
       <div className={styles.pageBg}>
-        <section className={styles.sloganContainer}>
-          <div className={styles.sloganTitle} dangerouslySetInnerHTML={{ __html: pageData[language].slogan.replace(/\n/g, '<br/>') }} />
-          <div
-            ref={subSloganRef}
-            className={styles.productPageSloganSub}
-            dangerouslySetInnerHTML={{ __html: pageData[language].subSlogan.replace(/\n/g, '<br/>') }}
+        {/* [수정] 부모 섹션
+          - 기존 클래스(styles.sloganContainer)를 유지하면 너비가 830px로 갇힘.
+          - 따라서 부모 섹션은 너비를 100%로 풀어주되, 내부에 있는 메인 타이틀은 기존 스타일을 유지.
+        */}
+        <section style={{ 
+          width: '100%', 
+          maxWidth: '100vw', 
+          padding: '100px 20px 60px 20px', 
+          boxSizing: 'border-box',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}>
+          {/* [복구 완료] 메인 슬로건
+            - 기존에 사용하던 CSS 모듈 클래스(styles.sloganTitle)를 그대로 사용하여
+            - 폰트, 컬러, 그림자 등 모든 디자인을 원상복구했습니다.
+          */}
+          <div 
+            className={styles.sloganTitle} 
+            dangerouslySetInnerHTML={{ __html: pageData[language].slogan.replace(/\n/g, '<br/>') }} 
+          />
+          
+          {/* [서브 슬로건만 수정]
+            - 별도의 클래스(sub-slogan-custom)를 적용하여
+            - 너비 제한 해제 (1440px)
+            - 폰트 사이즈/컬러/정렬 강제 적용 (CSS Reset)
+          */}
+          <div 
+            className="sub-slogan-custom"
+            dangerouslySetInnerHTML={{ __html: pageData[language].subSlogan.replace(/\n/g, '<br/>') }} 
           />
         </section>
-        {categories.map(category => (
-          <section key={category.id} className={styles.categorySection}>
-            <div className={styles.categoryTitle}>{(category.name as any)?.en !== undefined && typeof language === 'string' ? (category.name as any)[language] : String(category.name)}</div>
-            <div className={styles.categoryDescription} dangerouslySetInnerHTML={{ __html: category.description ? category.description.replace(/\n/g, '<br/>') : '' }} />
-            <div className={styles.productsGrid}>
-              {products.filter(p => p.category === category.id || p.category === (typeof category.name === 'object' && category.name !== null && 'en' in category.name && 'ko' in category.name ? category.name[language] : String(category.name))).map(product => (
-                <ProductCard
-                  key={product.id}
-                  image={product.image}
-                  name={typeof product.name === 'object' && product.name !== null && 'en' in product.name && 'ko' in product.name ? product.name[language] : String(product.name)}
-                  category={typeof category.name === 'object' && category.name !== null && 'en' in category.name && 'ko' in category.name ? category.name[language] : String(category.name)}
-                  onClick={() => setModalProduct(product)}
-                />
-              ))}
-            </div>
-          </section>
-        ))}
+
+        {/* 카테고리별 제품 리스트 */}
+        {categories.map(cat => {
+          const catName = getLocalized(cat.name, language);
+          const catDesc = getLocalized(cat.description, language);
+
+          const targetId = normalize(cat.id);
+          const targetEn = normalize(typeof cat.name === 'object' ? cat.name.en : cat.name);
+          const targetKo = normalize(typeof cat.name === 'object' ? cat.name.ko : cat.name);
+          const targetRaw = normalize(typeof cat.name === 'string' ? cat.name : '');
+
+          const filteredProds = products.filter(p => {
+            const pCat = normalize(p.category);
+            return (
+              pCat === targetId ||
+              pCat === targetEn ||
+              pCat === targetKo ||
+              pCat === targetRaw
+            );
+          });
+
+          return (
+            <section key={cat.id} className={styles.categorySection}>
+              <div className={styles.categoryTitle}>{catName}</div>
+              <div className={styles.categoryDescription} dangerouslySetInnerHTML={{ __html: catDesc.replace(/\n/g, '<br/>') }} />
+              <div className={styles.productsGrid}>
+                {filteredProds.length > 0 ? (
+                  filteredProds.map(prod => (
+                    <ProductCard
+                      key={prod.id}
+                      image={prod.image}
+                      name={getLocalized(prod.name, language)}
+                      category={catName}
+                      onClick={() => setModalProduct(prod)}
+                    />
+                  ))
+                ) : (
+                  <div style={{ width: '100%', textAlign: 'center', padding: '20px', color: '#ccc', display: 'none' }}></div>
+                )}
+              </div>
+            </section>
+          );
+        })}
+
         <section className={styles.customSection}>
           <div className={styles.customText} dangerouslySetInnerHTML={{ __html: pageData[language].bottomText.replace(/\n/g, '<br/>') }} />
-          <button 
-            className={styles.moreButton}
-            onClick={() => navigate('/contact')}
-          >
+          <button className={styles.moreButton} onClick={() => navigate('/contact')}>
             {language === 'ko' ? '더보기' : 'More'}
           </button>
         </section>
       </div>
+
       {modalProduct && (
         <ProductDetailModal product={modalProduct} onClose={() => setModalProduct(null)} language={language} labels={labelSettings} />
       )}
       <Footer />
+      
+      {/* [스타일 정의] 
+        - 메인 슬로건 스타일은 건드리지 않음 (기존 styles.sloganTitle 사용)
+        - 서브 슬로건 스타일만 여기서 정의하여 적용
+      */}
+      <style>{`
+        .sub-slogan-custom {
+          width: 100%;
+          max-width: 1440px; /* 넓게 퍼지도록 설정 */
+          margin: 24px auto 0 auto;
+          text-align: center;
+          font-family: 'Pretendard', sans-serif;
+          font-size: 1.2rem;
+          font-weight: 500;
+          color: #8c6450;
+          line-height: 1.6;
+        }
+
+        /* 서브 슬로건 내부의 P, DIV 태그 초기화 (줄바꿈 허용 + 중앙 정렬) */
+        .sub-slogan-custom p,
+        .sub-slogan-custom div {
+          margin: 0;
+          padding: 0;
+          text-align: center !important; /* 강제 중앙 정렬 */
+          min-height: 1.2em; /* 빈 줄 유지 */
+          width: 100%;
+        }
+
+        /* 서브 슬로건 내부의 H태그 스타일 리셋 (본문처럼 보이게) */
+        .sub-slogan-custom h1, 
+        .sub-slogan-custom h2, 
+        .sub-slogan-custom h3 {
+          font-size: 1.2rem;
+          font-weight: 500;
+          margin: 0;
+          line-height: 1.6;
+          text-align: center !important;
+          color: #8c6450;
+        }
+
+        @media (max-width: 768px) {
+          .sub-slogan-custom { font-size: 1rem; padding: 0 16px; }
+        }
+      `}</style>
     </>
   );
 };
 
-export default ProductPage; 
+export default ProductPage;

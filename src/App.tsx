@@ -2126,7 +2126,8 @@ function AdminFoodServiceManage() {
 
 // Product 관리 페이지
 function AdminProductManage() {
-  return <AdminProductManageComponent />;
+  const { adminLang } = useAdminLang();
+  return <AdminProductManageComponent adminLang={adminLang} />;
 }
 
 // Contact 관리 페이지
