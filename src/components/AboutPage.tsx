@@ -227,6 +227,7 @@ OM FOOD는 앞으로도 건강한 재료, 정직한 조리, 감동 있는 서비
       section3ContentSize: '1.1rem',
       section3Image: '',
       visionMessage: '건강한 음식, 행복한 식탁\n오엠푸드는 오늘도 더 나은 맛과 가치를 만듭니다.',
+      visionMessageSize: '1.2rem',
       historyItems: cloneHistoryItems(),
       historyTitle: '기업 연혁',
       historySubtitle: '2010년부터 현재까지 OM FOOD가 걸어온 길입니다.',
@@ -298,6 +299,7 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
       section3ContentSize: '1.1rem',
       section3Image: '',
       visionMessage: 'Healthy Food, Happy Tables\nOM FOOD keeps creating better flavors and values.',
+      visionMessageSize: '1.2rem',
       historyItems: cloneHistoryItems(),
       historyTitle: 'Company History',
       historySubtitle: 'Milestones that shaped OM FOOD from 2010 to today.',
@@ -345,6 +347,7 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
     ? aboutData[currentLang].section3Image
     : getImagePath('OM_E4.jpg');
   const historyItems = aboutData[currentLang].historyItems || [];
+  const visionMessageSize = (aboutData[currentLang] as any).visionMessageSize || '1.2rem';
   const introSections = [
     {
       label: aboutData[currentLang].section1Label || (currentLang === 'ko' ? '우리의 철학' : 'Our Philosophy'),
@@ -371,7 +374,7 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
       labelSize: (aboutData[currentLang] as any).section3LabelSize || '1rem',
       title: aboutData[currentLang].section3Title,
       titleSize: (aboutData[currentLang] as any).section3TitleSize || '2.5rem',
-      content: `${aboutData[currentLang].section3Content}${aboutData[currentLang].visionMessage ? '<br/><br/>' + aboutData[currentLang].visionMessage : ''}`,
+      content: `${aboutData[currentLang].section3Content}${aboutData[currentLang].visionMessage ? `<br/><br/><div style="font-size: ${visionMessageSize};">${aboutData[currentLang].visionMessage}</div>` : ''}`,
       contentSize: (aboutData[currentLang] as any).section3ContentSize || '1.1rem',
       image: section3ImageSrc,
       reverse: false
@@ -420,7 +423,8 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
               section2ContentSize: (data as any).section2ContentSize || prev.ko.section2ContentSize || '1.1rem',
               section3LabelSize: (data as any).section3LabelSize || prev.ko.section3LabelSize || '1rem',
               section3TitleSize: (data as any).section3TitleSize || prev.ko.section3TitleSize || '2.5rem',
-              section3ContentSize: (data as any).section3ContentSize || prev.ko.section3ContentSize || '1.1rem'
+              section3ContentSize: (data as any).section3ContentSize || prev.ko.section3ContentSize || '1.1rem',
+              visionMessageSize: (data as any).visionMessageSize || prev.ko.visionMessageSize || '1.2rem'
             }
           }));
         }
@@ -448,7 +452,8 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
               section2ContentSize: (data as any).section2ContentSize || prev.en.section2ContentSize || '1.1rem',
               section3LabelSize: (data as any).section3LabelSize || prev.en.section3LabelSize || '1rem',
               section3TitleSize: (data as any).section3TitleSize || prev.en.section3TitleSize || '2.5rem',
-              section3ContentSize: (data as any).section3ContentSize || prev.en.section3ContentSize || '1.1rem'
+              section3ContentSize: (data as any).section3ContentSize || prev.en.section3ContentSize || '1.1rem',
+              visionMessageSize: (data as any).visionMessageSize || prev.en.visionMessageSize || '1.2rem'
             }
           }));
         }
@@ -867,7 +872,7 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
                 >
                   {section.label}
                 </p>
-                <h3 style={{ fontSize: section.titleSize }}>
+                <h3 style={{ fontSize: section.titleSize, whiteSpace: 'pre-line' }}>
                   {section.title}
                 </h3>
                 <div

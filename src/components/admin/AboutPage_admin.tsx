@@ -74,6 +74,7 @@ interface AboutContent {
   section3ContentSize: string;
   section3Image: string;
   visionMessage: string;
+  visionMessageSize: string;
   historyItems: HistoryEntry[];
   historyTitle: string;
   historySubtitle: string;
@@ -233,7 +234,8 @@ const mergeContent = (base: AboutContent, incoming?: Partial<AboutContent>): Abo
     certificates:
       incoming.certificates && incoming.certificates.length
         ? incoming.certificates
-        : (base.certificates || [])
+        : (base.certificates || []),
+    visionMessageSize: incoming.visionMessageSize ?? base.visionMessageSize
   };
 };
 
@@ -302,6 +304,7 @@ OM FOOD는 앞으로도 건강한 재료, 정직한 조리, 감동 있는 서비
     section3ContentSize: '1.1rem',
     section3Image: '',
     visionMessage: '건강한 음식, 행복한 식탁\n오엠푸드는 오늘도 더 나은 맛과 가치를 만듭니다.',
+    visionMessageSize: '1.2rem',
     historyItems: cloneHistoryItems(),
     historyTitle: '기업 연혁',
     historySubtitle: '2010년부터 현재까지 OM FOOD가 걸어온 길입니다.',
@@ -370,6 +373,7 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
     section3ContentSize: '1.1rem',
     section3Image: '',
     visionMessage: 'Healthy Food, Happy Tables\nOM FOOD keeps creating better flavors and values.',
+    visionMessageSize: '1.2rem',
     historyItems: cloneHistoryItems(),
     historyTitle: 'Company History',
     historySubtitle: 'Milestones that shaped OM FOOD from 2010 to today.',
@@ -687,11 +691,11 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">제목</label>
-                        <input
-                          type="text"
+                        <textarea
                           value={currentContent[titleKey]}
                           onChange={(e) => setCurrentContent(prev => ({ ...prev, [titleKey]: e.target.value }))}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          rows={2}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                         />
                       </div>
                       <div>
@@ -757,13 +761,32 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
                 })}
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">비전 메시지</label>
-                  <textarea
-                    value={currentContent.visionMessage}
-                    onChange={(e) => setCurrentContent(prev => ({ ...prev, visionMessage: e.target.value }))}
-                    rows={2}
+                  <label className="block text-sm font-medium text-gray-700 mb-2">비전 메시지 폰트 크기</label>
+                  <input
+                    type="text"
+                    value={currentContent.visionMessageSize}
+                    onChange={(e) => setCurrentContent(prev => ({ ...prev, visionMessageSize: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="예: 건강한 음식, 행복한 식탁..."
+                    placeholder="예: 1.2rem"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">비전 메시지</label>
+                  <ReactQuill
+                    value={currentContent.visionMessage}
+                    onChange={(value) => setCurrentContent(prev => ({ ...prev, visionMessage: value }))}
+                    theme="snow"
+                    modules={{
+                      toolbar: [
+                        [{ 'header': [1, 2, 3, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        [{ 'color': [] }, { 'background': [] }],
+                        ['link'],
+                        ['clean']
+                      ]
+                    }}
+                    style={{ minHeight: '120px' }}
                   />
                 </div>
               </div>
@@ -1314,7 +1337,7 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
                             {currentContent[labelKey] || (num === 1 ? 'Philosophy' : num === 2 ? 'Brand' : 'Challenge')}
                           </p>
                           <h4 
-                            className="font-bold text-gray-900 mb-3"
+                            className="font-bold text-gray-900 mb-3 whitespace-pre-line"
                             style={{ fontSize: currentContent[titleSizeKey] || '2.5rem' }}
                           >
                             {currentContent[titleKey] || `섹션 ${num} 제목`}
@@ -1325,9 +1348,11 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
                             dangerouslySetInnerHTML={{ __html: currentContent[contentKey] || '내용을 입력하세요.' }}
                           />
                           {num === 3 && currentContent.visionMessage && (
-                            <p className="mt-3 font-semibold text-gray-800 whitespace-pre-line">
-                              {currentContent.visionMessage}
-                            </p>
+                            <div
+                              className="mt-3 font-semibold text-gray-800"
+                              style={{ fontSize: currentContent.visionMessageSize || '1.2rem' }}
+                              dangerouslySetInnerHTML={{ __html: currentContent.visionMessage }}
+                            />
                           )}
                         </div>
                         <div className="flex-1 w-full">

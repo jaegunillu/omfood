@@ -54,6 +54,9 @@ const BrandPage: React.FC = () => {
   const [networkStatus, setNetworkStatus] = useState<string>('unknown');
   const sectionRefs = useRef<(HTMLDivElement|null)[]>([]);
   const [visibleArr, setVisibleArr] = useState<boolean[]>([]);
+  const [currentLang, setCurrentLang] = useState<'ko' | 'en'>(
+    localStorage.getItem('siteLang') === 'ko' ? 'ko' : 'en'
+  );
 
   useEffect(() => {
     // 네트워크 상태 모니터링
@@ -100,6 +103,32 @@ const BrandPage: React.FC = () => {
     return () => {
       unsubMainMedia();
       unsubBrands();
+    };
+  }, []);
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const lang = urlParams.get('lang') as 'ko' | 'en' | null;
+    const savedLang = localStorage.getItem('siteLang') as 'ko' | 'en' | null;
+
+    if (lang && (lang === 'ko' || lang === 'en')) {
+      setCurrentLang(lang);
+    } else if (savedLang && (savedLang === 'ko' || savedLang === 'en')) {
+      setCurrentLang(savedLang);
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleLangChange = (event: any) => {
+      const lang = event.detail?.language as 'ko' | 'en';
+      if (lang && (lang === 'ko' || lang === 'en')) {
+        setCurrentLang(lang);
+      }
+    };
+
+    window.addEventListener('languageChange', handleLangChange);
+    return () => {
+      window.removeEventListener('languageChange', handleLangChange);
     };
   }, []);
 
@@ -328,6 +357,11 @@ const BrandPage: React.FC = () => {
           ref={el => { sectionRefs.current[idx] = el as HTMLDivElement | null; }}
           style={{background:'#fff',display:'flex',alignItems:'center',justifyContent:'center',minHeight:500,marginTop:0,paddingTop:0}}
         >
+          {(() => {
+            const mainText = typeof brand.mainText === 'object' ? (brand.mainText?.[currentLang] || '') : brand.mainText;
+            const subText = typeof brand.subText === 'object' ? (brand.subText?.[currentLang] || '') : brand.subText;
+            const linkText = typeof brand.linkText === 'object' ? (brand.linkText?.[currentLang] || '') : brand.linkText;
+            return (
           <div className={`brand-section-inner horizontal${idx % 2 === 1 ? ' reverse' : ''}`}>
             <div className="brand-desc left">
               <h2
@@ -342,7 +376,7 @@ const BrandPage: React.FC = () => {
                   textAlign: 'left' 
                 }}
               >
-                {stripHtmlTags(brand.mainText)}
+                {stripHtmlTags(mainText || '')}
               </h2>
               <div
                 className={`brand-desc-text${visibleArr[idx] ? ' brand-ani-in-sub' : ' invisible'}`}
@@ -353,7 +387,7 @@ const BrandPage: React.FC = () => {
                   color: '#222', 
                   textAlign: 'left' 
                 }}
-                dangerouslySetInnerHTML={{ __html: brand.subText }}
+                dangerouslySetInnerHTML={{ __html: subText || '' }}
               />
               {brand.link && (
                 <a
@@ -377,7 +411,7 @@ const BrandPage: React.FC = () => {
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  {brand.linkText ? brand.linkText.replace(/<[^>]+>/g, '') : '자세히 보기'} &gt;&gt;
+                  {linkText ? linkText.replace(/<[^>]+>/g, '') : '자세히 보기'} &gt;&gt;
                 </a>
               )}
             </div>
@@ -402,7 +436,7 @@ const BrandPage: React.FC = () => {
               ) : (
                 <img 
                   src={brand.mediaUrl} 
-                  alt={brand.mainText} 
+                  alt={mainText || ''} 
                   style={{
                     width: 500,
                     height: 500,
@@ -416,6 +450,8 @@ const BrandPage: React.FC = () => {
               )}
             </div>
           </div>
+            );
+          })()}
         </section>
       ))}
       <Footer />

@@ -564,6 +564,7 @@ const BrandPageManage: React.FC = () => {
           <SectionTitle>브랜드 목록 ({brandPages.length}개)</SectionTitle>
           
           <DragDropList
+            key={adminLang}
             items={brandPages}
             onReorder={handleReorder}
             renderItem={renderBrandItem}

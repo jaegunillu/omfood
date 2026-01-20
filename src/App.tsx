@@ -4415,16 +4415,17 @@ function AdminBrandPageManage() {
   });
   const [brands, setBrands] = useState<any[]>([]);
   const [addBrand, setAddBrand] = useState({
-    mainText: '',
-    subText: '',
+    mainText: { en: '', ko: '' },
+    subText: { en: '', ko: '' },
     mediaType: 'video',
     file: null as File | null,
     preview: '',
     link: '',
-    linkText: ''
+    linkText: { en: '', ko: '' }
   });
   const [loading, setLoading] = useState(true);
   const { success, error } = useToast();
+  const { adminLang } = useAdminLang();
 
   useEffect(() => {
     setLoading(true);
@@ -4436,7 +4437,16 @@ function AdminBrandPageManage() {
     const unsub = onSnapshot(collection(db, 'brandPage', 'brands', 'items'), (brandsSnap) => {
       const arr: any[] = [];
       brandsSnap.forEach(docSnap => {
-        arr.push({ id: docSnap.id, ...docSnap.data(), file: null, preview: '' });
+        const data = docSnap.data() as any;
+        arr.push({
+          id: docSnap.id,
+          ...data,
+          mainText: typeof data.mainText === 'string' ? { en: data.mainText, ko: data.mainText } : data.mainText,
+          subText: typeof data.subText === 'string' ? { en: data.subText, ko: data.subText } : data.subText,
+          linkText: typeof data.linkText === 'string' ? { en: data.linkText, ko: data.linkText } : data.linkText,
+          file: null,
+          preview: ''
+        });
       });
       arr.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
       setBrands(arr);
@@ -4575,10 +4585,10 @@ function AdminBrandPageManage() {
         mediaType,
         order: brands.length,
         link: addBrand.link || '',
-        linkText: addBrand.linkText || ''
+        linkText: addBrand.linkText || { en: '', ko: '' }
       };
       await addDoc(collection(db, 'brandPage', 'brands', 'items'), data);
-      setAddBrand({ mainText: '', subText: '', mediaType: 'video', file: null, preview: '', link: '', linkText: '' });
+      setAddBrand({ mainText: { en: '', ko: '' }, subText: { en: '', ko: '' }, mediaType: 'video', file: null, preview: '', link: '', linkText: { en: '', ko: '' } });
       success('브랜드가 추가되었습니다!');
     } catch (e) {
       error('추가 실패');
@@ -4598,11 +4608,11 @@ function AdminBrandPageManage() {
         <div style={{ flex: 1, width: 555, minWidth: 555, maxWidth: 555, minHeight: 620, background: '#fff', borderRadius: 18, boxShadow: '0 4px 24px rgba(0,0,0,0.07)', boxSizing: 'border-box', padding: 32, display: 'flex', flexDirection: 'column', gap: 18 }}>
           <div style={{ fontWeight: 700, fontSize: 20, marginBottom: 16 }}>브랜드 추가</div>
           <AdminLabel>메인 텍스트</AdminLabel>
-          <AdminQuill value={addBrand.mainText} onChange={v => setAddBrand(b => ({ ...b, mainText: v }))} modules={quillModules} theme="snow" placeholder="브랜드 메인 텍스트" />
+          <AdminQuill key={`add-main-${adminLang}`} value={addBrand.mainText?.[adminLang] || ''} onChange={v => setAddBrand(b => ({ ...b, mainText: { ...(b.mainText || { en: '', ko: '' }), [adminLang]: v } }))} modules={quillModules} theme="snow" placeholder="브랜드 메인 텍스트" />
           <AdminLabel style={{ marginTop: 4 }}>서브 텍스트</AdminLabel>
-          <AdminQuill value={addBrand.subText} onChange={v => setAddBrand(b => ({ ...b, subText: v }))} modules={quillModules} theme="snow" placeholder="브랜드 서브 텍스트" />
+          <AdminQuill key={`add-sub-${adminLang}`} value={addBrand.subText?.[adminLang] || ''} onChange={v => setAddBrand(b => ({ ...b, subText: { ...(b.subText || { en: '', ko: '' }), [adminLang]: v } }))} modules={quillModules} theme="snow" placeholder="브랜드 서브 텍스트" />
           <AdminLabel style={{ marginTop: 4 }}>링크 텍스트 (선택사항)</AdminLabel>
-          <AdminQuill value={addBrand.linkText} onChange={v => setAddBrand(b => ({ ...b, linkText: v }))} modules={quillModules} theme="snow" placeholder="자세히 보기" />
+          <AdminQuill key={`add-link-${adminLang}`} value={addBrand.linkText?.[adminLang] || ''} onChange={v => setAddBrand(b => ({ ...b, linkText: { ...(b.linkText || { en: '', ko: '' }), [adminLang]: v } }))} modules={quillModules} theme="snow" placeholder="자세히 보기" />
           <AdminLabel style={{ marginTop: 4 }}>비디오/이미지 파일</AdminLabel>
           <input type="file" accept="image/png,image/jpeg,video/mp4" onChange={e => handleFile(e, null)} style={{ marginBottom: 8 }} />
           {addBrand.preview && (
@@ -4678,13 +4688,55 @@ function AdminBrandPageManage() {
                 </div>
                 <input type="file" accept="image/png,image/jpeg,video/mp4" onChange={e => handleFile(e, idx)} style={{ marginBottom: 8 }} />
                 <AdminLabel style={{ marginBottom: 8, fontSize: '1.12rem', fontWeight: 700, color: '#222' }}>메인 텍스트</AdminLabel>
-                <AdminQuill value={brand.mainText} onChange={v => setBrands(prev => { const next = [...prev]; next[idx] = { ...next[idx], mainText: v }; return next; })} modules={quillModules} formats={formats} theme="snow" placeholder="브랜드 메인 텍스트" />
+                <AdminQuill
+                  key={`main-text-${brand.id}-${adminLang}`}
+                  value={brand.mainText?.[adminLang] || ''}
+                  onChange={v => setBrands(prev => {
+                    const next = [...prev];
+                    const current = next[idx]?.mainText;
+                    const base = typeof current === 'string' ? { en: current, ko: current } : (current || { en: '', ko: '' });
+                    next[idx] = { ...next[idx], mainText: { ...base, [adminLang]: v } };
+                    return next;
+                  })}
+                  modules={quillModules}
+                  formats={formats}
+                  theme="snow"
+                  placeholder="브랜드 메인 텍스트"
+                />
                 <AdminLabel style={{ marginTop: 4, fontSize: '1.12rem', fontWeight: 700, color: '#222' }}>서브 텍스트</AdminLabel>
-                <AdminQuill value={brand.subText} onChange={v => setBrands(prev => { const next = [...prev]; next[idx] = { ...next[idx], subText: v }; return next; })} modules={quillModules} formats={formats} theme="snow" placeholder="브랜드 서브 텍스트" />
+                <AdminQuill
+                  key={`sub-text-${brand.id}-${adminLang}`}
+                  value={brand.subText?.[adminLang] || ''}
+                  onChange={v => setBrands(prev => {
+                    const next = [...prev];
+                    const current = next[idx]?.subText;
+                    const base = typeof current === 'string' ? { en: current, ko: current } : (current || { en: '', ko: '' });
+                    next[idx] = { ...next[idx], subText: { ...base, [adminLang]: v } };
+                    return next;
+                  })}
+                  modules={quillModules}
+                  formats={formats}
+                  theme="snow"
+                  placeholder="브랜드 서브 텍스트"
+                />
                 <AdminLabel style={{ marginTop: 4, fontSize: '1.12rem', fontWeight: 700, color: '#222' }}>링크 URL (선택사항)</AdminLabel>
                 <AdminInput value={brand.link || ''} onChange={e => setBrands(prev => { const next = [...prev]; next[idx] = { ...next[idx], link: e.target.value }; return next; })} style={{ fontSize: 16, padding: '10px 12px', borderRadius: 8, border: '1.5px solid #e5e5e5', marginBottom: 4 }} placeholder="https://example.com" />
                 <AdminLabel style={{ marginTop: 4, fontSize: '1.12rem', fontWeight: 700, color: '#222' }}>링크 텍스트 (선택사항)</AdminLabel>
-                <AdminQuill value={brand.linkText || ''} onChange={v => setBrands(prev => { const next = [...prev]; next[idx] = { ...next[idx], linkText: v }; return next; })} modules={quillModules} formats={formats} theme="snow" placeholder="자세히 보기" />
+                <AdminQuill
+                  key={`link-text-${brand.id}-${adminLang}`}
+                  value={brand.linkText?.[adminLang] || ''}
+                  onChange={v => setBrands(prev => {
+                    const next = [...prev];
+                    const current = next[idx]?.linkText;
+                    const base = typeof current === 'string' ? { en: current, ko: current } : (current || { en: '', ko: '' });
+                    next[idx] = { ...next[idx], linkText: { ...base, [adminLang]: v } };
+                    return next;
+                  })}
+                  modules={quillModules}
+                  formats={formats}
+                  theme="snow"
+                  placeholder="자세히 보기"
+                />
                 <div style={{ display: 'flex', gap: 8, marginTop: 16, justifyContent: 'center' }}>
                   <AdminButton $primary onClick={() => handleSaveBrand(idx)} style={{ minWidth: 70, fontSize: 15, borderRadius: 8, height: 40 }}>저장</AdminButton>
                   <AdminButton onClick={() => handleDeleteBrand(idx)} style={{ background: '#f66', color: '#fff', minWidth: 70, fontSize: 15, borderRadius: 8, height: 40 }}>삭제</AdminButton>
