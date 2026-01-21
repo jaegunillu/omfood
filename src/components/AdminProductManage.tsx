@@ -1044,11 +1044,8 @@ const AdminProductManage: React.FC<AdminProductManageProps> = ({ adminLang }) =>
                         </div>
                         <ButtonGroup>
                           <SmallButton $primary onClick={async () => {
-                            const processedCategory = {
-                              ...category,
-                              description: category.description ? convertNewlinesToBr(category.description[adminLang]) : ''
-                            };
-                            await setDoc(doc(db, 'productCategories', category.id), processedCategory);
+                            // 수정: description을 문자열로 변환하지 않고 객체 그대로 저장하여 언어 데이터 보존
+                            await setDoc(doc(db, 'productCategories', category.id), category);
                             addToast('카테고리가 저장되었습니다!');
                           }}>저장</SmallButton>
                           <SmallButton $danger onClick={() => handleDeleteCategory(category.id)}>삭제</SmallButton>
@@ -1209,7 +1206,7 @@ const AdminProductManage: React.FC<AdminProductManageProps> = ({ adminLang }) =>
                               {product.name[adminLang] || '제품명 없음'}
                               {modifiedProducts.has(product.id) && <ModifiedIndicator />}
                             </ProductName>
-                            <ProductCategory>{product.category || '카테고리 없음'}</ProductCategory>
+                            <ProductCategory>{categories.find(c => c.id === product.category)?.name[adminLang] || '카테고리 없음'}</ProductCategory>
                           </ProductInfo>
                         </ProductCardHeaderContent>
                         <ToggleButton>
