@@ -69,24 +69,19 @@ const LogoWrapper = styled.div`
 `;
 
 const LogoImg = styled.img<{
-  $visible?: boolean;
-  $isLoaded: boolean;
-  $isMainPage: boolean;
-  $isHeaderHover: boolean;
-  $navHover: boolean;
-  $logoHover: boolean;
+  $isActive: boolean;
 }>`
   position: absolute;
   top: 50%;
   left: 50%;
+  transform: translate(-50%, -50%);
   width: auto !important;
   height: auto !important;
   max-width: 100% !important;
   max-height: 100% !important;
   object-fit: contain;
-  opacity: ${props => (props.$visible && props.$isLoaded ? 1 : 0)};
-  transform: translate(-50%, -50%) scale(${props => (props.$visible ? 1 : 0.95)});
-  transition: opacity 0.4s cubic-bezier(0.4,0,0.2,1), transform 0.4s cubic-bezier(0.4,0,0.2,1);
+  opacity: ${props => (props.$isActive ? 1 : 0)};
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
   filter: none;
 `;
@@ -348,8 +343,7 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [language, setLanguage] = useState<'en' | 'ko'>(localStorage.getItem('siteLang') === 'ko' ? 'ko' : 'en');
   const [logoWhite, setLogoWhite] = useState<string | null>(null);
-  const [logoBlack, setLogoBlack] = useState<string | null>(null);
-  const [isLogoLoaded, setIsLogoLoaded] = useState(false);
+  const [logoColor, setLogoColor] = useState<string | null>(null);
   const [menuItems, setMenuItems] = useState<{ en: string[]; ko: string[] } | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -387,13 +381,13 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
         console.log('[Header] 로고 데이터:', data);
         // Firestore에서 받은 경로를 그대로 사용 (이미 완전한 URL)
         setLogoWhite(data.white || null);
-        setLogoBlack(data.black || null);
+        setLogoColor(data.black || null);
         console.log('[Header] 로고 경로 설정:', { white: data.white, black: data.black });
         console.log('[Header] 로고 상태 업데이트 완료');
       } else {
         console.log('[Header] 로고 데이터 문서가 존재하지 않음');
         setLogoWhite(null);
-        setLogoBlack(null);
+        setLogoColor(null);
       }
     }, (error) => {
       console.error('[Header] 로고 데이터 구독 오류:', error);
@@ -447,9 +441,9 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
 
   // 렌더링 디버깅을 위한 useEffect
   useEffect(() => {
-    console.log('[Header] 렌더링 디버깅 - menuItems:', menuItems, 'language:', language, 'logoWhite:', logoWhite, 'logoBlack:', logoBlack);
+    console.log('[Header] 렌더링 디버깅 - menuItems:', menuItems, 'language:', language, 'logoWhite:', logoWhite, 'logoColor:', logoColor);
     console.log('[Header] 메뉴 렌더링 - menuItems[language]:', menuItems?.[language]);
-  }, [menuItems, language, logoWhite, logoBlack]);
+  }, [menuItems, language, logoWhite, logoColor]);
 
   const handleMobileMenuToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -502,19 +496,7 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
     return arr.filter(v => typeof v === 'string' && v !== null && v !== undefined);
   })() as string[];
 
-  const logoSrc = isMobile
-    ? logoBlack || undefined
-    : isMainPage
-    ? (isHeaderHover || navHover || logoHover || languageHover
-        ? logoBlack || undefined
-        : logoWhite || undefined)
-    : logoBlack || undefined;
-
-  useEffect(() => {
-    if (logoSrc) {
-      setIsLogoLoaded(false);
-    }
-  }, [logoSrc]);
+  const showColor = isMobile || !isMainPage || (isHeaderHover || navHover || logoHover || languageHover);
 
   return (
     <HeaderContainer
@@ -539,19 +521,8 @@ const Header: React.FC<HeaderProps> = ({ isMainPage = false, isBrandPage = false
         onMouseLeave={() => setLogoHover(false)}
       >
         <a href="/" style={{ width: '100%', height: '100%', display: 'block', position: 'relative' }}>
-          {logoSrc && (
-            <LogoImg
-              src={logoSrc}
-              alt="logo"
-              $visible={true}
-              $isLoaded={isLogoLoaded}
-              $isMainPage={isMainPage}
-              $isHeaderHover={isHeaderHover}
-              $navHover={navHover}
-              $logoHover={logoHover}
-              onLoad={() => setIsLogoLoaded(true)}
-            />
-          )}
+          {logoWhite && <LogoImg src={logoWhite} alt="White Logo" $isActive={!showColor} />}
+          {logoColor && <LogoImg src={logoColor} alt="Color Logo" $isActive={showColor} />}
         </a>
       </LogoWrapper>
       <NavWrapper>

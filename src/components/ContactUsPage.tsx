@@ -13,14 +13,6 @@ import Footer from './Footer';
 // 개인정보보호 약관 전문 (static 파일 import)
 // const privacyPolicy = `...`; // 기존 코드 제거
 
-const SUBJECT_OPTIONS = [
-  "Where to Buy (Distributors/Retailers)",
-  "Product Questions",
-  "Company Questions",
-  "Collaboration Proposal",
-  "Other",
-];
-
 const DEFAULT_PAGE_CONTENT = {
   title: { en: 'CONTACT US', ko: '문의하기' },
   formTitle: { en: 'Get in Touch', ko: '연락하기' },
@@ -28,6 +20,13 @@ const DEFAULT_PAGE_CONTENT = {
     en: "Have a question about our products, exploring partnership opportunities, or just want to learn more? We'd love to hear from you. Please fill out the form below and our team will get back to you as soon as possible.",
     ko: '제품에 대한 질문이 있으시거나, 파트너십 기회를 탐색하고 싶으시거나, 더 자세히 알고 싶으시다면? 저희가 도와드리겠습니다. 아래 양식을 작성해 주시면 저희 팀이 최대한 빨리 연락드리겠습니다.'
   },
+  subjectOptions: [
+    { en: "Where to Buy (Distributors/Retailers)", ko: "구매처 안내 (대리점 / 판매처)" },
+    { en: "Product Questions", ko: "제품 관련 문의" },
+    { en: "Company Questions", ko: "회사 관련 문의" },
+    { en: "Collaboration Proposal", ko: "협업 제안" },
+    { en: "Other", ko: "기타 문의" }
+  ],
   labels: {
     subject: { en: 'Please select the subject of your inquiry', ko: '문의 주제를 선택해 주세요' },
     product: { en: 'Product Name', ko: '제품명' },
@@ -86,8 +85,8 @@ const ContactUsPage: React.FC = () => {
     if (typeof val === 'string') return val;
     if (typeof val === 'object') {
       if (typeof val[lang] === 'string') return val[lang];
-      if (typeof val.en === 'string') return val.en;
-      if (typeof val.ko === 'string') return val.ko;
+      if (typeof val.en === 'string' && val.en !== '') return val.en;
+      if (typeof val.ko === 'string' && val.ko !== '') return val.ko;
     }
     return ''; // 객체가 오면 빈 문자열로 안전하게
   }
@@ -169,11 +168,18 @@ const ContactUsPage: React.FC = () => {
             }
             return fallback;
           };
+          const opts = Array.isArray(data.subjectOptions)
+            ? data.subjectOptions.map((opt: any, idx: number) => {
+                const fallback = DEFAULT_PAGE_CONTENT.subjectOptions[idx] || { en: '', ko: '' };
+                return norm(opt, fallback);
+              })
+            : DEFAULT_PAGE_CONTENT.subjectOptions;
 
           setPageContent({
             title: norm(data.title, DEFAULT_PAGE_CONTENT.title),
             formTitle: norm(data.formTitle, DEFAULT_PAGE_CONTENT.formTitle),
             formDesc: norm(data.formDesc, DEFAULT_PAGE_CONTENT.formDesc),
+            subjectOptions: opts,
             labels: {
               subject: norm(data.labels?.subject, DEFAULT_PAGE_CONTENT.labels.subject),
               product: norm(data.labels?.product, DEFAULT_PAGE_CONTENT.labels.product),
@@ -229,9 +235,9 @@ const ContactUsPage: React.FC = () => {
                   <option value="" disabled hidden>
                     {focus.subject ? "" : (currentLang === 'ko' ? "선택해 주세요" : "Choose here")}
                   </option>
-                  {SUBJECT_OPTIONS.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
+                  {(pageContent.subjectOptions?.length ? pageContent.subjectOptions : DEFAULT_PAGE_CONTENT.subjectOptions).map((opt, idx) => (
+                    <option key={`${opt?.en || 'opt'}-${idx}`} value={tx(opt, currentLang)}>
+                      {tx(opt, currentLang)}
                     </option>
                   ))}
                 </select>
