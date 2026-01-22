@@ -104,6 +104,30 @@ const AdminLogoutBtn = styled.button`
 const ContactUsAdminPage: React.FC = () => {
   const navigate = useNavigate();
   const { adminLang } = useAdminLang();
+  const defaultPageContent = {
+    title: { en: 'CONTACT US', ko: '문의하기' },
+    formTitle: { en: 'Get in Touch', ko: '연락하기' },
+    formDesc: {
+      en: "Have a question about our products, exploring partnership opportunities, or just want to learn more? We'd love to hear from you. Please fill out the form below and our team will get back to you as soon as possible.",
+      ko: '제품에 대한 질문이 있으시거나, 파트너십 기회를 탐색하고 싶으시거나, 더 자세히 알고 싶으시다면? 저희가 도와드리겠습니다. 아래 양식을 작성해 주시면 저희 팀이 최대한 빨리 연락드리겠습니다.'
+    },
+    subjectOptions: [
+      { en: "Where to Buy (Distributors/Retailers)", ko: "구매처 안내 (대리점 / 판매처)" },
+      { en: "Product Questions", ko: "제품 관련 문의" },
+      { en: "Company Questions", ko: "회사 관련 문의" },
+      { en: "Collaboration Proposal", ko: "협업 제안" },
+      { en: "Other", ko: "기타 문의" }
+    ],
+    labels: {
+      subject: { en: 'Please select the subject of your inquiry', ko: '문의 주제를 선택해 주세요' },
+      product: { en: 'Product Name', ko: '제품명' },
+      country: { en: 'Country / City', ko: '국가 / 도시' },
+      email: { en: 'Email', ko: '이메일' },
+      comments: { en: 'Additional Information', ko: '추가 정보' },
+      privacy: { en: "I've read and agree to the terms of the ", ko: '을 읽고 동의합니다' },
+      submit: { en: 'Submit', ko: '제출' }
+    }
+  };
   // 문의 리스트 Firestore 연동
   const [inquiries, setInquiries] = useState<any[]>([]);
   useEffect(() => {
@@ -162,6 +186,7 @@ const ContactUsAdminPage: React.FC = () => {
   });
   const [editInfo, setEditInfo] = useState(mainInfo);
   const [editMode, setEditMode] = useState(false);
+  const [pageContent, setPageContent] = useState(defaultPageContent);
 
   const { success } = useToast();
 
@@ -188,6 +213,91 @@ const ContactUsAdminPage: React.FC = () => {
       success("새 문서로 저장되었습니다.");
     }
     setEditMode(false);
+  };
+
+  const savePageContent = async () => {
+    try {
+      await updateDoc(doc(db, "contact_us_config", "page_content"), pageContent);
+      success("저장되었습니다.");
+    } catch (e) {
+      await setDoc(doc(db, "contact_us_config", "page_content"), pageContent);
+      success("새 문서로 저장되었습니다.");
+    }
+  };
+
+  useEffect(() => {
+    const unsub = onSnapshot(doc(db, "contact_us_config", "page_content"), (docSnap) => {
+      if (docSnap.exists()) {
+        const d = docSnap.data();
+        const norm = (v: any, fallback: { en: string; ko: string }) => {
+          if (typeof v === 'string') return { en: v, ko: v };
+          if (v && typeof v === 'object') {
+            return {
+              en: typeof v.en === 'string' ? v.en : fallback.en,
+              ko: typeof v.ko === 'string' ? v.ko : fallback.ko
+            };
+          }
+          return fallback;
+        };
+        const normOption = (v: any, fallback: { en: string; ko: string }) => {
+          if (typeof v === 'string') return { en: v, ko: v };
+          if (v && typeof v === 'object') {
+            return {
+              en: typeof v.en === 'string' ? v.en : fallback.en,
+              ko: typeof v.ko === 'string' ? v.ko : fallback.ko
+            };
+          }
+          return fallback;
+        };
+        const optionsFallback = defaultPageContent.subjectOptions;
+        const normalizedOptions = Array.isArray(d.subjectOptions)
+          ? d.subjectOptions.map((opt: any, idx: number) => normOption(opt, optionsFallback[idx] || { en: '', ko: '' }))
+          : optionsFallback;
+
+        setPageContent({
+          title: norm(d.title, defaultPageContent.title),
+          formTitle: norm(d.formTitle, defaultPageContent.formTitle),
+          formDesc: norm(d.formDesc, defaultPageContent.formDesc),
+          subjectOptions: (normalizedOptions && normalizedOptions.length > 0 ? normalizedOptions : optionsFallback) || optionsFallback,
+          labels: {
+            subject: norm(d.labels?.subject, defaultPageContent.labels.subject),
+            product: norm(d.labels?.product, defaultPageContent.labels.product),
+            country: norm(d.labels?.country, defaultPageContent.labels.country),
+            email: norm(d.labels?.email, defaultPageContent.labels.email),
+            comments: norm(d.labels?.comments, defaultPageContent.labels.comments),
+            privacy: norm(d.labels?.privacy, defaultPageContent.labels.privacy),
+            submit: norm(d.labels?.submit, defaultPageContent.labels.submit)
+          }
+        });
+      }
+    });
+
+    return () => unsub();
+  }, []);
+
+  const handleOptionChange = (index: number, value: string) => {
+    const currentOptions = pageContent.subjectOptions || [];
+    const updated = currentOptions.map((opt: any, idx: number) => {
+      if (idx !== index) return opt;
+      return { ...opt, [adminLang]: value };
+    });
+    setPageContent({ ...pageContent, subjectOptions: updated });
+  };
+
+  const addOption = () => {
+    const currentOptions = pageContent.subjectOptions || [];
+    setPageContent({
+      ...pageContent,
+      subjectOptions: [...currentOptions, { en: '', ko: '' }]
+    });
+  };
+
+  const removeOption = (index: number) => {
+    const currentOptions = pageContent.subjectOptions || [];
+    setPageContent({
+      ...pageContent,
+      subjectOptions: currentOptions.filter((_, idx) => idx !== index)
+    });
   };
 
   const handleLogout = () => {
@@ -273,8 +383,118 @@ const ContactUsAdminPage: React.FC = () => {
           </div>
         )}
         
+        {/* 페이지 콘텐츠 및 폼 라벨 관리 */}
+        <div style={{ background: colors.white, borderRadius: 16, boxShadow: '0 4px 24px rgba(0,0,0,0.08)', padding: 36, width: '100%', maxWidth: 1440, marginBottom: 40 }}>
+          <h2 style={{ fontWeight: 700, fontSize: 20, marginBottom: 24 }}>페이지 콘텐츠 및 폼 라벨 관리</h2>
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, gap: 12 }}>
+              <label style={{ display: 'block', fontSize: 14, fontWeight: 700 }}>문의 주제 옵션 (Dropdown Menu)</label>
+              <Button onClick={addOption} style={{ minWidth: 120, height: 36 }}>+ 항목 추가</Button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {(pageContent.subjectOptions || []).map((opt: any, idx: number) => (
+                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <input
+                    style={{ width: '100%', border: '1px solid #e0e0e0', borderRadius: 8, padding: '10px 14px', fontSize: 15 }}
+                    value={opt?.[adminLang] || ''}
+                    onChange={e => handleOptionChange(idx, e.target.value)}
+                  />
+                  <Button onClick={() => removeOption(idx)} style={{ minWidth: 88, height: 36, whiteSpace: 'nowrap' }}>삭제</Button>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+            <div>
+            <label style={{ display: 'block', fontSize: 14, fontWeight: 700, marginBottom: 6 }}>페이지 제목</label>
+            <input
+              style={{ width: '100%', border: '1px solid #e0e0e0', borderRadius: 8, padding: '10px 14px', fontSize: 15 }}
+              value={pageContent.title[adminLang] || ''}
+              onChange={e => setPageContent({ ...pageContent, title: { ...pageContent.title, [adminLang]: e.target.value } })}
+            />
+            </div>
+            <div>
+            <label style={{ display: 'block', fontSize: 14, fontWeight: 700, marginBottom: 6 }}>폼 제목</label>
+            <input
+              style={{ width: '100%', border: '1px solid #e0e0e0', borderRadius: 8, padding: '10px 14px', fontSize: 15 }}
+              value={pageContent.formTitle[adminLang] || ''}
+              onChange={e => setPageContent({ ...pageContent, formTitle: { ...pageContent.formTitle, [adminLang]: e.target.value } })}
+            />
+            </div>
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: 'block', fontSize: 14, fontWeight: 700, marginBottom: 6 }}>폼 설명</label>
+            <textarea
+              style={{ width: '100%', border: '1px solid #e0e0e0', borderRadius: 8, padding: '10px 14px', fontSize: 15, minHeight: 120, resize: 'vertical', whiteSpace: 'pre-wrap' }}
+              value={pageContent.formDesc[adminLang] || ''}
+              onChange={e => setPageContent({ ...pageContent, formDesc: { ...pageContent.formDesc, [adminLang]: e.target.value } })}
+            />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+            <div>
+            <label style={{ display: 'block', fontSize: 14, fontWeight: 700, marginBottom: 6 }}>주제(Subject)</label>
+            <input
+              style={{ width: '100%', border: '1px solid #e0e0e0', borderRadius: 8, padding: '10px 14px', fontSize: 15 }}
+              value={pageContent.labels.subject[adminLang] || ''}
+              onChange={e => setPageContent({ ...pageContent, labels: { ...pageContent.labels, subject: { ...pageContent.labels.subject, [adminLang]: e.target.value } } })}
+            />
+            </div>
+            <div>
+            <label style={{ display: 'block', fontSize: 14, fontWeight: 700, marginBottom: 6 }}>제품명</label>
+            <input
+              style={{ width: '100%', border: '1px solid #e0e0e0', borderRadius: 8, padding: '10px 14px', fontSize: 15 }}
+              value={pageContent.labels.product[adminLang] || ''}
+              onChange={e => setPageContent({ ...pageContent, labels: { ...pageContent.labels, product: { ...pageContent.labels.product, [adminLang]: e.target.value } } })}
+            />
+            </div>
+            <div>
+            <label style={{ display: 'block', fontSize: 14, fontWeight: 700, marginBottom: 6 }}>국가/도시</label>
+            <input
+              style={{ width: '100%', border: '1px solid #e0e0e0', borderRadius: 8, padding: '10px 14px', fontSize: 15 }}
+              value={pageContent.labels.country[adminLang] || ''}
+              onChange={e => setPageContent({ ...pageContent, labels: { ...pageContent.labels, country: { ...pageContent.labels.country, [adminLang]: e.target.value } } })}
+            />
+            </div>
+            <div>
+            <label style={{ display: 'block', fontSize: 14, fontWeight: 700, marginBottom: 6 }}>이메일</label>
+            <input
+              style={{ width: '100%', border: '1px solid #e0e0e0', borderRadius: 8, padding: '10px 14px', fontSize: 15 }}
+              value={pageContent.labels.email[adminLang] || ''}
+              onChange={e => setPageContent({ ...pageContent, labels: { ...pageContent.labels, email: { ...pageContent.labels.email, [adminLang]: e.target.value } } })}
+            />
+            </div>
+            <div>
+            <label style={{ display: 'block', fontSize: 14, fontWeight: 700, marginBottom: 6 }}>추가 정보(Comments)</label>
+            <input
+              style={{ width: '100%', border: '1px solid #e0e0e0', borderRadius: 8, padding: '10px 14px', fontSize: 15 }}
+              value={pageContent.labels.comments[adminLang] || ''}
+              onChange={e => setPageContent({ ...pageContent, labels: { ...pageContent.labels, comments: { ...pageContent.labels.comments, [adminLang]: e.target.value } } })}
+            />
+            </div>
+            <div>
+            <label style={{ display: 'block', fontSize: 14, fontWeight: 700, marginBottom: 6 }}>개인정보 동의 문구</label>
+            <input
+              style={{ width: '100%', border: '1px solid #e0e0e0', borderRadius: 8, padding: '10px 14px', fontSize: 15 }}
+              value={pageContent.labels.privacy[adminLang] || ''}
+              onChange={e => setPageContent({ ...pageContent, labels: { ...pageContent.labels, privacy: { ...pageContent.labels.privacy, [adminLang]: e.target.value } } })}
+            />
+            </div>
+            <div>
+            <label style={{ display: 'block', fontSize: 14, fontWeight: 700, marginBottom: 6 }}>제출 버튼 텍스트</label>
+            <input
+              style={{ width: '100%', border: '1px solid #e0e0e0', borderRadius: 8, padding: '10px 14px', fontSize: 15 }}
+              value={pageContent.labels.submit[adminLang] || ''}
+              onChange={e => setPageContent({ ...pageContent, labels: { ...pageContent.labels, submit: { ...pageContent.labels.submit, [adminLang]: e.target.value } } })}
+            />
+            </div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
+            <Button variant="primary" onClick={savePageContent}>저장</Button>
+          </div>
+        </div>
+
         {/* 하단 정보 수정 */}
-        <div style={{ background: colors.white, borderRadius: 16, boxShadow: '0 4px 24px rgba(0,0,0,0.08)', padding: 36, width: '100%', maxWidth: 700 }}>
+        <div style={{ background: colors.white, borderRadius: 16, boxShadow: '0 4px 24px rgba(0,0,0,0.08)', padding: 36, width: '100%', maxWidth: 1440 }}>
           <h2 style={{ fontWeight: 700, fontSize: 20, marginBottom: 24 }}>CONTACT US 하단 정보 관리</h2>
           {editMode ? (
             <>

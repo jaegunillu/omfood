@@ -21,6 +21,24 @@ const SUBJECT_OPTIONS = [
   "Other",
 ];
 
+const DEFAULT_PAGE_CONTENT = {
+  title: { en: 'CONTACT US', ko: '문의하기' },
+  formTitle: { en: 'Get in Touch', ko: '연락하기' },
+  formDesc: {
+    en: "Have a question about our products, exploring partnership opportunities, or just want to learn more? We'd love to hear from you. Please fill out the form below and our team will get back to you as soon as possible.",
+    ko: '제품에 대한 질문이 있으시거나, 파트너십 기회를 탐색하고 싶으시거나, 더 자세히 알고 싶으시다면? 저희가 도와드리겠습니다. 아래 양식을 작성해 주시면 저희 팀이 최대한 빨리 연락드리겠습니다.'
+  },
+  labels: {
+    subject: { en: 'Please select the subject of your inquiry', ko: '문의 주제를 선택해 주세요' },
+    product: { en: 'Product Name', ko: '제품명' },
+    country: { en: 'Country / City', ko: '국가 / 도시' },
+    email: { en: 'Email', ko: '이메일' },
+    comments: { en: 'Additional Information', ko: '추가 정보' },
+    privacy: { en: "I've read and agree to the terms of the ", ko: '을 읽고 동의합니다' },
+    submit: { en: 'Submit', ko: '제출' }
+  }
+};
+
 type FormValues = {
   subject: string;
   productName: string;
@@ -73,6 +91,13 @@ const ContactUsPage: React.FC = () => {
     }
     return ''; // 객체가 오면 빈 문자열로 안전하게
   }
+
+  const [pageContent, setPageContent] = useState(DEFAULT_PAGE_CONTENT);
+
+  const getText = (val: any, fallback: string) => {
+    const resolved = tx(val, currentLang);
+    return resolved || fallback;
+  };
 
   const onSubmit = async (data: FormValues) => {
     try {
@@ -128,12 +153,49 @@ const ContactUsPage: React.FC = () => {
     return () => unsub();
   }, []);
 
+  useEffect(() => {
+    const unsub = onSnapshot(
+      doc(db, "contact_us_config", "page_content"),
+      (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          const norm = (v: any, fallback: { en: string; ko: string }) => {
+            if (typeof v === 'string') return { en: v, ko: v };
+            if (v && typeof v === 'object') {
+              return {
+                en: typeof v.en === 'string' ? v.en : fallback.en,
+                ko: typeof v.ko === 'string' ? v.ko : fallback.ko
+              };
+            }
+            return fallback;
+          };
+
+          setPageContent({
+            title: norm(data.title, DEFAULT_PAGE_CONTENT.title),
+            formTitle: norm(data.formTitle, DEFAULT_PAGE_CONTENT.formTitle),
+            formDesc: norm(data.formDesc, DEFAULT_PAGE_CONTENT.formDesc),
+            labels: {
+              subject: norm(data.labels?.subject, DEFAULT_PAGE_CONTENT.labels.subject),
+              product: norm(data.labels?.product, DEFAULT_PAGE_CONTENT.labels.product),
+              country: norm(data.labels?.country, DEFAULT_PAGE_CONTENT.labels.country),
+              email: norm(data.labels?.email, DEFAULT_PAGE_CONTENT.labels.email),
+              comments: norm(data.labels?.comments, DEFAULT_PAGE_CONTENT.labels.comments),
+              privacy: norm(data.labels?.privacy, DEFAULT_PAGE_CONTENT.labels.privacy),
+              submit: norm(data.labels?.submit, DEFAULT_PAGE_CONTENT.labels.submit)
+            }
+          });
+        }
+      }
+    );
+    return () => unsub();
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#FAF6F0] flex flex-col">
       <Header />
       <main className="flex-1 flex flex-col items-center justify-start py-12 mt-[120px] bg-[#fdf8f3] contact-fallback-page px-4">
         <h1 className="text-5xl font-extrabold text-[#5a3723] mb-6 font-pretendard tracking-tight text-center contact-fallback-title">
-          {currentLang === 'ko' ? '문의하기' : 'CONTACT US'}
+          {getText(pageContent.title, currentLang === 'ko' ? DEFAULT_PAGE_CONTENT.title.ko : DEFAULT_PAGE_CONTENT.title.en)}
         </h1>
         <form
           className="bg-white rounded-2xl shadow-lg md:p-16 p-4 w-full max-w-4xl border border-gray-200 mt-8 mb-12 text-[1.15rem] font-pretendard contact-fallback-card"
@@ -142,13 +204,10 @@ const ContactUsPage: React.FC = () => {
         >
           <div className="mb-10 text-center">
             <h2 className="text-3xl font-extrabold text-[#5a3723] font-pretendard mb-4">
-              {currentLang === 'ko' ? '연락하기' : 'Get in Touch'}
+              {getText(pageContent.formTitle, currentLang === 'ko' ? DEFAULT_PAGE_CONTENT.formTitle.ko : DEFAULT_PAGE_CONTENT.formTitle.en)}
             </h2>
-            <p className="text-lg text-[#8c6450] font-pretendard leading-relaxed max-w-3xl mx-auto">
-              {currentLang === 'ko' 
-                ? '제품에 대한 질문이 있으시거나, 파트너십 기회를 탐색하고 싶으시거나, 더 자세히 알고 싶으시다면? 저희가 도와드리겠습니다. 아래 양식을 작성해 주시면 저희 팀이 최대한 빨리 연락드리겠습니다.'
-                : 'Have a question about our products, exploring partnership opportunities, or just want to learn more? We\'d love to hear from you. Please fill out the form below and our team will get back to you as soon as possible.'
-              }
+            <p className="text-lg text-[#8c6450] font-pretendard leading-relaxed max-w-3xl mx-auto whitespace-pre-wrap">
+              {getText(pageContent.formDesc, currentLang === 'ko' ? DEFAULT_PAGE_CONTENT.formDesc.ko : DEFAULT_PAGE_CONTENT.formDesc.en)}
             </p>
           </div>
 
@@ -156,7 +215,7 @@ const ContactUsPage: React.FC = () => {
           <div className="grid md:grid-cols-2 grid-cols-1 gap-6 mb-6">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                {currentLang === 'ko' ? '문의 주제를 선택해 주세요' : 'Please select the subject of your inquiry'}
+                {getText(pageContent.labels.subject, currentLang === 'ko' ? DEFAULT_PAGE_CONTENT.labels.subject.ko : DEFAULT_PAGE_CONTENT.labels.subject.en)}
               </label>
               <div style={{ position: 'relative', width: '100%' }}>
                 <select
@@ -191,7 +250,7 @@ const ContactUsPage: React.FC = () => {
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                {currentLang === 'ko' ? '제품명' : 'Product Name'}
+                {getText(pageContent.labels.product, currentLang === 'ko' ? DEFAULT_PAGE_CONTENT.labels.product.ko : DEFAULT_PAGE_CONTENT.labels.product.en)}
               </label>
               <input
                 {...register("productName")}
@@ -207,7 +266,7 @@ const ContactUsPage: React.FC = () => {
           <div className="grid md:grid-cols-2 grid-cols-1 gap-6 mb-6">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                {currentLang === 'ko' ? '국가 / 도시' : 'Country / City'}
+                {getText(pageContent.labels.country, currentLang === 'ko' ? DEFAULT_PAGE_CONTENT.labels.country.ko : DEFAULT_PAGE_CONTENT.labels.country.en)}
               </label>
               <input
                 {...register("country")}
@@ -219,7 +278,7 @@ const ContactUsPage: React.FC = () => {
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                {currentLang === 'ko' ? '이메일' : 'Email'}
+                {getText(pageContent.labels.email, currentLang === 'ko' ? DEFAULT_PAGE_CONTENT.labels.email.ko : DEFAULT_PAGE_CONTENT.labels.email.en)}
               </label>
               <input
                 {...register("email", {
@@ -243,7 +302,7 @@ const ContactUsPage: React.FC = () => {
           </div>
           <div className="mb-6">
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              {currentLang === 'ko' ? '추가 정보' : 'Additional Information'}
+              {getText(pageContent.labels.comments, currentLang === 'ko' ? DEFAULT_PAGE_CONTENT.labels.comments.ko : DEFAULT_PAGE_CONTENT.labels.comments.en)}
             </label>
             <textarea
               {...register("comments", {
@@ -275,32 +334,43 @@ const ContactUsPage: React.FC = () => {
           <div className="flex-1 flex items-center gap-2" style={{ flexWrap: 'nowrap' }}>
             <label
               htmlFor="privacy"
-              className="text-sm text-gray-700 leading-relaxed cursor-pointer inline-flex items-center"
-              style={{ flexWrap: 'wrap' }}
+              className="text-sm text-gray-700 leading-relaxed cursor-pointer inline-flex items-center flex-wrap"
             >
-              {currentLang === 'ko'
-                ? '개인정보처리방침을 읽고 동의합니다'
-                : (
-                  <>
-                    I&apos;ve read and agree to the terms of the&nbsp;
-                    <span className="font-bold text-[#E5002B] inline-flex items-center">
-                      privacy policy
-                      <button
-                        type="button"
-                        className="text-sm text-[#E5002B] underline hover:text-[#C4002B] transition-colors"
-                        style={{ flexShrink: 0, padding: 0, margin: 0, marginLeft: 0, border: 'none', background: 'none', cursor: 'pointer' }}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setShowPrivacy((v) => !v);
-                        }}
-                      >
-                        {showPrivacy ? "▲" : "▼"}
-                      </button>
-                    </span>
-                  </>
-                )
-              }
+              {currentLang === 'ko' ? (
+                <>
+                  <span className="font-bold text-[#E5002B] inline-flex items-center" 
+                        onClick={(e) => { e.preventDefault(); setShowPrivacy((v) => !v); }}>
+                    개인정보처리방침
+                    <button
+                      type="button"
+                      className="text-sm text-[#E5002B] underline hover:text-[#C4002B] transition-colors ml-1"
+                      style={{ padding: 0, border: 'none', background: 'none', cursor: 'pointer' }}
+                    >
+                      {showPrivacy ? "▲" : "▼"}
+                    </button>
+                  </span>
+                  {getText(pageContent.labels.privacy, DEFAULT_PAGE_CONTENT.labels.privacy.ko)}
+                </>
+              ) : (
+                <>
+                  {getText(pageContent.labels.privacy, DEFAULT_PAGE_CONTENT.labels.privacy.en)}
+                  <span className="font-bold text-[#E5002B] inline-flex items-center">
+                    privacy policy
+                    <button
+                      type="button"
+                      className="text-sm text-[#E5002B] underline hover:text-[#C4002B] transition-colors"
+                      style={{ flexShrink: 0, padding: 0, margin: 0, marginLeft: 0, border: 'none', background: 'none', cursor: 'pointer' }}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setShowPrivacy((v) => !v);
+                      }}
+                    >
+                      {showPrivacy ? "▲" : "▼"}
+                    </button>
+                  </span>
+                </>
+              )}
             </label>
             </div>
           </div>
@@ -312,7 +382,9 @@ const ContactUsPage: React.FC = () => {
                 .privacy-policy-table th { background: #f5f5f5; font-weight: 700; }
                 .privacy-policy-table tr:nth-child(even) td { background: #fafafa; }
               `}</style>
-              <div dangerouslySetInnerHTML={{ __html: privacyPolicy.en.replace(/<table /g, '<table class="privacy-policy-table" ') }} />
+              <div dangerouslySetInnerHTML={{ 
+                __html: (currentLang === 'ko' ? privacyPolicy.ko : privacyPolicy.en).replace(/<table /g, '<table class="privacy-policy-table" ') 
+              }} />
             </div>
           )}
           <button
@@ -320,7 +392,7 @@ const ContactUsPage: React.FC = () => {
             className="w-full bg-gray-300 hover:bg-gray-400 text-white py-3 rounded-lg mt-6 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-base transition-colors duration-200 contact-fallback-submit"
             disabled={!watch("agreedPrivacy")}
           >
-            {currentLang === 'ko' ? '제출' : 'Submit'}
+            {getText(pageContent.labels.submit, currentLang === 'ko' ? DEFAULT_PAGE_CONTENT.labels.submit.ko : DEFAULT_PAGE_CONTENT.labels.submit.en)}
           </button>
         </form>
         {/* 하단 정보 */}
