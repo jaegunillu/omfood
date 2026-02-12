@@ -282,6 +282,7 @@ const FooterManagePage: React.FC = () => {
       const sRef = storageRef(storage, `footer-icons/sns_${Date.now()}.${ext}`);
       await uploadBytes(sRef, newSNS.file);
       iconUrl = await getDownloadURL(sRef);
+      iconUrl = `${iconUrl}${iconUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
     }
     const updatedSNS = [...editSNS, { icon: iconUrl, url: newSNS.url }];
     await setDoc(doc(db, 'footer_config', 'main'), {
@@ -329,7 +330,8 @@ const FooterManagePage: React.FC = () => {
     const ext = file.name.split('.').pop();
     const sRef = storageRef(storage, `footer-icons/sns_${Date.now()}.${ext}`);
     await uploadBytes(sRef, file);
-    const iconUrl = await getDownloadURL(sRef);
+    let iconUrl = await getDownloadURL(sRef);
+    iconUrl = `${iconUrl}${iconUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
     const updated = editSNS.map((s, i) => i === idx ? { ...s, icon: iconUrl } : s);
     setEditSNS(updated);
     setUploadingIdx(null);
@@ -467,7 +469,12 @@ const FooterManagePage: React.FC = () => {
                 <FileInput
                   type="file"
                   accept="image/*"
-                  onChange={e => e.target.files && handleSNSIconUpload(idx, e.target.files[0])}
+                  onChange={e => {
+                    if (e.target.files) {
+                      handleSNSIconUpload(idx, e.target.files[0]);
+                      e.target.value = '';
+                    }
+                  }}
                   disabled={uploadingIdx === idx}
                 />
                 {uploadingIdx === idx ? '업로드중...' : '아이콘 변경'}
@@ -501,7 +508,12 @@ const FooterManagePage: React.FC = () => {
               <FileInput
                 type="file"
                 accept="image/*"
-                onChange={e => e.target.files && setNewSNS(s => ({ ...s, file: e.target.files![0], icon: '' }))}
+                onChange={e => {
+                  if (e.target.files) {
+                    setNewSNS(s => ({ ...s, file: e.target.files![0], icon: '' }));
+                    e.target.value = '';
+                  }
+                }}
                 disabled={uploadingNew}
               />
               {uploadingNew ? '업로드중...' : '아이콘 선택'}

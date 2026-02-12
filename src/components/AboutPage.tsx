@@ -506,6 +506,10 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
   }, [currentLang]);
 
   useEffect(() => {
+    setIsHeaderImageLoaded(false);
+  }, [headerImageSrc]);
+
+  useEffect(() => {
     if (!historyItems.length) return;
 
     // IntersectionObserver를 사용하여 뷰포트 중앙에 있는 아이템 감지
@@ -627,6 +631,7 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
   });
   const [activeHistoryIndex, setActiveHistoryIndex] = useState(0);
   const historyItemRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [isHeaderImageLoaded, setIsHeaderImageLoaded] = useState(false);
 
   const fadeInUp = {
     initial: { opacity: 0, y: 30 },
@@ -713,11 +718,12 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
         width: '100%',
         height: '800px',
         overflow: 'hidden',
-        backgroundColor: '#000'
+        backgroundColor: '#fff'
       }}>
         <img 
           src={headerImageSrc}
           alt="OM FOOD Background" 
+          onLoad={() => setIsHeaderImageLoaded(true)}
           style={{
             position: 'absolute',
             top: 0,
@@ -726,7 +732,9 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
             height: '100%',
             objectFit: 'cover',
             objectPosition: `${headerImagePos.x}% ${headerImagePos.y}%`,
-            zIndex: 0
+            zIndex: 0,
+            opacity: isHeaderImageLoaded ? 1 : 0,
+            transition: 'opacity 0.5s ease-in-out'
           }}
         />
         
@@ -1483,129 +1491,158 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
         </motion.div>
       </motion.section>
 
-{/* 글로벌 K-푸드 시대 … Section */}
-<motion.section
-  className="om-global-kfood"
-  style={{
-    position: 'relative',
-    padding: '0 2rem 28rem 2rem',              // 하단 padding 증가 (20rem → 28rem)
-    backgroundColor: '#F6EFE8',        // 연베이지
-    overflow: 'hidden'
-  }}
-  {...fadeInUp}
->
-  {/* 오른쪽 배경 일러스트 (섹션 배경 위에 바로 얹기) */}
-  <div
-    aria-hidden
-    style={{
-      position: 'absolute',
-      inset: 0,
-      backgroundImage: `url(${messageImageSrc})`,
-      backgroundRepeat: 'no-repeat',
-      backgroundPosition: `${messageImagePos.x}% ${messageImagePos.y}%`,
-      backgroundSize: 'cover',
-      opacity: 0.58,
-      filter: 'grayscale(100%)',
-      mixBlendMode: 'multiply',
-      pointerEvents: 'none'
-    }}
-  />
-
-  <div style={{ maxWidth: '100rem', margin: '0 auto', paddingTop: '150px' }}>
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'minmax(10, 64rem) 1fr', // 좌 텍스트 폭 고정
-        columnGap: '4rem',
-        alignItems: 'start'
-      }}
-    >
-      {/* 좌측 텍스트 컬럼 */}
-      <motion.div
-        initial={{ opacity: 0, x: -50 }}
-        whileInView={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        viewport={{ once: true }}
+      {/* 글로벌 K-푸드 시대 … Section - 레퍼런스 이미지와 동일 구조 */}
+      <motion.section
+        className="om-global-kfood"
+        style={{
+          position: 'relative',
+          padding: 0,
+          backgroundColor: '#F6EFE8',
+          overflow: 'hidden'
+        }}
+        {...fadeInUp}
       >
-        {/* 제목 : 줄바꿈 강제 */}
-        <motion.h2
-          style={{
-            fontWeight: 800,
-            color: '#0F172A',
-            lineHeight: 1.25,
-            letterSpacing: '-0.02em',
-            fontSize: 'clamp(4.25rem, 1.6vw + 1.6rem, 2.25rem)',
-            marginBottom: '2.5rem',
-            maxWidth: '22ch',
-            textAlign: 'left'
-          }}
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          viewport={{ once: true }}
-        >
-          {aboutData[currentLang].messageTitle.split('\n').map((line, index) => (
-            <React.Fragment key={index}>
-              {line}
-              {index < aboutData[currentLang].messageTitle.split('\n').length - 1 && <br/>}
-            </React.Fragment>
-          ))}
-        </motion.h2>
-
-        {/* 본문 : 줄너비/행간 통일 + 줄바꿈 강제 예시 */}
-        <motion.div
-          style={{
-            color: '#374151',
-            fontSize: '1.5625rem',  // ≒17px
-            lineHeight: 1.5,
-            letterSpacing: 0,
-            maxWidth: '58ch',
-            display: 'grid',
-            rowGap: '2.5rem'
-          }}
-          variants={staggerContainer}
-          initial="initial"
-          whileInView="whileInView"
-          viewport={{ once: true }}
-        >
-          {aboutData[currentLang].messageContent.split('\n\n').map((paragraph, index) => (
-            <motion.p 
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ 
-                opacity: 1, 
-                y: 0
-              }}
-              transition={{ duration: 0.6, delay: index * 0.1, ease: "easeOut" }}
+        <div className="om-global-kfood-content" style={{ maxWidth: '100rem', margin: '0 auto', padding: '8rem 2rem' }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'minmax(0, 55%) 1fr',
+              columnGap: '4rem',
+              alignItems: 'center',
+              minHeight: '520px'
+            }}
+          >
+            {/* 좌측 텍스트 컬럼 */}
+            <motion.div
+              style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
               viewport={{ once: true }}
             >
-              {paragraph.split('\n').map((line, lineIndex) => (
-                <React.Fragment key={lineIndex}>
+            <motion.h2
+              style={{
+                fontWeight: 800,
+                color: '#0F172A',
+                lineHeight: 1.25,
+                letterSpacing: '-0.02em',
+                fontSize: 'clamp(4.25rem, 1.6vw + 1.6rem, 2.25rem)',
+                marginBottom: '2.5rem',
+                maxWidth: '22ch',
+                textAlign: 'left'
+              }}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              viewport={{ once: true }}
+            >
+              {aboutData[currentLang].messageTitle.split('\n').map((line, index) => (
+                <React.Fragment key={index}>
                   {line}
-                  {lineIndex < paragraph.split('\n').length - 1 && <br/>}
+                  {index < aboutData[currentLang].messageTitle.split('\n').length - 1 && <br/>}
                 </React.Fragment>
               ))}
-            </motion.p>
-          ))}
+            </motion.h2>
 
-          <motion.p 
-            style={{ fontWeight: 600, color: '#111827', marginTop: '0.5rem' }}
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
+            <motion.div
+              style={{
+                color: '#374151',
+                fontSize: '1.5625rem',
+                lineHeight: 1.5,
+                letterSpacing: 0,
+                maxWidth: '58ch',
+                display: 'grid',
+                rowGap: '2.5rem'
+              }}
+              variants={staggerContainer}
+              initial="initial"
+              whileInView="whileInView"
+              viewport={{ once: true }}
+            >
+              {aboutData[currentLang].messageContent.split('\n\n').map((paragraph, index) => (
+                <motion.p 
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ 
+                    opacity: 1, 
+                    y: 0
+                  }}
+                  transition={{ duration: 0.6, delay: index * 0.1, ease: "easeOut" }}
+                  viewport={{ once: true }}
+                >
+                  {paragraph.split('\n').map((line, lineIndex) => (
+                    <React.Fragment key={lineIndex}>
+                      {line}
+                      {lineIndex < paragraph.split('\n').length - 1 && <br/>}
+                    </React.Fragment>
+                  ))}
+                </motion.p>
+              ))}
+
+              <motion.p 
+                style={{ fontWeight: 600, color: '#111827', marginTop: '0.5rem' }}
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.6, delay: 0.5 }}
+                viewport={{ once: true }}
+              >
+                {aboutData[currentLang].representativeName}
+              </motion.p>
+            </motion.div>
+          </motion.div>
+
+          {/* 우측 인물 이미지 컬럼 - 이미지 세로 중앙 배치 */}
+          <motion.div
+            className="om-global-kfood-image"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative',
+              minHeight: '460px'
+            }}
+            initial={{ opacity: 0, x: 50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
             viewport={{ once: true }}
           >
-            {aboutData[currentLang].representativeName}
-          </motion.p>
-        </motion.div>
-      </motion.div>
+            {messageImageSrc && (
+              <div
+                style={{
+                  position: 'relative',
+                  width: '100%',
+                  maxWidth: '560px',
+                  minHeight: '400px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <img
+                  src={messageImageSrc}
+                  alt={aboutData[currentLang].representativeName}
+                  style={{
+                    position: 'relative',
+                    zIndex: 1,
+                    width: '100%',
+                    maxWidth: '100%',
+                    height: 'auto',
+                    maxHeight: '680px',
+                    objectFit: 'contain',
+                    objectPosition: 'center center',
+                    display: 'block',
+                    filter: 'none',
+                    opacity: 1,
+                    mixBlendMode: 'normal'
+                  }}
+                />
+              </div>
+            )}
+          </motion.div>
+        </div>
+      </div>
+      </motion.section>
 
-      {/* 우측 컬럼은 비워둬 배경 일러스트가 보이게만 사용 */}
-      <div />
-    </div>
-  </div>
-       </motion.section>
-       
       <style>{`
 .intro-zigzag-section {
   background: #fff;
@@ -1714,6 +1751,24 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
 }
 .about-page .certificates-section img {
   image-rendering: auto;
+}
+
+/* 대표 메시지 섹션 - 이미지 세로 중앙 배치 */
+.om-global-kfood-content > div {
+  align-items: center !important;
+}
+.om-global-kfood-image {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+.om-global-kfood-image > div {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+.om-global-kfood-image img {
+  object-position: center center !important;
 }
 
 /* PC (1801px 이상)에는 기존 스타일 유지 */
@@ -1836,6 +1891,25 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
     font-size: clamp(0.9rem, 1.5vw, 1rem) !important;
     text-align: left !important;
   }
+  .om-global-kfood-content > div {
+    min-height: 420px !important;
+    grid-template-columns: minmax(0, 55%) 1fr !important;
+    align-items: center !important;
+  }
+  .om-global-kfood-image {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  .om-global-kfood-image > div {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  .om-global-kfood-image img {
+    max-height: 560px !important;
+    object-position: center center !important;
+  }
   .about-page .certificates-section {
     padding: clamp(4rem, 6vw, 8rem) clamp(1.5rem, 3vw, 10rem) !important;
   }
@@ -1894,8 +1968,8 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
   .about-page .om-global-kfood {
     padding-top: 0 !important;
   }
-  .about-page .om-global-kfood > div {
-    padding-top: 80px !important;
+  .om-global-kfood-content {
+    padding-top: 3rem !important;
   }
   .about-page section h2,
   .about-page section h3,
@@ -2077,12 +2151,15 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
     object-fit: contain !important;
   }
   .about-page .om-global-kfood {
-    padding: 4rem 1.5rem 12rem 1.5rem !important;
+    padding: 0 !important;
   }
-  .om-global-kfood > div {
+  .om-global-kfood-content {
+    padding: 3rem 1.5rem 10rem 1.5rem !important;
+  }
+  .om-global-kfood-content > div {
     grid-template-columns: 1fr !important;
   }
-  .om-global-kfood > div > div:first-child {
+  .om-global-kfood-content > div > div:first-child {
     max-width: 100% !important;
   }
   .om-global-kfood h2 {
@@ -2092,12 +2169,12 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
     width: 100% !important;
     max-width: 100% !important;
   }
-  .om-global-kfood > div > div > div:first-child {
+  .om-global-kfood-content > div > div:first-child {
     text-align: left !important;
     align-items: flex-start !important;
     width: 100% !important;
   }
-  .om-global-kfood > div > div > div:first-child > div {
+  .om-global-kfood-content > div > div:first-child > div {
     text-align: left !important;
     width: 100% !important;
     max-width: 100% !important;
@@ -2114,13 +2191,15 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
     text-align: right !important;
     width: 100% !important;
   }
-  .om-global-kfood > div[aria-hidden="true"] {
-    height: 300px;
-    background-position: center !important;
-    background-size: cover !important;
-    background-repeat: no-repeat !important;
+  .om-global-kfood-image {
+    justify-content: center !important;
+    align-items: center !important;
     margin-top: 2rem;
-    opacity: 0.4 !important;
+    min-height: 320px !important;
+  }
+  .om-global-kfood-image img {
+    max-height: 420px !important;
+    min-height: unset !important;
   }
   .about-page .certificates-section {
     padding: 4rem 1.5rem !important;

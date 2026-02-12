@@ -212,7 +212,8 @@ const BrandPageManage: React.FC = () => {
     try {
       const storageRef = ref(storage, `brandPages/${itemId}/${fieldName}`);
       await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(storageRef);
+      let downloadURL = await getDownloadURL(storageRef);
+      downloadURL = `${downloadURL}${downloadURL.includes('?') ? '&' : '?'}t=${Date.now()}`;
       const docRef = doc(db, 'brandPages', itemId);
       try {
         await updateDoc(docRef, { [fieldName]: downloadURL });
@@ -231,7 +232,8 @@ const BrandPageManage: React.FC = () => {
     try {
       const storageRef = ref(storage, `brandPages/${itemId}/${fieldName}`);
       await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(storageRef);
+      let downloadURL = await getDownloadURL(storageRef);
+      downloadURL = `${downloadURL}${downloadURL.includes('?') ? '&' : '?'}t=${Date.now()}`;
       const docRef = doc(db, 'brandPages', itemId);
       try {
         await updateDoc(docRef, { [fieldName]: downloadURL });
@@ -392,6 +394,7 @@ const BrandPageManage: React.FC = () => {
                   const file = e.target.files?.[0];
                   if (file) {
                     handleVideoUpload(file, brand.id, 'video');
+                    e.target.value = '';
                   }
                 }}
                 style={{ width: '100%', padding: '12px', fontSize: '1rem' }}
@@ -430,6 +433,7 @@ const BrandPageManage: React.FC = () => {
                     const file = e.target.files?.[0];
                     if (file) {
                       handleVideoUpload(file, brand.id, 'mainVideo');
+                      e.target.value = '';
                     }
                   }}
                   style={{ width: '100%', padding: '12px', fontSize: '1rem' }}

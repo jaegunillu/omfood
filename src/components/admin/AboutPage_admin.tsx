@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { flushSync } from 'react-dom';
 import { db, storage } from '../../firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -383,18 +384,39 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
   const currentContent = adminLang === 'ko' ? koContent : enContent;
   const setCurrentContent = adminLang === 'ko' ? setKoContent : setEnContent;
 
+  // 업로드 중인 필드 추적 (중복 클릭 방지)
+  const [uploadingField, setUploadingField] = useState<string | null>(null);
+
+  // 스토리지 경로 생성 (타임스탬프 + 랜덤 문자열로 중복 방지)
+  const storageAvailableRef = (field: keyof AboutContent, file: File) => {
+    const timestamp = Date.now();
+    const randomId = Math.random().toString(36).slice(2, 9);
+    const extension = file.name.split('.').pop();
+    const safeField = String(field);
+    return storageRef(storage, `about/${safeField}_${timestamp}_${randomId}.${extension || 'jpg'}`);
+  };
+
   // 이미지 업로드 핸들러
   const handleImageUpload = async (field: keyof AboutContent, file: File) => {
+    if (!file) return;
+    const fieldKey = String(field);
+    setUploadingField(fieldKey);
     try {
       const fileRef = storageAvailableRef(field, file);
       await uploadBytes(fileRef, file);
       const downloadUrl = await getDownloadURL(fileRef);
-      // 두 언어 상태 모두 업데이트
-      setKoContent(prev => ({ ...prev, [field]: downloadUrl }));
-      setEnContent(prev => ({ ...prev, [field]: downloadUrl }));
+      // 캐시 버스팅: 브라우저 캐시로 인한 이전 이미지 표시 방지
+      const finalUrl = `${downloadUrl}${downloadUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
+      // flushSync로 즉시 상태 반영하여 React 배칭으로 인한 리렌더 누락 방지
+      flushSync(() => {
+        setKoContent(prev => ({ ...prev, [field]: finalUrl }));
+        setEnContent(prev => ({ ...prev, [field]: finalUrl }));
+      });
     } catch (error) {
       console.error('이미지 업로드 실패:', error);
-      alert('이미지 업로드 중 오류가 발생했습니다.');
+      alert('이미지 업로드 중 오류가 발생했습니다. 파일 크기나 네트워크를 확인해주세요.');
+    } finally {
+      setUploadingField(null);
     }
   };
 
@@ -418,12 +440,33 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
     }));
   };
 
-  const storageAvailableRef = (field: keyof AboutContent, file: File) => {
-    const timestamp = Date.now();
-    const extension = file.name.split('.').pop();
-    const safeField = String(field);
-    return storageRef(storage, `about/${safeField}_${timestamp}.${extension || 'jpg'}`);
-  };
+  // 공통 파일 인풋 렌더링 헬퍼 (동일 파일 재선택 시 onChange 트리거 보장)
+  const renderFileInput = (fieldKey: keyof AboutContent) => (
+    <div>
+      <input
+        type="file"
+        accept="image/*"
+        disabled={uploadingField === fieldKey}
+        onChange={async (e) => {
+          const file = e.target.files?.[0];
+          const inputEl = e.target;
+          if (file) {
+            await handleImageUpload(fieldKey, file);
+            inputEl.value = '';
+          }
+        }}
+        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 disabled:opacity-50"
+      />
+      {uploadingField === fieldKey && (
+        <p className="text-sm text-blue-600 mt-1 font-semibold animate-pulse">이미지 업로드 중... 잠시만 기다려주세요.</p>
+      )}
+      {typeof currentContent[fieldKey] === 'string' && (currentContent[fieldKey] as string) && (
+        <div className="mt-2">
+          <img src={currentContent[fieldKey] as string} alt="Preview" className="w-32 h-20 object-cover rounded shadow-sm" />
+        </div>
+      )}
+    </div>
+  );
 
   // 리스트 아이템 추가
   const addListItem = (field: 'philosophyItems' | 'spiritItems') => {
@@ -597,17 +640,7 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     헤더 이미지
                   </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => e.target.files?.[0] && handleImageUpload('headerImage', e.target.files[0])}
-                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                  />
-                  {currentContent.headerImage && (
-                    <div className="mt-2">
-                      <img src={currentContent.headerImage} alt="Header preview" className="w-32 h-20 object-cover rounded" />
-                    </div>
-                  )}
+                  {renderFileInput('headerImage')}
                 </div>
 
                 <div>
@@ -740,21 +773,7 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">이미지</label>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => e.target.files?.[0] && handleImageUpload(imageKey, e.target.files[0])}
-                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                      />
-                      {currentContent[imageKey] && (
-                        <div className="mt-2">
-                          <img
-                            src={currentContent[imageKey]}
-                            alt={`섹션 ${num} 이미지 미리보기`}
-                            className="w-40 h-32 object-cover rounded"
-                          />
-                        </div>
-                      )}
+                      {renderFileInput(imageKey)}
                     </div>
                     </div>
                   );
@@ -855,17 +874,7 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     이미지
                   </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => e.target.files?.[0] && handleImageUpload('philosophyImage', e.target.files[0])}
-                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                  />
-                  {currentContent.philosophyImage && (
-                    <div className="mt-2">
-                      <img src={currentContent.philosophyImage} alt="Philosophy preview" className="w-32 h-20 object-cover rounded" />
-                    </div>
-                  )}
+                  {renderFileInput('philosophyImage')}
                 </div>
               </div>
             </div>
@@ -933,17 +942,7 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     이미지
                   </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => e.target.files?.[0] && handleImageUpload('spiritImage', e.target.files[0])}
-                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                  />
-                  {currentContent.spiritImage && (
-                    <div className="mt-2">
-                      <img src={currentContent.spiritImage} alt="Spirit preview" className="w-32 h-20 object-cover rounded" />
-                    </div>
-                  )}
+                  {renderFileInput('spiritImage')}
                 </div>
               </div>
             </div>
@@ -1078,35 +1077,48 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
                         <input
                           type="file"
                           accept="image/*"
+                          disabled={uploadingField === `certificate_${index}`}
                           onChange={async (e) => {
                             const file = e.target.files?.[0];
+                            const inputEl = e.target;
                             if (!file) return;
+                            const fieldKey = `certificate_${index}`;
+                            setUploadingField(fieldKey);
                             try {
                               const timestamp = Date.now();
+                              const randomId = Math.random().toString(36).slice(2, 9);
                               const extension = file.name.split('.').pop();
-                              const fileRef = storageRef(storage, `about/certificate_${timestamp}.${extension || 'jpg'}`);
+                              const fileRef = storageRef(storage, `about/certificate_${timestamp}_${randomId}.${extension || 'jpg'}`);
                               await uploadBytes(fileRef, file);
                               const downloadUrl = await getDownloadURL(fileRef);
-                              // 두 언어 상태 모두 업데이트
-                              setKoContent(prev => ({
-                                ...prev,
-                                certificates: prev.certificates.map((c, i) =>
-                                  i === index ? { ...c, image: downloadUrl } : c
-                                )
-                              }));
-                              setEnContent(prev => ({
-                                ...prev,
-                                certificates: prev.certificates.map((c, i) =>
-                                  i === index ? { ...c, image: downloadUrl } : c
-                                )
-                              }));
+                              const finalUrl = `${downloadUrl}${downloadUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
+                              flushSync(() => {
+                                setKoContent(prev => ({
+                                  ...prev,
+                                  certificates: prev.certificates.map((c, i) =>
+                                    i === index ? { ...c, image: finalUrl } : c
+                                  )
+                                }));
+                                setEnContent(prev => ({
+                                  ...prev,
+                                  certificates: prev.certificates.map((c, i) =>
+                                    i === index ? { ...c, image: finalUrl } : c
+                                  )
+                                }));
+                              });
                             } catch (error) {
                               console.error('이미지 업로드 실패:', error);
-                              alert('이미지 업로드 중 오류가 발생했습니다.');
+                              alert('이미지 업로드 중 오류가 발생했습니다. 파일 크기나 네트워크를 확인해주세요.');
+                            } finally {
+                              setUploadingField(null);
+                              inputEl.value = '';
                             }
                           }}
-                          className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 mb-2"
+                          className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 disabled:opacity-50 mb-2"
                         />
+                        {uploadingField === `certificate_${index}` && (
+                          <p className="text-sm text-blue-600 mt-1 font-semibold animate-pulse">이미지 업로드 중...</p>
+                        )}
                         {cert.image && (
                           <div className="mt-2">
                             <img src={cert.image} alt="Certificate preview" className="w-32 h-40 object-contain rounded border border-gray-200" />
@@ -1174,17 +1186,7 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     배경 이미지
                   </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => e.target.files?.[0] && handleImageUpload('sloganImage', e.target.files[0])}
-                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                  />
-                  {currentContent.sloganImage && (
-                    <div className="mt-2">
-                      <img src={currentContent.sloganImage} alt="Slogan preview" className="w-32 h-20 object-cover rounded" />
-                    </div>
-                  )}
+                  {renderFileInput('sloganImage')}
                 </div>
               </div>
             </div>
@@ -1234,17 +1236,7 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     배경 이미지
                   </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => e.target.files?.[0] && handleImageUpload('messageImage', e.target.files[0])}
-                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                  />
-                  {currentContent.messageImage && (
-                    <div className="mt-2">
-                      <img src={currentContent.messageImage} alt="Message preview" className="w-32 h-20 object-cover rounded" />
-                    </div>
-                  )}
+                  {renderFileInput('messageImage')}
                 </div>
               </div>
             </div>
@@ -1578,10 +1570,10 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
                 </div>
               </div>
 
-              {/* 대표 메시지 프리뷰 */}
+              {/* 대표 메시지 프리뷰 - 텍스트(좌)와 이미지(우) 나란히, 인물 전체 보이도록 object-contain */}
               <div className="mb-8">
-                <div className="bg-orange-50 rounded-lg p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="rounded-lg p-6" style={{ backgroundColor: '#EBE7DD' }}>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                     <div>
                       <h3 className="text-xl font-bold text-gray-900 mb-4">{currentContent.messageTitle}</h3>
                       <div className="space-y-4 text-gray-700">
@@ -1591,35 +1583,44 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
                       </div>
                       <p className="font-semibold text-gray-900 mt-4">{currentContent.representativeName}</p>
                     </div>
-                    <div>
+                    <div className="flex items-center justify-center min-h-[320px] md:min-h-[400px]">
                       {currentContent.messageImage ? (
-                        <div className="relative" style={{ cursor: 'crosshair' }}>
-                          <img 
-                            src={currentContent.messageImage} 
-                            alt="Message" 
-                            className="w-full h-64 object-cover rounded-lg"
-                            onClick={(e) => handleImageClick(e, 'messageImagePos')}
-                          />
-                          {currentContent.messageImagePos && (
-                            <div
-                              style={{
-                                position: 'absolute',
-                                left: `${currentContent.messageImagePos.x}%`,
-                                top: `${currentContent.messageImagePos.y}%`,
-                                transform: 'translate(-50%, -50%)',
-                                width: '20px',
-                                height: '20px',
-                                borderRadius: '50%',
-                                backgroundColor: 'red',
-                                border: '2px solid white',
-                                pointerEvents: 'none',
-                                zIndex: 10
-                              }}
+                        <div 
+                          className="relative w-full h-full flex items-center justify-center rounded-lg overflow-visible"
+                          style={{ 
+                            backgroundColor: '#EBE7DD',
+                            backgroundImage: 'radial-gradient(ellipse 80% 70% at 85% 70%, rgba(249, 115, 22, 0.15), transparent 60%)'
+                          }}
+                        >
+                          <div className="relative" style={{ cursor: 'crosshair', maxWidth: '100%', maxHeight: '400px' }}>
+                            <img 
+                              src={currentContent.messageImage} 
+                              alt="Message" 
+                              className="max-w-full max-h-[400px] w-auto h-auto object-contain rounded-lg"
+                              style={{ objectPosition: 'center' }}
+                              onClick={(e) => handleImageClick(e, 'messageImagePos')}
                             />
-                          )}
+                            {currentContent.messageImagePos && (
+                              <div
+                                style={{
+                                  position: 'absolute',
+                                  left: `${currentContent.messageImagePos.x}%`,
+                                  top: `${currentContent.messageImagePos.y}%`,
+                                  transform: 'translate(-50%, -50%)',
+                                  width: '20px',
+                                  height: '20px',
+                                  borderRadius: '50%',
+                                  backgroundColor: 'red',
+                                  border: '2px solid white',
+                                  pointerEvents: 'none',
+                                  zIndex: 10
+                                }}
+                              />
+                            )}
+                          </div>
                         </div>
                       ) : (
-                        <div className="w-full h-64 bg-gray-300 rounded-lg flex items-center justify-center">
+                        <div className="w-full min-h-[320px] rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.05)' }}>
                           <span className="text-gray-500">대표 메시지 이미지</span>
                         </div>
                       )}

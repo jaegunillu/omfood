@@ -827,6 +827,7 @@ const AdminProductManage: React.FC<AdminProductManageProps> = ({ adminLang }) =>
     const file = e.target.files?.[0];
     if (!file) return;
     
+    const inputEl = e.target;
     setUploading(true);
     setUploadProgress(0);
     
@@ -846,14 +847,15 @@ const AdminProductManage: React.FC<AdminProductManageProps> = ({ adminLang }) =>
       setUploadProgress(100);
       
       const url = await getDownloadURL(fileStorageRef);
+      const finalUrl = `${url}${url.includes('?') ? '&' : '?'}t=${Date.now()}`;
       
       if (productId) {
         setProducts(prev => prev.map(p => 
-          p.id === productId ? { ...p, image: url } : p
+          p.id === productId ? { ...p, image: finalUrl } : p
         ));
         handleProductChange(productId);
       } else {
-        setNewProduct(prev => ({ ...prev, image: url }));
+        setNewProduct(prev => ({ ...prev, image: finalUrl }));
       }
       
       addToast('이미지가 업로드되었습니다!');
@@ -862,6 +864,7 @@ const AdminProductManage: React.FC<AdminProductManageProps> = ({ adminLang }) =>
     } finally {
       setUploading(false);
       setUploadProgress(0);
+      inputEl.value = '';
     }
   };
 

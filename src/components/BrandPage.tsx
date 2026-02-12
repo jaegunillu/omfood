@@ -305,7 +305,6 @@ const BrandPage: React.FC = () => {
             muted 
             loop 
             playsInline 
-            poster="/logo_black.png" 
             style={{
               width:'100%',
               height:'100%',

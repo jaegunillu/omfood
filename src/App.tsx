@@ -2534,6 +2534,8 @@ function AdminMenuManage() {
   const [logoWhiteFile, setLogoWhiteFile] = useState<File | null>(null);
   const [logoBlackFile, setLogoBlackFile] = useState<File | null>(null);
   const [logoMsg, setLogoMsg] = useState('');
+  const logoWhiteInputRef = useRef<HTMLInputElement>(null);
+  const logoBlackInputRef = useRef<HTMLInputElement>(null);
 
   // 도큐먼트 로드
   useEffect(() => {
@@ -2598,10 +2600,19 @@ function AdminMenuManage() {
       const sRef = storageRef(storage, storagePath);
       await uploadBytes(sRef, file);
       const url = await getDownloadURL(sRef);
+      const finalUrl = `${url}${url.includes('?') ? '&' : '?'}t=${Date.now()}`;
       const docRef = doc(db, 'header', 'logo');
       await setDoc(docRef, { [type]: url }, { merge: true });
-      if (type === 'white') setLogoWhite(url);
-      if (type === 'black') setLogoBlack(url);
+      if (type === 'white') {
+        setLogoWhite(finalUrl);
+        setLogoWhiteFile(null);
+        if (logoWhiteInputRef.current) logoWhiteInputRef.current.value = '';
+      }
+      if (type === 'black') {
+        setLogoBlack(finalUrl);
+        setLogoBlackFile(null);
+        if (logoBlackInputRef.current) logoBlackInputRef.current.value = '';
+      }
       setLogoMsg('로고가 저장되었습니다!');
       setTimeout(() => setLogoMsg(''), 1500);
     } catch (e) {
@@ -2619,13 +2630,13 @@ function AdminMenuManage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18, marginBottom: 32 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
             <span style={{ minWidth: 90, fontWeight: 700, fontSize: 18 }}>로고(흰색)</span>
-            <input type="file" accept="image/*" onChange={e => setLogoWhiteFile(e.target.files?.[0] || null)} />
+            <input ref={logoWhiteInputRef} type="file" accept="image/*" onChange={e => setLogoWhiteFile(e.target.files?.[0] || null)} />
             {logoWhite && <img src={logoWhite} alt="logo_white" style={{ width: 60, height: 40, objectFit: 'contain', background: '#eee', borderRadius: 6 }} />}
             <button onClick={() => handleLogoUpload('white')} disabled={!logoWhiteFile} style={{ marginLeft: 8, padding: '6px 16px', borderRadius: 6, border: '1px solid #bbb', background: '#fff', cursor: logoWhiteFile ? 'pointer' : 'not-allowed' }}>저장</button>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
             <span style={{ minWidth: 90, fontWeight: 700, fontSize: 18 }}>로고(검정)</span>
-            <input type="file" accept="image/*" onChange={e => setLogoBlackFile(e.target.files?.[0] || null)} />
+            <input ref={logoBlackInputRef} type="file" accept="image/*" onChange={e => setLogoBlackFile(e.target.files?.[0] || null)} />
             {logoBlack && <img src={logoBlack} alt="logo_black" style={{ width: 60, height: 40, objectFit: 'contain', background: '#eee', borderRadius: 6 }} />}
             <button onClick={() => handleLogoUpload('black')} disabled={!logoBlackFile} style={{ marginLeft: 8, padding: '6px 16px', borderRadius: 6, border: '1px solid #bbb', background: '#fff', cursor: logoBlackFile ? 'pointer' : 'not-allowed' }}>저장</button>
           </div>
@@ -2745,6 +2756,7 @@ function AdminMainManage() {
     const url = URL.createObjectURL(file);
     setPreview(url);
     setFile(file);
+    e.target.value = '';
   };
 
   const handleFormChange = (field: 'main' | 'sub', value: string) => {
@@ -2762,6 +2774,7 @@ function AdminMainManage() {
         const fileStorageRef = storageRef(storage, uniqueName);
         await uploadBytes(fileStorageRef, file);
         mediaUrl = await getDownloadURL(fileStorageRef);
+        mediaUrl = `${mediaUrl}${mediaUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
         mediaChanged = true;
       }
 
@@ -2785,6 +2798,11 @@ function AdminMainManage() {
       }
 
       await setDoc(ref, updatePayload, { merge: true });
+
+      if (mediaChanged) {
+        setFile(null);
+        setPreview(mediaUrl);
+      }
 
       console.log('[SAVE mainSection]', adminLang, { 
         [`mainText.${adminLang}`]: form.main,
@@ -3040,6 +3058,7 @@ function AdminSloganManage() {
     const url = URL.createObjectURL(file);
     setSloganImageFile(file);
     setSloganImagePreview(url);
+    e.target.value = '';
   };
 
   const handleImageClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -3091,6 +3110,7 @@ function AdminSloganManage() {
         const fileStorageRef = storageRef(storage, uniqueName);
         await uploadBytes(fileStorageRef, sloganImageFile);
         imageUrl = await getDownloadURL(fileStorageRef);
+        imageUrl = `${imageUrl}${imageUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
         setSloganImage(imageUrl);
         setSloganImageFile(null);
         setSloganImagePreview('');
@@ -3546,6 +3566,7 @@ function AdminStoreManage() {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, idx: number | null = null) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    const inputEl = e.target;
     setUploading(true);
     try {
       const ext = file.name.split('.').pop();
@@ -3553,12 +3574,13 @@ function AdminStoreManage() {
       const fileStorageRef = storageRef(storage, uniqueName);
       await uploadBytes(fileStorageRef, file);
       const url = await getDownloadURL(fileStorageRef);
+      const finalUrl = `${url}${url.includes('?') ? '&' : '?'}t=${Date.now()}`;
       if (idx === null) {
-        setNewStore(prev => ({ ...prev, image: url }));
+        setNewStore(prev => ({ ...prev, image: finalUrl }));
       } else {
         setStores(prev => {
           const next = [...prev];
-          next[idx] = { ...next[idx], image: url };
+          next[idx] = { ...next[idx], image: finalUrl };
           return next;
         });
       }
@@ -3566,6 +3588,7 @@ function AdminStoreManage() {
       success('이미지 업로드 중 오류가 발생했습니다.');
     } finally {
       setUploading(false);
+      inputEl.value = '';
     }
   };
 
@@ -4011,6 +4034,7 @@ function AdminBrandManage() {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, idx: number | null = null) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    const inputEl = e.target;
     setUploading(true);
     try {
       const ext = file.name.split('.').pop();
@@ -4018,12 +4042,13 @@ function AdminBrandManage() {
       const fileStorageRef = storageRef(storage, uniqueName);
       await uploadBytes(fileStorageRef, file);
       const url = await getDownloadURL(fileStorageRef);
+      const finalUrl = `${url}${url.includes('?') ? '&' : '?'}t=${Date.now()}`;
       if (idx === null) {
-        setNewBrand(prev => ({ ...prev, image: url }));
+        setNewBrand(prev => ({ ...prev, image: finalUrl }));
       } else {
         setBrands(prev => {
           const next = [...prev];
-          next[idx] = { ...next[idx], image: url };
+          next[idx] = { ...next[idx], image: finalUrl };
           return next;
         });
       }
@@ -4031,6 +4056,7 @@ function AdminBrandManage() {
       success('이미지 업로드 중 오류가 발생했습니다.');
     } finally {
       setUploading(false);
+      inputEl.value = '';
     }
   };
 
@@ -4470,6 +4496,7 @@ function AdminBrandPageManage() {
         return next;
       });
     }
+    e.target.value = '';
   };
 
   // 메인 미디어 저장
@@ -4492,6 +4519,7 @@ function AdminBrandPageManage() {
         console.log('파일 업로드 완료');
         
         url = await getDownloadURL(fileStorageRef);
+        url = `${url}${url.includes('?') ? '&' : '?'}t=${Date.now()}`;
         type = mainMedia.file.type.startsWith('video') ? 'video' : 'image';
         console.log('다운로드 URL 생성:', { url, type });
       }
@@ -4523,6 +4551,7 @@ function AdminBrandPageManage() {
         const fileStorageRef = storageRef(storage, uniqueName);
         await uploadBytes(fileStorageRef, brand.file);
         mediaUrl = await getDownloadURL(fileStorageRef);
+        mediaUrl = `${mediaUrl}${mediaUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
         mediaType = brand.file.type.startsWith('video') ? 'video' : 'image';
       }
       const data = {
@@ -4537,6 +4566,11 @@ function AdminBrandPageManage() {
       if (brand.id) {
         await setDoc(doc(db, 'brandPage', 'brands', 'items', brand.id), data);
       }
+      setBrands(prev => {
+        const next = [...prev];
+        next[idx] = { ...next[idx], ...data, file: null, preview: '' };
+        return next;
+      });
       success('저장되었습니다!');
     } catch (e) {
       error('저장 실패');
@@ -4577,6 +4611,7 @@ function AdminBrandPageManage() {
         const fileStorageRef = storageRef(storage, uniqueName);
         await uploadBytes(fileStorageRef, addBrand.file);
         mediaUrl = await getDownloadURL(fileStorageRef);
+        mediaUrl = `${mediaUrl}${mediaUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
         mediaType = addBrand.file.type.startsWith('video') ? 'video' : 'image';
       }
       const data = {
@@ -4629,7 +4664,7 @@ function AdminBrandPageManage() {
         </div>
         <div style={{ flex: 1, width: 555, minWidth: 555, maxWidth: 555, minHeight: 620, background: '#fff', borderRadius: 18, boxShadow: '0 4px 24px rgba(0,0,0,0.07)', boxSizing: 'border-box', padding: 32, display: 'flex', flexDirection: 'column', gap: 18 }}>
           <div style={{ fontWeight: 700, fontSize: 20, marginBottom: 16 }}>메인 영역 미디어 교체</div>
-          <input type="file" accept="image/png,image/jpeg,video/mp4" onChange={e => setMainMedia(prev => ({ ...prev, file: e.target.files?.[0] || null }))} style={{ marginBottom: 8 }} />
+          <input type="file" accept="image/png,image/jpeg,video/mp4" onChange={e => { const f = e.target.files?.[0] || null; setMainMedia(prev => ({ ...prev, file: f })); e.target.value = ''; }} style={{ marginBottom: 8 }} />
           {mainMedia.url && (
             <div style={{ marginTop: 8 }}>
               {mainMedia.type === 'video' ? (

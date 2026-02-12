@@ -185,6 +185,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       console.error('Image upload failed:', error);
     } finally {
       setUploading(false);
+      e.target.value = '';
     }
   };
 
