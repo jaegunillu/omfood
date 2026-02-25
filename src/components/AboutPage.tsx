@@ -711,7 +711,7 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
   }
 
   return (
-    <div className="about-page" style={{ minHeight: '800px', backgroundColor: 'white' }}>
+    <div className="about-page" lang={currentLang} style={{ minHeight: '800px', backgroundColor: 'white' }}>
       {/* 메인 히어로 섹션 */}
       <section style={{ 
         position: 'relative', 
@@ -1644,6 +1644,31 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
       </motion.section>
 
       <style>{`
+/* 줄바꿈 최적화 - Orphan word 방지 (모바일/PC 공통) */
+.about-page h1,
+.about-page h2,
+.about-page h3,
+.about-page h4,
+.about-page p,
+.about-page span,
+.about-page li,
+.about-page .intro-content,
+.about-page .intro-content * {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+.about-page h1,
+.about-page h2,
+.about-page h3,
+.about-page h4,
+.about-page .intro-main-slogan,
+.about-page .intro-text .intro-label,
+.about-page .intro-text h3,
+.about-page .slogan-text,
+.about-page .history-section h2 {
+  text-wrap: balance;
+}
+
 .intro-zigzag-section {
   background: #fff;
 }
@@ -1933,6 +1958,23 @@ OM FOOD will continue to grow as a global dining brand representing K-Food, buil
 
 /* 모바일 (768px 이하) 스타일 */
 @media (max-width: 768px) {
+  /* 영문 제목: 각 줄의 텍스트 길이를 균형 있게 맞춤 */
+  .about-page[lang="en"] h2,
+  .about-page[lang="en"] h3,
+  .about-page[lang="en"] .intro-main-slogan {
+    text-wrap: balance !important;
+    word-break: normal !important;
+  }
+
+  /* 영문 본문: 문단 마지막 줄에 단어 하나만 덜렁 남는 것을 방지 */
+  .about-page[lang="en"] p,
+  .about-page[lang="en"] li,
+  .about-page[lang="en"] .intro-content,
+  .about-page[lang="en"] .history-content {
+    text-wrap: pretty !important;
+    word-break: normal !important;
+  }
+
   .intro-zigzag-section {
     padding: 4rem 1.5rem !important;
   }

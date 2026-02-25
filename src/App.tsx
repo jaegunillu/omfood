@@ -4826,6 +4826,20 @@ function App() {
     ReactGA.initialize('G-8ZMLB6ZDB5');
   }, []);
 
+  // HTML lang 속성 동기화 (사이트 언어 변경 시)
+  useEffect(() => {
+    const initLang = localStorage.getItem('siteLang') === 'ko' ? 'ko' : 'en';
+    document.documentElement.lang = initLang;
+
+    const handleLangChange = (e: any) => {
+      const lang = e.detail?.language || 'en';
+      document.documentElement.lang = lang;
+    };
+
+    window.addEventListener('languageChange', handleLangChange);
+    return () => window.removeEventListener('languageChange', handleLangChange);
+  }, []);
+
   // Firestore 실시간 stores 데이터
   const [storeList, setStoreList] = useState<Array<{ name: string; image: string; address: string; mapUrl: string; order?: number }>>(initialStores);
   const siteLang = localStorage.getItem('siteLang') === 'ko' ? 'ko' : 'en';

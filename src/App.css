@@ -249,3 +249,61 @@
   font-weight: 600;
   cursor: pointer;
 }
+
+/* === 전역 텍스트 줄바꿈 최적화 (모바일/PC 공통) === */
+
+/* 1. 기본 (한글 최적화: 단어 단위 줄바꿈) */
+p, span, div, li, a, button, h1, h2, h3, h4, h5, h6 {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+/* 2. 제목류 균형 맞춤 (한글/영문 공통) */
+h1, h2, h3, h4, h5, h6 {
+  text-wrap: balance;
+}
+
+/* 3. 영문 전용 최적화 (고아 단어 Orphan 방지 및 자연스러운 줄바꿈) */
+html[lang="en"] p, 
+html[lang="en"] span, 
+html[lang="en"] div, 
+html[lang="en"] li,
+html[lang="en"] a,
+html[lang="en"] button {
+  word-break: normal;
+  text-wrap: pretty;
+}
+
+html[lang="en"] h1, 
+html[lang="en"] h2, 
+html[lang="en"] h3, 
+html[lang="en"] h4, 
+html[lang="en"] h5, 
+html[lang="en"] h6 {
+  word-break: normal;
+  text-wrap: balance;
+}
+
+/* ==================================================
+   글로벌 타이포그래피 줄바꿈 최적화 (국문/영문 공통)
+   ================================================== */
+
+/* 1. 공통: 단어 중간에 끊어지지 않도록 설정 (한글/영문 모두 적용) */
+html, body, p, span, div, li, a, button {
+  word-break: keep-all !important; /* 단어 단위로 묶어서 줄바꿈 */
+  overflow-wrap: break-word !important; /* 레이아웃을 벗어나는 긴 단어만 예외적으로 자름 */
+}
+
+/* 2. 제목류 (Title, Heading 등): 각 줄의 길이를 균형 있게 맞춰줌 */
+/* 브라우저가 알아서 문맥(띄어쓰기)을 판단하여 윗줄과 아랫줄 길이를 비슷하게 나눔 */
+h1, h2, h3, h4, h5, h6,
+[class*="Title"], [class*="title"], 
+[class*="Name"], [class*="name"],
+[class*="Slogan"], [class*="slogan"] {
+  text-wrap: balance !important;
+}
+
+/* 3. 본문류 (Description, Content 등): 문단 마지막 줄에 단어 하나만 덜렁 남는 현상(Orphan) 방지 */
+p, li, [class*="Desc"], [class*="desc"], [class*="Content"], [class*="content"], [class*="Text"], [class*="text"] {
+  text-wrap: pretty !important;
+}
