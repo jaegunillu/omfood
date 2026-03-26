@@ -16,7 +16,7 @@ async function initFooterConfig() {
             { icon: 'naverblog.png', url: 'https://blog.naver.com/ovenmaru' },
             { icon: 'youtube.png', url: 'https://www.youtube.com/channel/UCA6MTVlrRI8jfhdKJp0H3bQ' }
         ],
-        copyright: 'COPYRIGHT(C) OMFOOD ALL RIGHT RESERVED.'
+        copyright: 'COPYRIGHT(C) OMFOOD ALL RIGHTS RESERVED.'
     });
     console.log('footer_config/main 문서가 Firestore에 생성되었습니다.');
 }

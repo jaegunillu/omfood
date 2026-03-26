@@ -543,7 +543,7 @@ const FooterManagePage: React.FC = () => {
           <AdminInput
             value={copyright}
             onChange={e => setCopyright(e.target.value)}
-            placeholder="COPYRIGHT(C) OMFOOD ALL RIGHT RESERVED."
+            placeholder="COPYRIGHT(C) OMFOOD ALL RIGHTS RESERVED."
           />
           <Button
             onClick={handleSaveCopyright}
@@ -556,7 +556,7 @@ const FooterManagePage: React.FC = () => {
           <PreviewBox>
             <strong>카피라이트 문구 (프리뷰)</strong>
             <div style={{ marginTop: 8 }}>
-              {footerConfig?.copyright || 'COPYRIGHT(C) OMFOOD ALL RIGHT RESERVED.'}
+              {footerConfig?.copyright || 'COPYRIGHT(C) OMFOOD ALL RIGHTS RESERVED.'}
             </div>
           </PreviewBox>
         </AdminCard>

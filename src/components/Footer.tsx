@@ -134,7 +134,7 @@ export default function Footer({ language = 'ko' }: { language?: 'ko' | 'en' }) 
           </BrandList>
         </LeftBlock>
         <RightBlock>
-          <Copyright>COPYRIGHT(C) OMFOOD ALL RIGHT RESERVED.</Copyright>
+          <Copyright>COPYRIGHT(C) OMFOOD ALL RIGHTS RESERVED.</Copyright>
         </RightBlock>
       </FooterContainer>
     );
@@ -177,7 +177,7 @@ export default function Footer({ language = 'ko' }: { language?: 'ko' | 'en' }) 
       </LeftBlock>
       <RightBlock>
         <Copyright>
-          {footerConfig?.copyright || 'COPYRIGHT(C) OMFOOD ALL RIGHT RESERVED.'}
+          {footerConfig?.copyright || 'COPYRIGHT(C) OMFOOD ALL RIGHTS RESERVED.'}
         </Copyright>
       </RightBlock>
     </FooterContainer>

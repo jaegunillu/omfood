@@ -145,7 +145,7 @@ const defaultHistoryItems: HistoryEntry[] = [
     contents: [
       'Reached 150 Ovenmaru Chicken Stores Nationwide',
       'Launched new menu items (Bulgogi Roast, Maru Tteokbokki, Cheese Tteokbokki, Boneless Chicken Feet, Stir-fried Garlic Gizzard)',
-      'Won No.1 Excellence Brand Award (JungAng Ilbo, 2018)'
+      'Won No.1 Excellence Brand Award (JoongAng Ilbo, 2018)'
     ]
   },
   {
@@ -318,13 +318,13 @@ OM FOOD는 앞으로도 건강한 재료, 정직한 조리, 감동 있는 서비
     headerTitle: 'Taste with Sincerity',
     headerSubtitle: 'OM FOOD',
     philosophyTitle: 'Management Philosophy',
-    philosophySubtitle: 'Systematic and organized franchise management and thorough after-sales service',
+    philosophySubtitle: 'Systematic franchise management with thorough ongoing support',
     philosophyItems: [
       'Perfect responsible management, transparent corporate management',
       'Part of income is returned to society (various volunteer activities, etc.)',
       'Strengthening and continuous development of new menu development to suit customer preferences',
-      'Establishing a successful brand with fresh and new tastes and atmosphere for customers',
-      'Excellent franchise management based on trust and reliability through continuous and thorough after-sales service'
+      'Delivering fresh flavors and memorable experiences to establish a successful brand',
+      'Fostering franchise excellence through trust, reliability, and consistent ongoing support'
     ],
     philosophyImage: '',
     spiritTitle: 'Corporate Spirit',
@@ -334,7 +334,7 @@ OM FOOD는 앞으로도 건강한 재료, 정직한 조리, 감동 있는 서비
       'We will become a customer-oriented company with a mission of differentiation, advancement, and standardization.',
       'We will build a mutual growth model based on trust and cooperation with franchisees.',
       'We will become a company that pursues customer satisfaction by providing the best taste, service, and atmosphere.',
-      'We will thoroughly implement pre-education and after-sales management through standardized manuals and systematic education programs.'
+      'Rigorous pre-opening training and ongoing post-opening support through standardized manuals and structured programs.'
     ],
     spiritImage: '',
     sloganText: 'Food must be healthy\nfor both those who eat it\nand those who sell it',
