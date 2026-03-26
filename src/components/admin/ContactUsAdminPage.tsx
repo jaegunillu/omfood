@@ -108,14 +108,14 @@ const ContactUsAdminPage: React.FC = () => {
     title: { en: 'CONTACT US', ko: '문의하기' },
     formTitle: { en: 'Get in Touch', ko: '연락하기' },
     formDesc: {
-      en: "Have a question about our products, exploring partnership opportunities, or just want to learn more? We'd love to hear from you. Please fill out the form below and our team will get back to you as soon as possible.",
+      en: "Whether you have product questions, are exploring partnerships, or simply want to learn more, we'd love to hear from you. Please fill out the form below and our team will get back to you as soon as possible.",
       ko: '제품에 대한 질문이 있으시거나, 파트너십 기회를 탐색하고 싶으시거나, 더 자세히 알고 싶으시다면? 저희가 도와드리겠습니다. 아래 양식을 작성해 주시면 저희 팀이 최대한 빨리 연락드리겠습니다.'
     },
     subjectOptions: [
       { en: "Where to Buy (Distributors/Retailers)", ko: "구매처 안내 (대리점 / 판매처)" },
       { en: "Product Questions", ko: "제품 관련 문의" },
       { en: "Company Questions", ko: "회사 관련 문의" },
-      { en: "Collaboration Proposal", ko: "협업 제안" },
+      { en: "Partnership Inquiry", ko: "협업 제안" },
       { en: "Other", ko: "기타 문의" }
     ],
     labels: {
