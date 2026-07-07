@@ -105,6 +105,19 @@ const ContactUsPage: React.FC = () => {
         ...data,
         createdAt: new Date(),
       });
+
+      // Meta Pixel Lead 이벤트 발화 (해외 바이어 문의 완료)
+      // Firestore 저장이 성공한 직후에만 실행됨 → 저장 실패 시 catch로 빠져 발화되지 않음
+      // 개인정보(이름/이메일/문의내용 등)는 파라미터에 절대 포함하지 않음
+      if (typeof window !== 'undefined' && (window as any).fbq) {
+        (window as any).fbq('trackSingle', '921123544344324', 'Lead', {
+          content_name: 'Vietnam buyer inquiry',
+          content_category: 'Export voucher',
+          language: 'vi',
+          form_location: 'official website contact form'
+        });
+      }
+
       success('Your inquiry has been successfully submitted.');
       reset(); // 폼 초기화
     } catch (err: any) {
